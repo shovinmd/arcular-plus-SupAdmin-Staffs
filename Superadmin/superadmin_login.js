@@ -25,10 +25,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const email = document.getElementById('superadmin-email').value;
     const password = document.getElementById('superadmin-password').value;
     
+    // Show loading state
+    const submitBtn = loginForm.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
     try {
-      // Show loading state
-      const submitBtn = loginForm.querySelector('button[type="submit"]');
-      const originalText = submitBtn.innerHTML;
       submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Logging in...';
       submitBtn.disabled = true;
       
@@ -50,34 +51,42 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('🔐 Verifying admin access for:', user.email);
       
       // Verify admin access with backend
-      const response = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/verify', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${idToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: user.email,
-          uid: user.uid,
-          displayName: user.displayName || user.email.split('@')[0]
-        })
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ Admin verified successfully:', result);
+      try {
+        const response = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/verify', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${idToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: user.email,
+            uid: user.uid,
+            displayName: user.displayName || user.email.split('@')[0]
+          })
+        });
         
-        // Check if admin profile is complete
-        if (result.data && result.data.profileComplete) {
-          // Profile complete, redirect to dashboard
-          window.location.href = 'admin_dashboard.html';
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ Admin verified successfully:', result);
+          
+          // Check if admin profile is complete
+          if (result.data && result.data.profileComplete) {
+            // Profile complete, redirect to dashboard
+            window.location.href = 'admin_dashboard.html';
+          } else {
+            // Profile incomplete, redirect to profile page
+            window.location.href = 'admin_profile.html';
+          }
         } else {
-          // Profile incomplete, redirect to profile page
-          window.location.href = 'admin_profile.html';
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to verify admin access');
         }
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to verify admin access');
+      } catch (fetchError) {
+        console.error('❌ Fetch error:', fetchError);
+        if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
+          throw new Error('Network error: Unable to connect to server. Please check your internet connection and try again.');
+        }
+        throw fetchError;
       }
       
     } catch (error) {
@@ -106,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
     } finally {
       // Reset button state
-      const submitBtn = loginForm.querySelector('button[type="submit"]');
       submitBtn.innerHTML = originalText;
       submitBtn.disabled = false;
     }

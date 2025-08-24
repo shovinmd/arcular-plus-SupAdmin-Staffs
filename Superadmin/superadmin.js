@@ -1,24 +1,59 @@
 // --- Super Admin Dashboard Logic ---
 document.addEventListener('DOMContentLoaded', function() {
-  checkSession();
+  // Initialize Firebase with Arcular+ config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBzK4SQ44cv6k8EiNF9B2agNASArWQrstk",
+    authDomain: "arcularplus-7e66c.firebaseapp.com",
+    projectId: "arcularplus-7e66c",
+    storageBucket: "arcularplus-7e66c.firebasestorage.app",
+    messagingSenderId: "239874151024",
+    appId: "1:239874151024:android:7e0d9de0400c6bb9fb5ab5"
+  };
+
+  // Initialize Firebase if not already initialized
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  // Check if user is authenticated
+  const idToken = localStorage.getItem('superadmin_idToken');
+  if (!idToken) {
+    // No token, redirect to login
+    window.location.href = 'superadmin_login.html';
+    return;
+  }
+
   const superadminDashboard = document.getElementById('superadmin-dashboard');
   if (superadminDashboard) {
-    const idToken = localStorage.getItem('superadmin_idToken');
-    if (!idToken) return;
     firebase.auth().onAuthStateChanged(async function(user) {
-      if (!user) return;
-      const res = await fetch('/api/admin/staff/' + user.uid, {
-        headers: { 'Authorization': 'Bearer ' + idToken }
-      });
-      if (!res.ok) return;
-      const staff = await res.json();
-      if (staff.role === 'superadmin') {
+      if (!user) {
+        // User not authenticated, redirect to login
+        localStorage.removeItem('superadmin_idToken');
+        window.location.href = 'superadmin_login.html';
+        return;
+      }
+      
+      try {
+        // Verify user is admin
+        const res = await fetch('/api/admin/staff', {
+          headers: { 'Authorization': 'Bearer ' + idToken }
+        });
+        
+        if (!res.ok) {
+          throw new Error('Unauthorized access');
+        }
+        
+        // User is authenticated and authorized, show dashboard
         superadminDashboard.style.display = '';
         setupStaffManagementUI();
         setupLogout();
         await fetchAndRenderStaffList();
-      } else {
-        superadminDashboard.style.display = 'none';
+        
+      } catch (error) {
+        console.error('Authorization error:', error);
+        // User not authorized, redirect to login
+        await firebase.auth().signOut();
+        localStorage.removeItem('superadmin_idToken');
+        window.location.href = 'superadmin_login.html';
       }
     });
   }
@@ -169,9 +204,4 @@ function setupLogout() {
   }
 }
 
-function checkSession() {
-  const idToken = localStorage.getItem('superadmin_idToken');
-  if (!idToken) {
-    window.location.href = 'superadmin_login.html';
-  }
-} 
+ 

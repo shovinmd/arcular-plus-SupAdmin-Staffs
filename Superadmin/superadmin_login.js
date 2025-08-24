@@ -42,12 +42,19 @@ document.addEventListener('DOMContentLoaded', function() {
       // Store token
       localStorage.setItem('superadmin_idToken', idToken);
       
-      // Check if user is admin
+      // Check if user is admin and create admin record if needed
       try {
-        const response = await fetch('/api/admin/staff', {
+        const response = await fetch('/api/admin/verify', {
+          method: 'POST',
           headers: {
-            'Authorization': `Bearer ${idToken}`
-          }
+            'Authorization': `Bearer ${idToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: user.email,
+            uid: user.uid,
+            displayName: user.displayName || user.email.split('@')[0]
+          })
         });
         
         if (response.ok) {

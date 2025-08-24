@@ -178,6 +178,8 @@ document.addEventListener('DOMContentLoaded', function() {
       password: document.getElementById('staff-password').value
     };
 
+    console.log('📝 Form data to submit:', formData);
+
     const firebaseUid = document.getElementById('staff-firebaseUid').value;
     const isEdit = !!firebaseUid;
 
@@ -189,10 +191,13 @@ document.addEventListener('DOMContentLoaded', function() {
       // Get fresh token for the request
       const user = firebase.auth().currentUser;
       const freshToken = await user.getIdToken();
+      
+      console.log('🔐 Fresh token obtained, length:', freshToken.length);
 
       let response;
       if (isEdit) {
         // Update existing staff
+        console.log('📝 Updating existing staff...');
         response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/staff/${firebaseUid}`, {
           method: 'PUT',
           headers: {
@@ -203,6 +208,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       } else {
         // Create new staff
+        console.log('📝 Creating new staff...');
+        console.log('🌐 Sending request to:', 'https://arcular-plus-backend.onrender.com/admin/api/admin/staff');
+        
         response = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/staff', {
           method: 'POST',
           headers: {
@@ -212,6 +220,9 @@ document.addEventListener('DOMContentLoaded', function() {
           body: JSON.stringify(formData)
         });
       }
+
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', response.headers);
 
       if (response.ok) {
         const result = await response.json();
@@ -226,11 +237,12 @@ document.addEventListener('DOMContentLoaded', function() {
         alert(isEdit ? 'Staff updated successfully!' : 'Staff created successfully!');
       } else {
         const errorData = await response.json();
+        console.error('❌ Server error response:', errorData);
         throw new Error(errorData.message || 'Failed to save staff');
       }
 
     } catch (error) {
-      console.error('Staff save error:', error);
+      console.error('❌ Staff save error:', error);
       alert('Error: ' + error.message);
     } finally {
       const submitBtn = document.getElementById('save-staff-btn');

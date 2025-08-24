@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
           // Check if admin profile is complete
           if (result.data && result.data.profileComplete) {
             // Profile complete, redirect to dashboard
-            window.location.href = 'index.html';
+            window.location.href = 'admin_dashboard.html';
           } else {
             // Profile incomplete, redirect to profile page
             window.location.href = 'admin_profile.html';

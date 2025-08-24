@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Redirect to dashboard after 2 seconds
         setTimeout(() => {
-          window.location.href = 'index.html';
+          window.location.href = 'admin_dashboard.html';
         }, 2000);
         
       } else {

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin Dashboard</title>
+  <link rel="stylesheet" href="superadmin_styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="icon" type="image/png" href="logo1.png">
+</head>
+<body>
+  <div class="superadmin-dashboard-container">
+    <header>
+      <div class="header-left">
+        <img src="logo1.png" alt="Arcular+ Logo" style="height: 40px; margin-right: 15px;">
+        <h2>Super Admin Dashboard</h2>
+      </div>
+      <div class="header-right">
+        <span id="admin-name">Loading...</span>
+        <button id="superadmin-logout-btn" class="logout-btn">Logout</button>
+      </div>
+    </header>
+    
+    <div class="dashboard-content">
+      <!-- Welcome Section -->
+      <section class="welcome-section">
+        <h3>Welcome, <span id="welcome-admin-name">Admin</span>! 👋</h3>
+        <p>Manage your Arcular+ platform and ARC staff members</p>
+      </section>
+
+      <!-- Quick Stats -->
+      <section class="stats-section">
+        <div class="stat-card">
+          <i class="fa-solid fa-users"></i>
+          <div class="stat-info">
+            <h4>Total Staff</h4>
+            <span id="total-staff-count">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-user-plus"></i>
+          <div class="stat-info">
+            <h4>Active Staff</h4>
+            <span id="active-staff-count">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-clock"></i>
+          <div class="stat-info">
+            <h4>Pending Approvals</h4>
+            <span id="pending-approvals-count">0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Staff Management Section -->
+      <section id="superadmin-dashboard" class="staff-management-section">
+        <div class="section-header">
+          <h3><i class="fa-solid fa-users"></i> ARC Staff Management</h3>
+          <button id="open-create-staff-modal" class="primary-btn">
+            <i class="fa-solid fa-plus"></i> Add New Staff
+          </button>
+        </div>
+        
+        <div class="table-container">
+          <table id="staff-table" border="1">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 20px;">
+                  Loading staff members...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- Create/Edit Staff Modal -->
+    <div id="staff-modal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="close-staff-modal">&times;</span>
+        <h3 id="staff-modal-title">Add New Staff</h3>
+        
+        <form id="staff-form">
+          <input type="hidden" id="staff-firebaseUid" />
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="staff-name">Full Name *</label>
+              <input type="text" id="staff-name" required>
+            </div>
+            <div class="form-group">
+              <label for="staff-email">Email *</label>
+              <input type="email" id="staff-email" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="staff-phone">Phone Number *</label>
+              <input type="tel" id="staff-phone" required>
+            </div>
+            <div class="form-group">
+              <label for="staff-role">Role *</label>
+              <select id="staff-role" required>
+                <option value="arcstaff">ARC Staff</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="manager">Manager</option>
+                <option value="super_admin">Super Admin</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="staff-department">Department *</label>
+              <input type="text" id="staff-department" required>
+            </div>
+            <div class="form-group">
+              <label for="staff-designation">Designation *</label>
+              <input type="text" id="staff-designation" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="staff-address">Address</label>
+            <textarea id="staff-address" rows="3"></textarea>
+          </div>
+          
+          <div class="form-group" id="password-group">
+            <label for="staff-password">Password *</label>
+            <input type="password" id="staff-password" required>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" id="cancel-staff-btn" class="secondary-btn">Cancel</button>
+            <button type="submit" id="save-staff-btn" class="primary-btn">Save Staff</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="admin_dashboard.js"></script>
+</body>
+</html>

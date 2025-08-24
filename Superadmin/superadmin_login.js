@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         console.log('🔐 Verifying admin access for:', user.email);
         
-        const response = await fetch('/admin/api/admin/verify', {
+        const response = await fetch('https://your-render-backend-url.onrender.com/admin/api/admin/verify', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${idToken}`,

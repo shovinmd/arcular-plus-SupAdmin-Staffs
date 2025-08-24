@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARC Staff Dashboard</title>
+    <link rel="stylesheet" href="arcstaff.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="logo1.png">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <img src="logo1.png" alt="Arcular+ Logo" style="height:40px;width:auto;margin-right:15px;">
+                <h1>Arcular+ Staff Control Panel</h1>
+            </div>
+            <div class="user-info">
+                <span id="staffName">Admin Staff</span>
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-tab="pending">
+                    <i class="fas fa-clock"></i>
+                    <span>Pending Approvals</span>
+                    <span class="badge" id="pendingCount">0</span>
+                </li>
+                <li class="nav-item" data-tab="hospitals">
+                    <i class="fas fa-hospital"></i>
+                    <span>Hospitals</span>
+                </li>
+                <li class="nav-item" data-tab="doctors">
+                    <i class="fas fa-user-md"></i>
+                    <span>Doctors</span>
+                </li>
+                <li class="nav-item" data-tab="nurses">
+                    <i class="fas fa-user-nurse"></i>
+                    <span>Nurses</span>
+                </li>
+                <li class="nav-item" data-tab="labs">
+                    <i class="fas fa-flask"></i>
+                    <span>Labs</span>
+                </li>
+                <li class="nav-item" data-tab="pharmacies">
+                    <i class="fas fa-pills"></i>
+                    <span>Pharmacies</span>
+                </li>
+                <li class="nav-item" data-tab="reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="dashboard-header">
+                    <h2>Dashboard Overview</h2>
+                    <div class="date-time" id="currentDateTime"></div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon pending">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="pendingStats">0</h3>
+                            <p>Pending Approvals</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon hospitals">
+                            <i class="fas fa-hospital"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="hospitalStats">0</h3>
+                            <p>Active Hospitals</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon doctors">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="doctorStats">0</h3>
+                            <p>Active Doctors</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon nurses">
+                            <i class="fas fa-user-nurse"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="nurseStats">0</h3>
+                            <p>Active Nurses</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    <div class="activity-list" id="recentActivity">
+                        <!-- Activity items will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Approvals Tab -->
+            <div id="pending" class="tab-content">
+                <div class="tab-header">
+                    <h2>Pending Approvals</h2>
+                    <div class="filters">
+                        <select id="filterType">
+                            <option value="all">All Types</option>
+                            <option value="hospital">Hospitals</option>
+                            <option value="doctor">Doctors</option>
+                            <option value="nurse">Nurses</option>
+                            <option value="lab">Labs</option>
+                            <option value="pharmacy">Pharmacies</option>
+                        </select>
+                        <button class="refresh-btn" onclick="loadPendingApprovals()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="approval-list" id="pendingApprovals">
+                    <!-- Pending approval items will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Hospitals Tab -->
+            <div id="hospitals" class="tab-content">
+                <div class="tab-header">
+                    <h2>Hospital Management</h2>
+                    <div class="search-bar">
+                        <input type="text" id="hospitalSearch" placeholder="Search hospitals...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hospital Name</th>
+                                <th>Registration No.</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hospitalsTable">
+                            <!-- Hospital data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Doctors Tab -->
+            <div id="doctors" class="tab-content">
+                <div class="tab-header">
+                    <h2>Doctor Management</h2>
+                    <div class="search-bar">
+                        <input type="text" id="doctorSearch" placeholder="Search doctors...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Doctor Name</th>
+                                <th>License No.</th>
+                                <th>Specialization</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctorsTable">
+                            <!-- Doctor data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Nurses Tab -->
+            <div id="nurses" class="tab-content">
+                <div class="tab-header">
+                    <h2>Nurse Management</h2>
+                    <div class="search-bar">
+                        <input type="text" id="nurseSearch" placeholder="Search nurses...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nurse Name</th>
+                                <th>License No.</th>
+                                <th>Department</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="nursesTable">
+                            <!-- Nurse data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Labs Tab -->
+            <div id="labs" class="tab-content">
+                <div class="tab-header">
+                    <h2>Lab Management</h2>
+                    <div class="search-bar">
+                        <input type="text" id="labSearch" placeholder="Search labs...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Lab Name</th>
+                                <th>License No.</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="labsTable">
+                            <!-- Lab data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pharmacies Tab -->
+            <div id="pharmacies" class="tab-content">
+                <div class="tab-header">
+                    <h2>Pharmacy Management</h2>
+                    <div class="search-bar">
+                        <input type="text" id="pharmacySearch" placeholder="Search pharmacies...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Pharmacy Name</th>
+                                <th>License No.</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pharmaciesTable">
+                            <!-- Pharmacy data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div id="reports" class="tab-content">
+                <div class="tab-header">
+                    <h2>Reports & Analytics</h2>
+                    <div class="report-filters">
+                        <select id="reportType">
+                            <option value="registration">Registration Report</option>
+                            <option value="approval">Approval Report</option>
+                            <option value="activity">Activity Report</option>
+                        </select>
+                        <button class="generate-btn" onclick="generateReport()">
+                            <i class="fas fa-download"></i> Generate Report
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="report-content" id="reportContent">
+                    <!-- Report content will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Super Admin Dashboard: ARC Staff Management -->
+            <section id="superadmin-dashboard" style="display:none;">
+              <h2>ARC Staff Management</h2>
+              <button id="open-create-staff-modal">Add New Staff</button>
+              <table id="staff-table" border="1" style="margin-top:16px;">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Staff rows will be populated here -->
+                </tbody>
+              </table>
+            </section>
+
+            <!-- Create/Edit Staff Modal -->
+            <div id="staff-modal" class="modal" style="display:none;">
+              <div class="modal-content">
+                <span class="close" id="close-staff-modal">&times;</span>
+                <h3 id="staff-modal-title">Add New Staff</h3>
+                <form id="staff-form">
+                  <input type="hidden" id="staff-firebaseUid" />
+                  <label>Name:<br><input type="text" id="staff-name" required></label><br><br>
+                  <label>Email:<br><input type="email" id="staff-email" required></label><br><br>
+                  <label>Password:<br><input type="password" id="staff-password" required></label><br><br>
+                  <label>Role:<br>
+                    <select id="staff-role">
+                      <option value="arcstaff">ARC Staff</option>
+                      <option value="superadmin">Super Admin</option>
+                    </select>
+                  </label><br><br>
+                  <button type="submit" id="save-staff-btn">Save</button>
+                </form>
+              </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for viewing details -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">User Details</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Modal content will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                <button class="btn btn-danger" id="rejectBtn" onclick="rejectUser()">Reject</button>
+                <button class="btn btn-success" id="approveBtn" onclick="approveUser()">Approve</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ARC ID Lookup Section -->
+    <div id="arcid-lookup" style="background:#F9FAFB;padding:24px;border-radius:12px;margin:24px 0;border:1px solid #E5E7EB;max-width:500px">
+      <h2 style="color:#0057A0;">Find User by ARC ID</h2>
+      <input id="arcid-input" type="text" placeholder="Enter ARC ID (e.g. ARC-XXXX-XXXX)" style="padding:8px 12px;border:1px solid #E5E7EB;border-radius:6px;width:70%;margin-right:8px;">
+      <button id="arcid-fetch" style="background:#0057A0;color:#fff;padding:8px 16px;border:none;border-radius:6px;">Fetch</button>
+      <div id="arcid-result" style="margin-top:20px;"></div>
+    </div>
+    <script>
+    document.getElementById('arcid-fetch').onclick = async function() {
+      const arcId = document.getElementById('arcid-input').value.trim();
+      const resultDiv = document.getElementById('arcid-result');
+      if (!arcId) {
+        resultDiv.innerHTML = '<span style="color:#A3E635">Please enter an ARC ID.</span>';
+        return;
+      }
+      resultDiv.innerHTML = 'Fetching...';
+      try {
+        const res = await fetch(`/api/users/arc/${arcId}`);
+        if (!res.ok) {
+          resultDiv.innerHTML = '<span style="color:#A3E635">User not found.</span>';
+          return;
+        }
+        const user = await res.json();
+        let html = `<div style='padding:16px;background:#fff;border-radius:8px;border:1px solid #E5E7EB;'>`;
+        html += `<h3 style='color:#0057A0;'>${user.fullName || 'No Name'}</h3>`;
+        html += `<p style='color:#6B7280;'>ARC ID: <b>${user.arcId}</b></p>`;
+        html += `<p style='color:#2E2E2E;'>Email: ${user.email || '-'}</p>`;
+        html += `<p style='color:#2E2E2E;'>Gender: ${user.gender || '-'}</p>`;
+        html += `<p style='color:#2E2E2E;'>DOB: ${user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : '-'}</p>`;
+        html += `<p style='color:#2E2E2E;'>Blood Group: ${user.bloodGroup || '-'}</p>`;
+        html += `<p style='color:#2E2E2E;'>Mobile: ${user.mobileNumber || '-'}</p>`;
+        html += `<p style='color:#2E2E2E;'>Address: ${user.address || '-'}, ${user.city || ''}, ${user.state || ''} ${user.pincode || ''}</p>`;
+        if(user.knownAllergies && user.knownAllergies.length) html += `<p style='color:#2E2E2E;'>Allergies: ${user.knownAllergies.join(', ')}</p>`;
+        if(user.chronicConditions && user.chronicConditions.length) html += `<p style='color:#2E2E2E;'>Chronic: ${user.chronicConditions.join(', ')}</p>`;
+        html += `</div>`;
+        resultDiv.innerHTML = html;
+      } catch (e) {
+        resultDiv.innerHTML = '<span style="color:#A3E635">Error fetching user info.</span>';
+      }
+    }
+    </script>
+    <script src="script.js"></script>
+    <script>
+        // Authentication check
+        document.addEventListener('DOMContentLoaded', function() {
+            const isLoggedIn = localStorage.getItem('adminLoggedIn') || sessionStorage.getItem('adminLoggedIn');
+            if (!isLoggedIn) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Set staff name from stored email
+            const adminEmail = localStorage.getItem('adminEmail') || sessionStorage.getItem('adminEmail');
+            if (adminEmail) {
+                const staffName = adminEmail.split('@')[0];
+                document.getElementById('staffName').textContent = staffName.charAt(0).toUpperCase() + staffName.slice(1);
+            }
+        });
+    </script>
+</body>
+</html> 

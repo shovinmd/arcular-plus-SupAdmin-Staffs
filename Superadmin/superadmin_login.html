@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin Login</title>
+  <link rel="stylesheet" href="superadmin_styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="icon" type="image/png" href="logo1.png">
+</head>
+<body>
+  <div class="superadmin-login-split">
+    <div class="superadmin-login-left">
+      <div class="superadmin-login-logo">
+        <img src="logo1.png" alt="Arcular+ Logo" class="superadmin-login-logo-img" style="height:140px;width:auto;display:block;margin-bottom:32px;">
+      </div>
+      <h1>Welcome, Super Admin</h1>
+      <h3>Arcular+ Platform Control Panel</h3>
+      <ul class="superadmin-login-features">
+        <li><i class="fa-solid fa-user-plus"></i> Create and manage ARC staff accounts</li>
+        <li><i class="fa-solid fa-user-check"></i> Oversee stakeholder approvals</li>
+        <li><i class="fa-solid fa-database"></i> Access platform analytics and reports</li>
+        <li><i class="fa-solid fa-cogs"></i> Configure system-wide settings</li>
+        <li><i class="fa-solid fa-shield-halved"></i> Ensure platform security</li>
+      </ul>
+    </div>
+    <div class="superadmin-login-right">
+      <h2>Super Admin Login</h2>
+      <p class="superadmin-login-subtitle">Access the Arcular+ super admin panel</p>
+      <form id="superadmin-login-form">
+        <div class="superadmin-input-group">
+          <label for="superadmin-email">Email Address</label>
+          <div class="superadmin-input-icon">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" id="superadmin-email" placeholder="Enter your email" required>
+          </div>
+        </div>
+        <div class="superadmin-input-group">
+          <label for="superadmin-password">Password</label>
+          <div class="superadmin-input-icon">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="superadmin-password" placeholder="Enter your password" required>
+          </div>
+        </div>
+        <div class="superadmin-login-options">
+          <label class="superadmin-remember-me">
+            <input type="checkbox" id="superadmin-remember"> Remember me
+          </label>
+          <a href="#" class="superadmin-forgot-password">Forgot Password?</a>
+        </div>
+        <button type="submit" class="superadmin-login-btn">Login</button>
+      </form>
+      <div id="superadmin-login-error"></div>
+      <div class="superadmin-login-footer">
+        <p>&copy; 2024 Arcular+ Healthcare Platform. All rights reserved.<br>
+        For technical support, contact: <a href="mailto:support@arcularplus.com">support@arcularplus.com</a></p>
+      </div>
+    </div>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="superadmin.js"></script>
+</body>
+</html> 

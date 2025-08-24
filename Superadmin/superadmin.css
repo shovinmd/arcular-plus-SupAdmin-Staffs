@@ -1,0 +1,85 @@
+body {
+  background: #f5f6fa;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.superadmin-dashboard-container {
+  background: #fff;
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 32px 28px 24px 28px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1.5px 4px rgba(0,0,0,0.04);
+}
+
+.superadmin-dashboard-container h2 {
+  margin-bottom: 24px;
+  color: #1565c0;
+  font-weight: 700;
+}
+
+.superadmin-dashboard-container label {
+  display: block;
+  text-align: left;
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 15px;
+}
+
+.superadmin-dashboard-container input[type="email"],
+.superadmin-dashboard-container input[type="password"] {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+  border: 1px solid #cfd8dc;
+  border-radius: 8px;
+  font-size: 15px;
+  background: #f9fafb;
+  transition: border 0.2s;
+}
+
+.superadmin-dashboard-container input:focus {
+  border: 1.5px solid #1565c0;
+  outline: none;
+}
+
+.superadmin-dashboard-container button[type="submit"],
+.superadmin-dashboard-container .logout-btn {
+  padding: 12px 24px;
+  background: #1565c0;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-left: 8px;
+}
+
+.superadmin-dashboard-container button[type="submit"]:hover,
+.superadmin-dashboard-container .logout-btn:hover {
+  background: #003c8f;
+}
+
+#superadmin-dashboard table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#superadmin-dashboard th, #superadmin-dashboard td {
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+#superadmin-dashboard th {
+  background: #f0f4f8;
+  color: #1565c0;
+}
+
+#superadmin-dashboard td {
+  background: #fff;
+} 

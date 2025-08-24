@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin Dashboard</title>
+  <link rel="stylesheet" href="superadmin.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="superadmin-dashboard-container">
+    <header>
+      <h2>Super Admin Dashboard</h2>
+      <button id="superadmin-logout-btn" class="logout-btn">Logout</button>
+    </header>
+    <section id="superadmin-dashboard">
+      <h3>ARC Staff Management</h3>
+      <button id="open-create-staff-modal">Add New Staff</button>
+      <table id="staff-table" border="1" style="margin-top:16px;">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Staff rows will be populated here -->
+        </tbody>
+      </table>
+    </section>
+    <!-- Create/Edit Staff Modal -->
+    <div id="staff-modal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="close-staff-modal">&times;</span>
+        <h3 id="staff-modal-title">Add New Staff</h3>
+        <form id="staff-form">
+          <input type="hidden" id="staff-firebaseUid" />
+          <label>Name:<br><input type="text" id="staff-name" required></label><br><br>
+          <label>Email:<br><input type="email" id="staff-email" required></label><br><br>
+          <label>Password:<br><input type="password" id="staff-password" required></label><br><br>
+          <label>Role:<br>
+            <select id="staff-role">
+              <option value="arcstaff">ARC Staff</option>
+              <option value="superadmin">Super Admin</option>
+            </select>
+          </label><br><br>
+          <button type="submit" id="save-staff-btn">Save</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="superadmin.js"></script>
+</body>
+</html> 

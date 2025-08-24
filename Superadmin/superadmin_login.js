@@ -64,8 +64,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (response.ok) {
           const result = await response.json();
           console.log('✅ Admin verified successfully:', result);
-          // User is authenticated and authorized, redirect to dashboard
-          window.location.href = 'index.html';
+          
+          // Check if admin profile is complete
+          if (result.data && result.data.profileComplete) {
+            // Profile complete, redirect to dashboard
+            window.location.href = 'index.html';
+          } else {
+            // Profile incomplete, redirect to profile page
+            window.location.href = 'admin_profile.html';
+          }
         } else {
           const errorData = await response.json();
           console.error('❌ Admin verification failed:', errorData);

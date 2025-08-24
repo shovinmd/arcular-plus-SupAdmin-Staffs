@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Profile Setup</title>
+  <link rel="stylesheet" href="superadmin_styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="icon" type="image/png" href="logo1.png">
+</head>
+<body>
+  <div class="superadmin-login-split">
+    <div class="superadmin-login-left">
+      <div class="superadmin-login-logo">
+        <img src="logo1.png" alt="Arcular+ Logo" class="superadmin-login-logo-img" style="height:140px;width:auto;display:block;margin-bottom:32px;">
+      </div>
+      <h1>Complete Your Profile</h1>
+      <h3>Super Admin Setup</h3>
+      <ul class="superadmin-login-features">
+        <li><i class="fa-solid fa-user-plus"></i> Set up your admin profile</li>
+        <li><i class="fa-solid fa-shield-halved"></i> Configure system permissions</li>
+        <li><i class="fa-solid fa-cogs"></i> Customize your dashboard</li>
+        <li><i class="fa-solid fa-database"></i> Access platform analytics</li>
+        <li><i class="fa-solid fa-users"></i> Manage ARC staff accounts</li>
+      </ul>
+    </div>
+    <div class="superadmin-login-right">
+      <h2>Admin Profile Setup</h2>
+      <p class="superadmin-login-subtitle">Complete your profile to access the dashboard</p>
+      
+      <form id="admin-profile-form">
+        <div class="superadmin-input-group">
+          <label for="admin-fullName">Full Name</label>
+          <div class="superadmin-input-icon">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="admin-fullName" placeholder="Enter your full name" required>
+          </div>
+        </div>
+        
+        <div class="superadmin-input-group">
+          <label for="admin-phone">Phone Number</label>
+          <div class="superadmin-input-icon">
+            <i class="fa-solid fa-phone"></i>
+            <input type="tel" id="admin-phone" placeholder="Enter your phone number" required>
+          </div>
+        </div>
+        
+        <div class="superadmin-input-group">
+          <label for="admin-department">Department</label>
+          <div class="superadmin-input-icon">
+            <i class="fa-solid fa-building"></i>
+            <input type="text" id="admin-department" placeholder="Enter your department" required>
+          </div>
+        </div>
+        
+        <div class="superadmin-input-group">
+          <label for="admin-designation">Designation</label>
+          <div class="superadmin-input-icon">
+            <i class="fa-solid fa-id-badge"></i>
+            <input type="text" id="admin-designation" placeholder="Enter your designation" required>
+          </div>
+        </div>
+        
+        <div class="superadmin-input-group">
+          <label for="admin-address">Address</label>
+          <div class="superadmin-input-icon">
+            <i class="fa-solid fa-map-marker-alt"></i>
+            <textarea id="admin-address" placeholder="Enter your address" rows="3" required></textarea>
+          </div>
+        </div>
+        
+        <button type="submit" class="superadmin-login-btn">Complete Profile</button>
+      </form>
+      
+      <div id="admin-profile-error"></div>
+      <div id="admin-profile-success"></div>
+      
+      <div class="superadmin-login-footer">
+        <p>&copy; 2025 Arcular+ Healthcare Platform. All rights reserved.<br>
+        For technical support, contact: <a href="mailto:support@arcularplus.com">support@arcularplus.com</a></p>
+      </div>
+    </div>
+  </div>
+  
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="admin_profile.js"></script>
+</body>
+</html>

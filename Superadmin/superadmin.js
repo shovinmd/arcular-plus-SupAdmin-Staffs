@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       try {
         // Verify user is admin
-        const res = await fetch('/api/admin/staff', {
+        const res = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/staff', {
           headers: { 'Authorization': 'Bearer ' + idToken }
         });
         
@@ -65,7 +65,7 @@ async function fetchAndRenderStaffList() {
   const tableBody = document.querySelector('#staff-table tbody');
   tableBody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
   try {
-    const res = await fetch('/api/admin/staff', {
+    const res = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/staff', {
       headers: { 'Authorization': 'Bearer ' + idToken }
     });
     if (!res.ok) throw new Error('Failed to fetch staff');
@@ -120,7 +120,7 @@ async function handleStaffFormSubmit(e) {
     let res;
     if (firebaseUid) {
       // Edit staff (update name/role)
-      res = await fetch(`/api/admin/staff/${firebaseUid}`, {
+              res = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/staff/${firebaseUid}`, {
         method: 'PUT',
         headers: {
           'Authorization': 'Bearer ' + idToken,
@@ -130,7 +130,7 @@ async function handleStaffFormSubmit(e) {
       });
     } else {
       // Create staff
-      res = await fetch('/api/admin/staff', {
+              res = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/staff', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer ' + idToken,
@@ -152,10 +152,10 @@ async function handleDeleteStaff(firebaseUid) {
   if (!idToken) return;
   if (!confirm('Are you sure you want to delete this staff member?')) return;
   try {
-    const res = await fetch(`/api/admin/staff/${firebaseUid}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + idToken }
-    });
+          const res = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/staff/${firebaseUid}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + idToken }
+      });
     if (!res.ok) throw new Error('Failed to delete staff');
     await fetchAndRenderStaffList();
   } catch (err) {
@@ -182,12 +182,12 @@ async function fetchStaffAndOpenEdit(firebaseUid) {
   const idToken = localStorage.getItem('superadmin_idToken');
   if (!idToken) return;
   try {
-    const res = await fetch(`/api/admin/staff/${firebaseUid}`, {
-      headers: { 'Authorization': 'Bearer ' + idToken }
-    });
-    if (!res.ok) throw new Error('Failed to fetch staff');
-    const staff = await res.json();
-    openStaffModal(true, staff);
+          const res = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/staff/${firebaseUid}`, {
+        headers: { 'Authorization': 'Bearer ' + idToken }
+      });
+      if (!res.ok) throw new Error('Failed to fetch staff');
+      const staff = await res.json();
+      openStaffModal(true, staff);
   } catch (err) {
     alert(err.message);
   }

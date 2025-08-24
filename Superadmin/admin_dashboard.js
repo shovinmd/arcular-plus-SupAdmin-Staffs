@@ -33,9 +33,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     try {
+      // Get fresh ID token
+      const freshToken = await user.getIdToken();
+      
       // Check if user has admin profile
       const profileRes = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
-        headers: { 'Authorization': 'Bearer ' + idToken }
+        headers: { 'Authorization': 'Bearer ' + freshToken }
       });
       
       if (!profileRes.ok || profileRes.status === 404) {
@@ -57,8 +60,8 @@ document.addEventListener('DOMContentLoaded', function() {
       setupDashboard();
       setupStaffManagementUI();
       setupLogout();
-      await fetchAndRenderStaffList();
-      await loadDashboardStats();
+      await fetchAndRenderStaffList(freshToken);
+      await loadDashboardStats(freshToken);
       
     } catch (error) {
       console.error('Authorization error:', error);
@@ -183,13 +186,17 @@ document.addEventListener('DOMContentLoaded', function() {
       submitBtn.textContent = 'Saving...';
       submitBtn.disabled = true;
 
+      // Get fresh token for the request
+      const user = firebase.auth().currentUser;
+      const freshToken = await user.getIdToken();
+
       let response;
       if (isEdit) {
         // Update existing staff
         response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/staff/${firebaseUid}`, {
           method: 'PUT',
           headers: {
-            'Authorization': `Bearer ${idToken}`,
+            'Authorization': `Bearer ${freshToken}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(formData)
@@ -199,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
         response = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/staff', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${idToken}`,
+            'Authorization': `Bearer ${freshToken}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(formData)
@@ -212,8 +219,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Close modal and refresh list
         closeStaffModal();
-        await fetchAndRenderStaffList();
-        await loadDashboardStats();
+        await fetchAndRenderStaffList(freshToken);
+        await loadDashboardStats(freshToken);
         
         // Show success message
         alert(isEdit ? 'Staff updated successfully!' : 'Staff created successfully!');
@@ -233,13 +240,13 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Fetch and render staff list
-  async function fetchAndRenderStaffList() {
+  async function fetchAndRenderStaffList(token = idToken) {
     const tableBody = document.querySelector('#staff-table tbody');
     tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Loading...</td></tr>';
     
     try {
       const res = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/staff', {
-        headers: { 'Authorization': 'Bearer ' + idToken }
+        headers: { 'Authorization': 'Bearer ' + token }
       });
       
       if (!res.ok) throw new Error('Failed to fetch staff');
@@ -301,8 +308,12 @@ document.addEventListener('DOMContentLoaded', function() {
   // Edit staff member
   async function editStaff(firebaseUid) {
     try {
+      // Get fresh token
+      const user = firebase.auth().currentUser;
+      const freshToken = await user.getIdToken();
+      
       const res = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/staff/${firebaseUid}`, {
-        headers: { 'Authorization': 'Bearer ' + idToken }
+        headers: { 'Authorization': 'Bearer ' + freshToken }
       });
       
       if (!res.ok) throw new Error('Failed to fetch staff');
@@ -320,15 +331,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!confirm('Are you sure you want to delete this staff member?')) return;
     
     try {
+      // Get fresh token
+      const user = firebase.auth().currentUser;
+      const freshToken = await user.getIdToken();
+      
       const res = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/staff/${firebaseUid}`, {
         method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + idToken }
+        headers: { 'Authorization': 'Bearer ' + freshToken }
       });
       
       if (!res.ok) throw new Error('Failed to delete staff');
       
-      await fetchAndRenderStaffList();
-      await loadDashboardStats();
+      await fetchAndRenderStaffList(freshToken);
+      await loadDashboardStats(freshToken);
       alert('Staff deleted successfully!');
       
     } catch (err) {
@@ -337,10 +352,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Load dashboard statistics
-  async function loadDashboardStats() {
+  async function loadDashboardStats(token = idToken) {
     try {
       const res = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/staff', {
-        headers: { 'Authorization': 'Bearer ' + idToken }
+        headers: { 'Authorization': 'Bearer ' + token }
       });
       
       if (res.ok) {

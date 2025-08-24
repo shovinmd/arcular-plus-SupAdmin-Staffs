@@ -44,7 +44,9 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Check if user is admin and create admin record if needed
       try {
-        const response = await fetch('/api/admin/verify', {
+        console.log('🔐 Verifying admin access for:', user.email);
+        
+        const response = await fetch('/admin/api/admin/verify', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${idToken}`,
@@ -57,13 +59,20 @@ document.addEventListener('DOMContentLoaded', function() {
           })
         });
         
+        console.log('📡 Response status:', response.status);
+        
         if (response.ok) {
+          const result = await response.json();
+          console.log('✅ Admin verified successfully:', result);
           // User is authenticated and authorized, redirect to dashboard
           window.location.href = 'index.html';
         } else {
-          throw new Error('Unauthorized access');
+          const errorData = await response.json();
+          console.error('❌ Admin verification failed:', errorData);
+          throw new Error(errorData.message || 'Unauthorized access');
         }
       } catch (error) {
+        console.error('❌ Admin verification error:', error);
         // User is not admin, sign out and show error
         await firebase.auth().signOut();
         localStorage.removeItem('superadmin_idToken');

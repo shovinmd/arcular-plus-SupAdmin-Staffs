@@ -28,80 +28,86 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       // Show loading state
       const submitBtn = loginForm.querySelector('button[type="submit"]');
-      const originalText = submitBtn.textContent;
-      submitBtn.textContent = 'Logging in...';
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Logging in...';
       submitBtn.disabled = true;
+      
+      // Clear previous errors
+      errorDiv.innerHTML = '';
+      
+      console.log('🔐 Attempting Firebase login for:', email);
       
       // Sign in with Firebase
       const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
       const user = userCredential.user;
       
+      console.log('✅ Firebase login successful for:', email);
+      
       // Get ID token
       const idToken = await user.getIdToken();
-      
-      // Store token
       localStorage.setItem('superadmin_idToken', idToken);
       
-      // Check if user is admin and create admin record if needed
-      try {
-        console.log('🔐 Verifying admin access for:', user.email);
+      console.log('🔐 Verifying admin access for:', user.email);
+      
+      // Verify admin access with backend
+      const response = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/verify', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: user.email,
+          uid: user.uid,
+          displayName: user.displayName || user.email.split('@')[0]
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Admin verified successfully:', result);
         
-        const response = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/verify', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${idToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email: user.email,
-            uid: user.uid,
-            displayName: user.displayName || user.email.split('@')[0]
-          })
-        });
-        
-        console.log('📡 Response status:', response.status);
-        
-        if (response.ok) {
-          const result = await response.json();
-          console.log('✅ Admin verified successfully:', result);
-          
-          // Check if admin profile is complete
-          if (result.data && result.data.profileComplete) {
-            // Profile complete, redirect to dashboard
-            window.location.href = 'admin_dashboard.html';
-          } else {
-            // Profile incomplete, redirect to profile page
-            window.location.href = 'admin_profile.html';
-          }
+        // Check if admin profile is complete
+        if (result.data && result.data.profileComplete) {
+          // Profile complete, redirect to dashboard
+          window.location.href = 'admin_dashboard.html';
         } else {
-          const errorData = await response.json();
-          console.error('❌ Admin verification failed:', errorData);
-          throw new Error(errorData.message || 'Unauthorized access');
+          // Profile incomplete, redirect to profile page
+          window.location.href = 'admin_profile.html';
         }
-      } catch (error) {
-        console.error('❌ Admin verification error:', error);
-        // User is not admin, sign out and show error
-        await firebase.auth().signOut();
-        localStorage.removeItem('superadmin_idToken');
-        throw new Error('Access denied. You are not authorized as a super admin.');
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to verify admin access');
       }
       
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ Login error:', error);
       
       // Show error message
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'No account found with this email address.';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Incorrect password. Please try again.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address format.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many failed attempts. Please try again later.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       errorDiv.innerHTML = `
-        <div class="error-message" style="color: red; background: #ffe6e6; padding: 10px; border-radius: 5px; margin: 10px 0;">
-          ${error.message}
+        <div class="error-message">
+          <i class="fa-solid fa-exclamation-triangle"></i> ${errorMessage}
         </div>
       `;
       
-      // Reset form
-      document.getElementById('superadmin-password').value = '';
     } finally {
       // Reset button state
       const submitBtn = loginForm.querySelector('button[type="submit"]');
-      submitBtn.textContent = 'Login';
+      submitBtn.innerHTML = originalText;
       submitBtn.disabled = false;
     }
   });
@@ -109,11 +115,12 @@ document.addEventListener('DOMContentLoaded', function() {
   // Check if user is already logged in
   firebase.auth().onAuthStateChanged(function(user) {
     if (user) {
-      // User is signed in, check if they have a valid token
+      // User is already logged in, check if they have a token
       const idToken = localStorage.getItem('superadmin_idToken');
       if (idToken) {
-        // Redirect to dashboard if already authenticated
-        window.location.href = 'index.html';
+        // Redirect based on profile completion status
+        // This will be handled by the verification endpoint
+        console.log('User already logged in, checking profile status...');
       }
     }
   });

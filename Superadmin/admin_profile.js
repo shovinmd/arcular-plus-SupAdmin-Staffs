@@ -85,8 +85,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show success message
         successDiv.innerHTML = `
-          <div class="success-message" style="color: green; background: #e6ffe6; padding: 10px; border-radius: 5px; margin: 10px 0;">
-            Profile completed successfully! Redirecting to dashboard...
+          <div class="success-message">
+            <i class="fa-solid fa-check-circle"></i> Profile completed successfully! Redirecting to dashboard...
           </div>
         `;
         
@@ -105,8 +105,8 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Show error message
       errorDiv.innerHTML = `
-        <div class="error-message" style="color: red; background: #ffe6e6; padding: 10px; border-radius: 5px; margin: 10px 0;">
-          ${error.message}
+        <div class="error-message">
+          <i class="fa-solid fa-exclamation-triangle"></i> ${error.message}
         </div>
       `;
       

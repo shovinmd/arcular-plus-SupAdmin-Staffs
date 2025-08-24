@@ -50,36 +50,49 @@ document.addEventListener('DOMContentLoaded', function() {
       
       console.log('🔐 Verifying admin access for:', user.email);
       
-      // Verify admin access with backend
+      // Check if admin profile already exists in MongoDB
       try {
-        const response = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/verify', {
-          method: 'POST',
+        const profileResponse = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
           headers: {
-            'Authorization': `Bearer ${idToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email: user.email,
-            uid: user.uid,
-            displayName: user.displayName || user.email.split('@')[0]
-          })
+            'Authorization': `Bearer ${idToken}`
+          }
         });
         
-        if (response.ok) {
-          const result = await response.json();
-          console.log('✅ Admin verified successfully:', result);
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          console.log('✅ Admin profile found:', profileData);
           
-          // Check if admin profile is complete
-          if (result.data && result.data.profileComplete) {
-            // Profile complete, redirect to dashboard
-            window.location.href = 'admin_dashboard.html';
-          } else {
-            // Profile incomplete, redirect to profile page
+          // Profile exists, redirect directly to dashboard
+          window.location.href = 'admin_dashboard.html';
+        } else if (profileResponse.status === 404) {
+          // Profile doesn't exist, create admin record first
+          console.log('🔐 Creating new admin record...');
+          
+          const verifyResponse = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/verify', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${idToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email: user.email,
+              uid: user.uid,
+              displayName: user.displayName || user.email.split('@')[0]
+            })
+          });
+          
+          if (verifyResponse.ok) {
+            const result = await verifyResponse.json();
+            console.log('✅ Admin record created successfully:', result);
+            
+            // New admin, redirect to profile page
             window.location.href = 'admin_profile.html';
+          } else {
+            const errorData = await verifyResponse.json();
+            throw new Error(errorData.message || 'Failed to create admin record');
           }
         } else {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to verify admin access');
+          throw new Error('Failed to check admin profile');
         }
       } catch (fetchError) {
         console.error('❌ Fetch error:', fetchError);
@@ -126,9 +139,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // User is already logged in, check if they have a token
       const idToken = localStorage.getItem('superadmin_idToken');
       if (idToken) {
-        // Redirect based on profile completion status
-        // This will be handled by the verification endpoint
-        console.log('User already logged in, checking profile status...');
+        // User is already authenticated, redirect to dashboard
+        console.log('User already logged in, redirecting to dashboard...');
+        window.location.href = 'admin_dashboard.html';
       }
     }
   });

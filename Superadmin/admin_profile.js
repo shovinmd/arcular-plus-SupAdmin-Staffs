@@ -32,9 +32,40 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    // User is authenticated, load existing profile data if available
-    loadExistingProfile();
+    // Check if profile is already complete
+    checkProfileStatus();
   });
+  
+  // Check if profile is already complete
+  async function checkProfileStatus() {
+    try {
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+      
+      const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
+        headers: {
+          'Authorization': `Bearer ${idToken}`
+        }
+      });
+      
+      if (response.ok) {
+        const profile = await response.json();
+        
+        // If profile is complete, redirect to dashboard
+        if (profile.data && profile.data.profileComplete) {
+          console.log('Profile already complete, redirecting to dashboard...');
+          window.location.href = 'admin_dashboard.html';
+          return;
+        }
+      }
+      
+      // Profile not complete, load existing data if available
+      loadExistingProfile();
+    } catch (error) {
+      console.log('Profile check failed, loading form...');
+      loadExistingProfile();
+    }
+  }
 
   const profileForm = document.getElementById('admin-profile-form');
   const errorDiv = document.getElementById('admin-profile-error');

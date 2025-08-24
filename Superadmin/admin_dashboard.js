@@ -33,16 +33,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     try {
-      // Verify user is admin and profile is complete
-      const res = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/staff', {
+      // Check if user has admin profile
+      const profileRes = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
         headers: { 'Authorization': 'Bearer ' + idToken }
       });
       
-      if (!res.ok) {
-        throw new Error('Unauthorized access');
+      if (!profileRes.ok || profileRes.status === 404) {
+        // No admin profile, redirect to profile page
+        console.log('No admin profile found, redirecting to profile page...');
+        window.location.href = 'admin_profile.html';
+        return;
       }
       
-      // User is authenticated and authorized, show dashboard
+      const profileData = await profileRes.json();
+      if (!profileData.data || !profileData.data.profileComplete) {
+        // Profile incomplete, redirect to profile page
+        console.log('Profile incomplete, redirecting to profile page...');
+        window.location.href = 'admin_profile.html';
+        return;
+      }
+      
+      // User is authenticated and profile is complete, show dashboard
       setupDashboard();
       setupStaffManagementUI();
       setupLogout();

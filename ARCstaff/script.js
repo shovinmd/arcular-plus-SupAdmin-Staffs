@@ -161,8 +161,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Store token
                         localStorage.setItem('staff_idToken', idToken);
                         
-                        // Redirect to dashboard
-                        window.location.href = 'index.html';
+                                // Redirect to dashboard
+        window.location.href = 'arcstaff-dashboard.html';
                     } else {
                         const errorData = await response.json();
                         throw new Error(errorData.message || 'Staff access verification failed');

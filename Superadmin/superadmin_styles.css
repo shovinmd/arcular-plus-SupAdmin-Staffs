@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f8fafc;
     min-height: 100vh;
     color: #333;
 }
@@ -18,12 +18,12 @@ body {
     min-height: 100vh;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f8fafc;
 }
 
 .superadmin-login-left {
     flex: 1.1;
-    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
     color: #fff;
     border-radius: 28px 0 0 28px;
     display: flex;
@@ -58,7 +58,7 @@ body {
     font-size: 1.2rem;
     font-weight: 400;
     margin-bottom: 32px;
-    color: #c7d2fe;
+    color: #e0e7ff;
 }
 
 .superadmin-login-features {
@@ -75,11 +75,11 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    color: #e0e7ff;
+    color: #f1f5f9;
 }
 
 .superadmin-login-features i {
-    color: #60a5fa;
+    color: #93c5fd;
     font-size: 1.1rem;
 }
 
@@ -257,7 +257,7 @@ body {
 }
 
 .welcome-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
     color: white;
     padding: 30px;
     border-radius: 12px;
@@ -290,12 +290,12 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #1e40af;
 }
 
 .stat-card i {
     font-size: 2.5rem;
-    color: #667eea;
+    color: #1e40af;
 }
 
 .stat-info h4 {
@@ -335,7 +335,7 @@ body {
 }
 
 .primary-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
     color: white;
     border: none;
     padding: 12px 24px;
@@ -409,7 +409,7 @@ body {
 }
 
 .edit-staff-btn, .delete-staff-btn {
-    background: #667eea;
+    background: #1e40af;
     color: white;
     border: none;
     padding: 6px 12px;
@@ -421,7 +421,7 @@ body {
 }
 
 .edit-staff-btn:hover {
-    background: #5a6fd8;
+    background: #1e3a8a;
 }
 
 .delete-staff-btn {
@@ -506,7 +506,7 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #1e40af;
 }
 
 .form-actions {
@@ -556,7 +556,7 @@ body {
     .superadmin-login-split {
         flex-direction: column;
         min-height: unset;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #f8fafc;
     }
     
     .superadmin-login-left, .superadmin-login-right {

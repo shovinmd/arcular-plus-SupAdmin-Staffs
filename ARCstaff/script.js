@@ -11,6 +11,23 @@ let allUsers = {
     pharmacies: []
 };
 
+// Firebase configuration for Arcular+ project
+const firebaseConfig = {
+    apiKey: "AIzaSyBzK4SQ44cv6k8EiNF9B2agNASArWQrstk",
+    authDomain: "arcularplus-7e66c.firebaseapp.com",
+    projectId: "arcularplus-7e66c",
+    storageBucket: "arcularplus-7e66c.firebasestorage.app",
+    messagingSenderId: "239874151024",
+    appId: "1:239874151024:android:7e0d9de0400c6bb9fb5ab5"
+};
+
+// Initialize Firebase if not already initialized
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+} else if (typeof firebase === 'undefined') {
+    console.warn('Firebase SDK not loaded');
+}
+
 // Mock data for demonstration
 const mockData = {
     pendingApprovals: [
@@ -104,36 +121,67 @@ const mockData = {
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 
-    // --- Super Admin Login Logic ---
-    const loginForm = document.getElementById('superadmin-login-form');
+    // --- ARC Staff Login Logic ---
+    const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            const email = document.getElementById('superadmin-email').value;
-            const password = document.getElementById('superadmin-password').value;
-            const errorDiv = document.getElementById('superadmin-login-error');
-            errorDiv.textContent = '';
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            if (errorDiv) errorDiv.textContent = '';
+            
             try {
-                // Firebase Auth sign in
+                // Firebase authentication
                 const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
                 const user = userCredential.user;
-                if (!user) throw new Error('No user found');
                 const idToken = await user.getIdToken();
-                // Fetch staff profile from backend
-                const res = await fetch('/api/admin/staff/' + user.uid, {
-                    headers: { 'Authorization': 'Bearer ' + idToken }
-                });
-                if (!res.ok) throw new Error('Not a super admin');
-                const staff = await res.json();
-                if (staff.role !== 'superadmin') {
-                    errorDiv.textContent = 'Access denied: not a super admin.';
-                    return;
+                
+                // Verify staff access
+                try {
+                    const response = await fetch('https://arcular-plus-backend.onrender.com/staff/api/staff/verify', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: user.email,
+                            uid: user.uid,
+                            displayName: user.displayName || user.email.split('@')[0]
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('✅ Staff access verified:', result);
+                        
+                        // Store token
+                        localStorage.setItem('staff_idToken', idToken);
+                        
+                        // Redirect to dashboard
+                        window.location.href = 'index.html';
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Staff access verification failed');
+                    }
+                } catch (fetchError) {
+                    console.error('❌ Staff verification error:', fetchError);
+                    if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
+                        throw new Error('Network error: Unable to connect to server. Please check your internet connection and try again.');
+                    }
+                    throw fetchError;
                 }
-                // Store token and redirect
-                localStorage.setItem('superadmin_idToken', idToken);
-                window.location.href = '../ARCstuff/index.html';
-            } catch (err) {
-                errorDiv.textContent = err.message || 'Login failed.';
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                if (errorDiv) {
+                    errorDiv.textContent = error.message || 'Login failed';
+                } else {
+                    alert('Login failed: ' + error.message);
+                }
             }
         });
     }
@@ -168,26 +216,59 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- ARC Staff Dashboard Logic ---
     checkArcStaffSession();
-    const arcstaffDashboard = document.getElementById('arcstaff-dashboard');
-    if (arcstaffDashboard) {
-        const idToken = localStorage.getItem('arcstaff_idToken');
-        if (!idToken) return;
-        firebase.auth().onAuthStateChanged(async function(user) {
-            if (!user) return;
-            const res = await fetch('/api/admin/staff/' + user.uid, {
-                headers: { 'Authorization': 'Bearer ' + idToken }
-            });
-            if (!res.ok) return;
-            const staff = await res.json();
-            if (staff.role === 'arcstaff') {
-                arcstaffDashboard.style.display = '';
-                setupArcStaffLogout();
-                await fetchAndRenderPendingStakeholders();
-            } else {
-                arcstaffDashboard.style.display = 'none';
+    
+    // Check authentication state
+    firebase.auth().onAuthStateChanged(async function(user) {
+        if (user) {
+            console.log('✅ User authenticated:', user.email);
+            const idToken = await user.getIdToken();
+            localStorage.setItem('staff_idToken', idToken);
+            
+            // Verify staff access
+            try {
+                const response = await fetch('https://arcular-plus-backend.onrender.com/staff/api/staff/profile/' + user.uid, {
+                    headers: { 'Authorization': `Bearer ${idToken}` }
+                });
+                
+                if (response.ok) {
+                    const staffProfile = await response.json();
+                    console.log('✅ Staff profile loaded:', staffProfile);
+                    currentUser = staffProfile;
+                    
+                    // Update UI with staff name
+                    const staffNameElement = document.getElementById('staffName');
+                    if (staffNameElement) {
+                        staffNameElement.textContent = staffProfile.data.fullName || user.email;
+                    }
+                    
+                    // Load dashboard data
+                    await loadDashboardData();
+                } else {
+                    console.error('❌ Staff profile not found');
+                    // Don't redirect, just show a message and stay on dashboard
+                    console.log('⚠️ Profile not found, but staying on dashboard');
+                    
+                    // Update UI with basic user info
+                    const staffNameElement = document.getElementById('staffName');
+                    if (staffNameElement) {
+                        staffNameElement.textContent = user.email;
+                    }
+                    
+                    // Load dashboard data anyway
+                    await loadDashboardData();
+                }
+            } catch (error) {
+                console.error('❌ Error loading staff profile:', error);
+                // Don't redirect on network errors, just log the error
+                console.log('⚠️ Network error, staying on dashboard');
             }
-        });
-    }
+        } else {
+            console.log('❌ No user authenticated');
+            localStorage.removeItem('staff_idToken');
+            console.log('🔒 Redirecting to login page');
+            window.location.href = 'login.html';
+        }
+    });
 });
 
 function initializeApp() {
@@ -207,6 +288,26 @@ function initializeApp() {
     // Load initial data
     loadPendingApprovals();
     loadAllUsers();
+}
+
+// Load dashboard data from backend
+async function loadDashboardData() {
+    try {
+        const idToken = localStorage.getItem('staff_idToken');
+        if (!idToken) return;
+        
+        // Load pending approvals from backend
+        await loadPendingApprovalsFromBackend();
+        
+        // Load all users
+        await loadAllUsers();
+        
+        // Update dashboard stats
+        updateDashboard();
+        
+    } catch (error) {
+        console.error('❌ Error loading dashboard data:', error);
+    }
 }
 
 function setupEventListeners() {
@@ -251,6 +352,53 @@ function loadMockData() {
         }
         allUsers[user.type + 's'].push(user);
     });
+}
+
+// Load pending approvals from backend
+async function loadPendingApprovalsFromBackend() {
+    try {
+        const idToken = localStorage.getItem('staff_idToken');
+        if (!idToken) {
+            // Load mock data if no token
+            pendingApprovals = [...mockData.pendingApprovals];
+            updatePendingCount();
+            return;
+        }
+        
+        // Load from backend
+        const response = await fetch('https://arcular-plus-backend.onrender.com/staff/api/stakeholders/pending', {
+            headers: { 'Authorization': `Bearer ${idToken}` }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            pendingApprovals = data;
+            updatePendingCount();
+        } else {
+            // Fallback to mock data
+            pendingApprovals = [...mockData.pendingApprovals];
+            updatePendingCount();
+        }
+    } catch (error) {
+        console.error('❌ Error loading pending approvals:', error);
+        // Fallback to mock data
+        pendingApprovals = [...mockData.pendingApprovals];
+        updatePendingCount();
+    }
+}
+
+// Update pending count in UI
+function updatePendingCount() {
+    const pendingCountElement = document.getElementById('pendingCount');
+    const pendingStatsElement = document.getElementById('pendingStats');
+    
+    if (pendingCountElement) {
+        pendingCountElement.textContent = pendingApprovals.length;
+    }
+    
+    if (pendingStatsElement) {
+        pendingStatsElement.textContent = pendingApprovals.length;
+    }
 }
 
 function switchTab(tabName) {
@@ -999,8 +1147,14 @@ function logout() {
         // Clear authentication data
         localStorage.removeItem('adminLoggedIn');
         localStorage.removeItem('adminEmail');
+        localStorage.removeItem('staff_idToken');
+        localStorage.removeItem('superadmin_idToken');
+        localStorage.removeItem('arcstaff_idToken');
         sessionStorage.removeItem('adminLoggedIn');
         sessionStorage.removeItem('adminEmail');
+        
+        // Sign out from Firebase
+        firebase.auth().signOut();
         
         // Show logout message
         showNotification('Logging out...', 'info');
@@ -1250,30 +1404,56 @@ function checkSession() {
 
 // --- ARC Staff Dashboard Logic ---
 function checkArcStaffSession() {
-  const idToken = localStorage.getItem('arcstaff_idToken');
+  const idToken = localStorage.getItem('staff_idToken');
   if (!idToken) {
-    window.location.href = 'arcstaff_login.html';
+    console.log('❌ No token found, checking Firebase auth state');
+    // Check if user is already authenticated with Firebase
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (!user) {
+        console.log('❌ No user authenticated, redirecting to login');
+        window.location.href = 'login.html';
+        return;
+      }
+    });
+    return;
   }
+  
+  console.log('✅ Token found, verifying with Firebase');
+  // Verify token with Firebase
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (!user) {
+      console.log('❌ Firebase user not found, clearing token and redirecting');
+      localStorage.removeItem('staff_idToken');
+      window.location.href = 'login.html';
+    } else {
+      console.log('✅ Firebase user verified, session valid');
+    }
+  });
 }
 
 function setupArcStaffLogout() {
-  const logoutBtn = document.getElementById('arcstaff-logout-btn');
+  const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
     logoutBtn.onclick = async function() {
-      await firebase.auth().signOut();
-      localStorage.removeItem('arcstaff_idToken');
-      window.location.href = 'arcstaff_login.html';
+      if (confirm('Are you sure you want to logout?')) {
+        await firebase.auth().signOut();
+        localStorage.removeItem('staff_idToken');
+        localStorage.removeItem('arcstaff_idToken');
+        window.location.href = 'login.html';
+      }
     };
   }
 }
 
 async function fetchAndRenderPendingStakeholders() {
-  const idToken = localStorage.getItem('arcstaff_idToken');
+  const idToken = localStorage.getItem('staff_idToken');
   if (!idToken) return;
   const tableBody = document.querySelector('#pending-table tbody');
+  if (!tableBody) return;
+  
   tableBody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
   try {
-    const res = await fetch('/api/stakeholders/pending', {
+    const res = await fetch('https://arcular-plus-backend.onrender.com/staff/api/stakeholders/pending', {
       headers: { 'Authorization': 'Bearer ' + idToken }
     });
     if (!res.ok) throw new Error('Failed to fetch pending stakeholders');
@@ -1316,10 +1496,10 @@ document.addEventListener('click', async function(e) {
 });
 
 async function handleApproveStakeholder(id) {
-  const idToken = localStorage.getItem('arcstaff_idToken');
+  const idToken = localStorage.getItem('staff_idToken');
   if (!idToken) return;
   try {
-    const res = await fetch(`/api/stakeholders/${id}/approve`, {
+    const res = await fetch(`https://arcular-plus-backend.onrender.com/staff/api/stakeholders/${id}/approve`, {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + idToken }
     });
@@ -1331,10 +1511,10 @@ async function handleApproveStakeholder(id) {
 }
 
 async function handleRejectStakeholder(id) {
-  const idToken = localStorage.getItem('arcstaff_idToken');
+  const idToken = localStorage.getItem('staff_idToken');
   if (!idToken) return;
   try {
-    const res = await fetch(`/api/stakeholders/${id}/reject`, {
+    const res = await fetch(`https://arcular-plus-backend.onrender.com/staff/api/stakeholders/${id}/reject`, {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + idToken }
     });

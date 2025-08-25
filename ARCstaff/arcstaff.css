@@ -3,21 +3,29 @@ body {
   font-family: 'Segoe UI', Arial, sans-serif;
   margin: 0;
   padding: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .arcstaff-dashboard-container {
   background: #fff;
   max-width: 900px;
-  margin: 60px auto;
+  width: 90%;
+  margin: 20px auto;
   padding: 32px 28px 24px 28px;
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1.5px 4px rgba(0,0,0,0.04);
+  transition: all 0.3s ease;
 }
 
 .arcstaff-dashboard-container h2 {
   margin-bottom: 24px;
   color: #1565c0;
   font-weight: 700;
+  text-align: center;
+  font-size: 2rem;
 }
 
 .arcstaff-dashboard-container label {
@@ -26,23 +34,27 @@ body {
   margin-bottom: 8px;
   color: #333;
   font-size: 15px;
+  font-weight: 500;
 }
 
 .arcstaff-dashboard-container input[type="email"],
 .arcstaff-dashboard-container input[type="password"] {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 16px;
   margin-bottom: 18px;
   border: 1px solid #cfd8dc;
   border-radius: 8px;
   font-size: 15px;
   background: #f9fafb;
-  transition: border 0.2s;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .arcstaff-dashboard-container input:focus {
   border: 1.5px solid #1565c0;
   outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
 }
 
 .arcstaff-dashboard-container button[type="submit"],
@@ -55,22 +67,35 @@ body {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
   margin-left: 8px;
+  min-width: 120px;
 }
 
 .arcstaff-dashboard-container button[type="submit"]:hover,
 .arcstaff-dashboard-container .logout-btn:hover {
   background: #003c8f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+}
+
+.arcstaff-dashboard-container button[type="submit"]:active,
+.arcstaff-dashboard-container .logout-btn:active {
+  transform: translateY(0);
 }
 
 #arcstaff-dashboard table {
   width: 100%;
   border-collapse: collapse;
+  margin-top: 20px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 #arcstaff-dashboard th, #arcstaff-dashboard td {
-  padding: 10px;
+  padding: 12px;
   border: 1px solid #e0e0e0;
   text-align: left;
 }
@@ -78,8 +103,545 @@ body {
 #arcstaff-dashboard th {
   background: #f0f4f8;
   color: #1565c0;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 #arcstaff-dashboard td {
   background: #fff;
+  font-size: 14px;
+}
+
+#arcstaff-dashboard tr:hover {
+  background: #f8f9fa;
+}
+
+/* Form Container */
+.form-container {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Button Container */
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* Loading State */
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #1565c0;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error Messages */
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border-left: 4px solid #c62828;
+}
+
+.success-message {
+  background: #e8f5e8;
+  color: #2e7d32;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border-left: 4px solid #2e7d32;
+}
+
+/* Responsive Design */
+@media (min-width: 1200px) {
+  .arcstaff-dashboard-container {
+    max-width: 1000px;
+    padding: 40px 36px 32px 36px;
+  }
+  
+  .arcstaff-dashboard-container h2 {
+    font-size: 2.2rem;
+  }
+  
+  .arcstaff-dashboard-container input[type="email"],
+  .arcstaff-dashboard-container input[type="password"] {
+    padding: 14px 18px;
+    font-size: 16px;
+  }
+  
+  .arcstaff-dashboard-container button[type="submit"],
+  .arcstaff-dashboard-container .logout-btn {
+    padding: 14px 28px;
+    font-size: 16px;
+  }
+  
+  .form-container {
+    max-width: 450px;
+  }
+}
+
+@media (max-width: 1199px) and (min-width: 992px) {
+  .arcstaff-dashboard-container {
+    max-width: 900px;
+    padding: 32px 28px 24px 28px;
+  }
+  
+  .arcstaff-dashboard-container h2 {
+    font-size: 1.9rem;
+  }
+  
+  .form-container {
+    max-width: 400px;
+  }
+}
+
+@media (max-width: 991px) and (min-width: 768px) {
+  .arcstaff-dashboard-container {
+    max-width: 700px;
+    width: 85%;
+    padding: 28px 24px 20px 24px;
+    margin: 15px auto;
+  }
+  
+  .arcstaff-dashboard-container h2 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  }
+  
+  .arcstaff-dashboard-container label {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  
+  .arcstaff-dashboard-container input[type="email"],
+  .arcstaff-dashboard-container input[type="password"] {
+    padding: 11px 14px;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  
+  .arcstaff-dashboard-container button[type="submit"],
+  .arcstaff-dashboard-container .logout-btn {
+    padding: 11px 22px;
+    font-size: 15px;
+    margin-left: 6px;
+  }
+  
+  .form-container {
+    max-width: 380px;
+  }
+  
+  .button-container {
+    gap: 10px;
+    margin-top: 18px;
+  }
+  
+  #arcstaff-dashboard th, #arcstaff-dashboard td {
+    padding: 10px;
+    font-size: 13px;
+  }
+  
+  #arcstaff-dashboard th {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 767px) and (min-width: 576px) {
+  body {
+    padding: 15px;
+  }
+  
+  .arcstaff-dashboard-container {
+    max-width: 100%;
+    width: 100%;
+    padding: 24px 20px 16px 20px;
+    margin: 10px auto;
+    border-radius: 12px;
+  }
+  
+  .arcstaff-dashboard-container h2 {
+    font-size: 1.6rem;
+    margin-bottom: 18px;
+  }
+  
+  .arcstaff-dashboard-container label {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  
+  .arcstaff-dashboard-container input[type="email"],
+  .arcstaff-dashboard-container input[type="password"] {
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    font-size: 14px;
+  }
+  
+  .arcstaff-dashboard-container button[type="submit"],
+  .arcstaff-dashboard-container .logout-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    margin-left: 0;
+    margin-top: 8px;
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .form-container {
+    max-width: 100%;
+  }
+  
+  .button-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  
+  #arcstaff-dashboard {
+    font-size: 12px;
+    overflow-x: auto;
+  }
+  
+  #arcstaff-dashboard th, #arcstaff-dashboard td {
+    padding: 8px 6px;
+    font-size: 12px;
+    min-width: 80px;
+  }
+  
+  #arcstaff-dashboard th {
+    font-size: 12px;
+  }
+  
+  .error-message,
+  .success-message {
+    padding: 10px;
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+}
+
+@media (max-width: 575px) {
+  body {
+    padding: 10px;
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+  
+  .arcstaff-dashboard-container {
+    max-width: 100%;
+    width: 100%;
+    padding: 20px 16px 12px 16px;
+    margin: 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+  
+  .arcstaff-dashboard-container h2 {
+    font-size: 1.4rem;
+    margin-bottom: 16px;
+  }
+  
+  .arcstaff-dashboard-container label {
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+  
+  .arcstaff-dashboard-container input[type="email"],
+  .arcstaff-dashboard-container input[type="password"] {
+    padding: 9px 10px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+  
+  .arcstaff-dashboard-container button[type="submit"],
+  .arcstaff-dashboard-container .logout-btn {
+    padding: 9px 18px;
+    font-size: 13px;
+    margin-left: 0;
+    margin-top: 6px;
+    width: 100%;
+    max-width: 180px;
+    border-radius: 6px;
+  }
+  
+  .form-container {
+    max-width: 100%;
+  }
+  
+  .button-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+  }
+  
+  #arcstaff-dashboard {
+    font-size: 11px;
+    overflow-x: auto;
+    margin-top: 16px;
+  }
+  
+  #arcstaff-dashboard th, #arcstaff-dashboard td {
+    padding: 6px 4px;
+    font-size: 11px;
+    min-width: 70px;
+  }
+  
+  #arcstaff-dashboard th {
+    font-size: 11px;
+  }
+  
+  .error-message,
+  .success-message {
+    padding: 8px;
+    font-size: 12px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+  }
+}
+
+@media (max-width: 375px) {
+  body {
+    padding: 8px;
+    padding-top: 15px;
+  }
+  
+  .arcstaff-dashboard-container {
+    padding: 16px 12px 10px 12px;
+    border-radius: 6px;
+  }
+  
+  .arcstaff-dashboard-container h2 {
+    font-size: 1.3rem;
+    margin-bottom: 14px;
+  }
+  
+  .arcstaff-dashboard-container label {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  
+  .arcstaff-dashboard-container input[type="email"],
+  .arcstaff-dashboard-container input[type="password"] {
+    padding: 8px 9px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    border-radius: 5px;
+  }
+  
+  .arcstaff-dashboard-container button[type="submit"],
+  .arcstaff-dashboard-container .logout-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+    margin-top: 5px;
+    max-width: 160px;
+    border-radius: 5px;
+  }
+  
+  .button-container {
+    gap: 5px;
+    margin-top: 12px;
+  }
+  
+  #arcstaff-dashboard {
+    font-size: 10px;
+    margin-top: 14px;
+  }
+  
+  #arcstaff-dashboard th, #arcstaff-dashboard td {
+    padding: 5px 3px;
+    font-size: 10px;
+    min-width: 60px;
+  }
+  
+  #arcstaff-dashboard th {
+    font-size: 10px;
+  }
+  
+  .error-message,
+  .success-message {
+    padding: 6px;
+    font-size: 11px;
+    margin-bottom: 10px;
+    border-radius: 3px;
+  }
+}
+
+/* Landscape Mobile Orientation */
+@media (max-width: 767px) and (orientation: landscape) {
+  body {
+    padding: 10px;
+    align-items: center;
+  }
+  
+  .arcstaff-dashboard-container {
+    margin: 5px auto;
+    padding: 20px 16px 12px 16px;
+  }
+  
+  .arcstaff-dashboard-container h2 {
+    font-size: 1.5rem;
+    margin-bottom: 14px;
+  }
+  
+  .arcstaff-dashboard-container input[type="email"],
+  .arcstaff-dashboard-container input[type="password"] {
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+  
+  .arcstaff-dashboard-container button[type="submit"],
+  .arcstaff-dashboard-container .logout-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    max-width: 150px;
+  }
+  
+  .button-container {
+    flex-direction: row;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+  }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .arcstaff-dashboard-container {
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+  
+  .arcstaff-dashboard-container input[type="email"],
+  .arcstaff-dashboard-container input[type="password"] {
+    border-width: 1px;
+  }
+  
+  .arcstaff-dashboard-container button[type="submit"],
+  .arcstaff-dashboard-container .logout-btn {
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: white !important;
+    align-items: flex-start;
+    padding: 0;
+  }
+  
+  .arcstaff-dashboard-container {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+  
+  .arcstaff-dashboard-container button[type="submit"],
+  .arcstaff-dashboard-container .logout-btn {
+    display: none !important;
+  }
+  
+  #arcstaff-dashboard {
+    border: 1px solid #000 !important;
+  }
+  
+  #arcstaff-dashboard th {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+  }
+  
+  #arcstaff-dashboard td {
+    color: #000 !important;
+  }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  .arcstaff-dashboard-container,
+  .arcstaff-dashboard-container button[type="submit"],
+  .arcstaff-dashboard-container .logout-btn {
+    transition: none;
+  }
+  
+  .loading::after {
+    animation: none;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #1a1a1a;
+  }
+  
+  .arcstaff-dashboard-container {
+    background: #2d2d2d;
+    color: #ffffff;
+  }
+  
+  .arcstaff-dashboard-container h2 {
+    color: #64b5f6;
+  }
+  
+  .arcstaff-dashboard-container label {
+    color: #e0e0e0;
+  }
+  
+  .arcstaff-dashboard-container input[type="email"],
+  .arcstaff-dashboard-container input[type="password"] {
+    background: #3d3d3d;
+    border-color: #555;
+    color: #ffffff;
+  }
+  
+  .arcstaff-dashboard-container input:focus {
+    border-color: #64b5f6;
+    background: #4d4d4d;
+  }
+  
+  #arcstaff-dashboard th {
+    background: #3d3d3d;
+    color: #64b5f6;
+  }
+  
+  #arcstaff-dashboard td {
+    background: #2d2d2d;
+    color: #e0e0e0;
+  }
+  
+  #arcstaff-dashboard tr:hover {
+    background: #3d3d3d;
+  }
 } 

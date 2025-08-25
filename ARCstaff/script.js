@@ -272,9 +272,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
-    // Load mock data
-    loadMockData();
-    
     // Set up event listeners
     setupEventListeners();
     
@@ -287,7 +284,6 @@ function initializeApp() {
     
     // Load initial data
     loadPendingApprovals();
-    loadAllUsers();
 }
 
 // Load dashboard data from backend
@@ -359,8 +355,7 @@ async function loadPendingApprovalsFromBackend() {
     try {
         const idToken = localStorage.getItem('staff_idToken');
         if (!idToken) {
-            // Load mock data if no token
-            pendingApprovals = [...mockData.pendingApprovals];
+            pendingApprovals = [];
             updatePendingCount();
             return;
         }
@@ -375,14 +370,14 @@ async function loadPendingApprovalsFromBackend() {
             pendingApprovals = data;
             updatePendingCount();
         } else {
-            // Fallback to mock data
-            pendingApprovals = [...mockData.pendingApprovals];
+            // Fallback to empty
+            pendingApprovals = [];
             updatePendingCount();
         }
     } catch (error) {
         console.error('❌ Error loading pending approvals:', error);
-        // Fallback to mock data
-        pendingApprovals = [...mockData.pendingApprovals];
+        // Fallback to empty
+        pendingApprovals = [];
         updatePendingCount();
     }
 }
@@ -535,7 +530,7 @@ function loadPendingApprovals() {
             <div class="approval-details">
                 <div class="detail-item">
                     <label>Name</label>
-                    <span>${approval.name}</span>
+                    <span>${approval.fullName || approval.name || '-'}</span>
                 </div>
                 <div class="detail-item">
                     <label>License/Registration</label>
@@ -547,7 +542,7 @@ function loadPendingApprovals() {
                 </div>
                 <div class="detail-item">
                     <label>Email</label>
-                    <span>${approval.email}</span>
+                    <span>${approval.email || '-'}</span>
                 </div>
                 ${approval.specialization ? `
                 <div class="detail-item">
@@ -569,13 +564,13 @@ function loadPendingApprovals() {
                 ` : ''}
             </div>
             <div class="approval-actions">
-                <button class="action-btn view-btn" onclick="viewDetails('${approval.id}')">
+                <button class="action-btn view-btn" onclick="viewDetails('${approval._id || approval.id}')">
                     <i class="fas fa-eye"></i> View Details
                 </button>
-                <button class="action-btn approve-btn" onclick="approveUser('${approval.id}')">
+                <button class="action-btn approve-btn" onclick="approveUser('${approval._id || approval.id}')">
                     <i class="fas fa-check"></i> Approve
                 </button>
-                <button class="action-btn reject-btn" onclick="rejectUser('${approval.id}')">
+                <button class="action-btn reject-btn" onclick="rejectUser('${approval._id || approval.id}')">
                     <i class="fas fa-times"></i> Reject
                 </button>
             </div>
@@ -606,7 +601,7 @@ function formatDate(dateString) {
 }
 
 function viewDetails(userId) {
-    const user = pendingApprovals.find(u => u.id === userId);
+    const user = pendingApprovals.find(u => (u._id || u.id) === userId);
     if (!user) return;
     
     const modal = document.getElementById('detailModal');
@@ -692,50 +687,45 @@ function closeModal() {
     document.getElementById('detailModal').style.display = 'none';
 }
 
-function approveUser(userId) {
-    const userIndex = pendingApprovals.findIndex(u => u.id === userId);
-    if (userIndex === -1) return;
-    
-    const user = pendingApprovals[userIndex];
-    user.status = 'approved';
-    user.approvedAt = new Date().toISOString();
-    
-    // Move to approved users
-    if (!allUsers[user.type + 's']) {
-        allUsers[user.type + 's'] = [];
+async function approveUser(userId) {
+    try {
+        const idToken = localStorage.getItem('staff_idToken');
+        if (!idToken) throw new Error('Not authenticated');
+        const res = await fetch(`https://arcular-plus-backend.onrender.com/staff/api/stakeholders/${userId}/approve`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${idToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to approve');
+        await loadPendingApprovalsFromBackend();
+        loadPendingApprovals();
+        updateDashboard();
+        closeModal();
+        showNotification('User approved successfully!', 'success');
+    } catch (e) {
+        console.error(e);
+        showNotification('Failed to approve', 'error');
     }
-    allUsers[user.type + 's'].push(user);
-    
-    // Remove from pending
-    pendingApprovals.splice(userIndex, 1);
-    
-    // Update UI
-    updateDashboard();
-    loadPendingApprovals();
-    closeModal();
-    
-    // Show success message
-    showNotification('User approved successfully!', 'success');
 }
 
-function rejectUser(userId) {
-    const userIndex = pendingApprovals.findIndex(u => u.id === userId);
-    if (userIndex === -1) return;
-    
-    const user = pendingApprovals[userIndex];
-    user.status = 'rejected';
-    user.rejectedAt = new Date().toISOString();
-    
-    // Remove from pending
-    pendingApprovals.splice(userIndex, 1);
-    
-    // Update UI
-    updateDashboard();
-    loadPendingApprovals();
-    closeModal();
-    
-    // Show success message
-    showNotification('User rejected successfully!', 'error');
+async function rejectUser(userId) {
+    try {
+        const idToken = localStorage.getItem('staff_idToken');
+        if (!idToken) throw new Error('Not authenticated');
+        const res = await fetch(`https://arcular-plus-backend.onrender.com/staff/api/stakeholders/${userId}/reject`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason: 'Rejected by staff' })
+        });
+        if (!res.ok) throw new Error('Failed to reject');
+        await loadPendingApprovalsFromBackend();
+        loadPendingApprovals();
+        updateDashboard();
+        closeModal();
+        showNotification('User rejected successfully!', 'error');
+    } catch (e) {
+        console.error(e);
+        showNotification('Failed to reject', 'error');
+    }
 }
 
 function loadHospitals() {

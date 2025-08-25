@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Debug Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        button { padding: 10px; margin: 5px; }
+        .result { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Staff Dashboard Debug Page</h1>
+    
+    <div class="section">
+        <h2>1. Check Staff Accounts</h2>
+        <button onclick="checkStaffAccounts()">Check Existing Staff</button>
+        <div id="staffAccounts" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Create Test Staff Account</h2>
+        <input type="email" id="staffEmail" placeholder="staff@example.com" value="staff1@gmail.com">
+        <input type="text" id="staffUid" placeholder="Firebase UID">
+        <input type="text" id="staffName" placeholder="Full Name" value="Test Staff">
+        <button onclick="createTestStaff()">Create Test Staff</button>
+        <div id="createResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Test Staff Verification</h2>
+        <button onclick="testStaffVerify()">Test Staff Verify</button>
+        <div id="verifyResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>4. Test Pending Stakeholders</h2>
+        <button onclick="testPendingStakeholders()">Test Pending Stakeholders</button>
+        <div id="pendingResult" class="result"></div>
+    </div>
+
+    <script>
+        const BASE_URL = 'https://arcular-plus-backend.onrender.com';
+
+        async function checkStaffAccounts() {
+            try {
+                const response = await fetch(`${BASE_URL}/staff/api/staff/test`);
+                const data = await response.json();
+                document.getElementById('staffAccounts').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('staffAccounts').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function createTestStaff() {
+            const email = document.getElementById('staffEmail').value;
+            const uid = document.getElementById('staffUid').value;
+            const name = document.getElementById('staffName').value;
+
+            if (!email || !uid) {
+                alert('Please fill email and UID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/staff/api/staff/create-test`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, uid, fullName: name })
+                });
+                const data = await response.json();
+                document.getElementById('createResult').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('createResult').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testStaffVerify() {
+            const email = document.getElementById('staffEmail').value;
+            const uid = document.getElementById('staffUid').value;
+
+            if (!email || !uid) {
+                alert('Please fill email and UID first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/staff/api/staff/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, uid })
+                });
+                const data = await response.json();
+                document.getElementById('verifyResult').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('verifyResult').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testPendingStakeholders() {
+            try {
+                const response = await fetch(`${BASE_URL}/staff/api/stakeholders/pending`);
+                const data = await response.json();
+                document.getElementById('pendingResult').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('pendingResult').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

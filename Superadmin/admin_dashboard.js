@@ -532,6 +532,144 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('Failed to load stats:', error);
     }
   }
+
+  // Load pending profile changes from staff
+  async function loadPendingProfileChanges(token) {
+    try {
+      console.log('Loading pending profile changes...');
+      
+      const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile-changes`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Pending profile changes loaded:', data);
+        renderPendingProfileChanges(data.pendingChanges || []);
+      } else {
+        console.error('Failed to load pending profile changes:', response.status);
+        renderPendingProfileChanges([]);
+      }
+    } catch (error) {
+      console.error('Error loading pending profile changes:', error);
+      renderPendingProfileChanges([]);
+    }
+  }
+
+  // Render pending profile changes in the UI
+  function renderPendingProfileChanges(changes) {
+    const changesContainer = document.querySelector('.changes-list');
+    if (!changesContainer) return;
+
+    if (changes.length === 0) {
+      changesContainer.innerHTML = `
+        <div class="no-changes">
+          <p>No pending profile changes at the moment.</p>
+        </div>
+      `;
+      return;
+    }
+
+    changesContainer.innerHTML = changes.map(change => `
+      <div class="change-item" data-change-id="${change._id}">
+        <div class="change-info">
+          <div class="change-staff-name">${change.staffName}</div>
+          <div class="change-details">
+            <strong>Field:</strong> ${change.fieldName}<br>
+            <strong>Old Value:</strong> ${change.oldValue || 'N/A'}<br>
+            <strong>New Value:</strong> ${change.newValue || 'N/A'}<br>
+            <strong>Reason:</strong> ${change.reason || 'No reason provided'}
+          </div>
+          <div class="change-submitted">
+            Submitted: ${new Date(change.submittedAt).toLocaleDateString()}
+          </div>
+        </div>
+        <div class="change-actions">
+          <button class="change-approve-btn" onclick="handleApproveProfileChange('${change._id}')">
+            Approve
+          </button>
+          <button class="change-reject-btn" onclick="handleRejectProfileChange('${change._id}')">
+            Reject
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Handle approving a profile change
+  async function handleApproveProfileChange(changeId) {
+    try {
+      const token = await firebase.auth().currentUser.getIdToken();
+      if (!token) {
+        showErrorMessage('Authentication required');
+        return;
+      }
+
+      const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile-changes/${changeId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        showSuccessMessage('Profile change approved successfully');
+        // Refresh the pending changes list
+        await loadPendingProfileChanges(token);
+        // Also refresh staff list to show updated information
+        await fetchAndRenderStaffList(token);
+      } else {
+        const errorData = await response.json();
+        showErrorMessage(`Failed to approve: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error approving profile change:', error);
+      showErrorMessage('Failed to approve profile change');
+    }
+  }
+
+  // Handle rejecting a profile change
+  async function handleRejectProfileChange(changeId) {
+    try {
+      const token = await firebase.auth().currentUser.getIdToken();
+      if (!token) {
+        showErrorMessage('Authentication required');
+        return;
+      }
+
+      const reason = prompt('Please provide a reason for rejection:');
+      if (!reason) {
+        showErrorMessage('Rejection reason is required');
+        return;
+      }
+
+      const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile-changes/${changeId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason })
+      });
+
+      if (response.ok) {
+        showSuccessMessage('Profile change rejected successfully');
+        // Refresh the pending changes list
+        await loadPendingProfileChanges(token);
+      } else {
+        const errorData = await response.json();
+        showErrorMessage(`Failed to reject: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error rejecting profile change:', error);
+      showErrorMessage('Failed to reject profile change');
+    }
+  }
 });
 
 // Global functions for onclick handlers

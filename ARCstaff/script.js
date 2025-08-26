@@ -1664,80 +1664,38 @@ async function fetchPendingStakeholders() {
   try {
     const idToken = localStorage.getItem('staff_idToken');
     
-    // Try to fetch from backend first
-    try {
-      const response = await fetch('https://arcular-plus-backend.onrender.com/staff/api/stakeholders/pending', {
-        headers: {
-          'Authorization': `Bearer ${idToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
+    const response = await fetch('https://arcular-plus-backend.onrender.com/staff/api/stakeholders/pending', {
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      const stakeholders = result.data || [];
+      console.log('📊 Fetched pending stakeholders from backend:', stakeholders);
       
-      if (response.ok) {
-        const stakeholders = await response.json();
-        console.log('📊 Fetched pending stakeholders from backend:', stakeholders);
-        
-        // Update stats
-        updateDashboardStats(stakeholders);
-        
-        // Render pending approvals list
-        renderPendingApprovals(stakeholders);
-        return;
-      }
-    } catch (backendError) {
-      console.log('⚠️ Backend fetch failed, using fallback data:', backendError.message);
+      // Update stats
+      updateDashboardStats(stakeholders);
+      
+      // Render pending approvals list
+      renderPendingApprovals(stakeholders);
+    } else {
+      console.error('❌ Failed to fetch pending stakeholders:', response.status);
+      showErrorMessage('Failed to load pending approvals. Please try again.');
+      
+      // Show empty state
+      updateDashboardStats([]);
+      renderPendingApprovals([]);
     }
-    
-    // Fallback to mock data if backend fails
-    const fallbackData = [
-      {
-        _id: '1',
-        type: 'hospital',
-        name: 'City General Hospital',
-        email: 'admin@cityhospital.com',
-        submittedAt: new Date().toISOString()
-      },
-      {
-        _id: '2',
-        type: 'doctor',
-        name: 'Dr. Sarah Johnson',
-        email: 'sarah.johnson@email.com',
-        submittedAt: new Date().toISOString()
-      },
-      {
-        _id: '3',
-        type: 'nurse',
-        name: 'Nurse Maria Garcia',
-        email: 'maria.garcia@email.com',
-        submittedAt: new Date().toISOString()
-      },
-      {
-        _id: '4',
-        type: 'lab',
-        name: 'Advanced Diagnostics Lab',
-        email: 'admin@advancedlab.com',
-        submittedAt: new Date().toISOString()
-      },
-      {
-        _id: '5',
-        type: 'pharmacy',
-        name: 'MedCare Pharmacy',
-        email: 'admin@medcarepharmacy.com',
-        submittedAt: new Date().toISOString()
-      }
-    ];
-    
-    console.log('📊 Using fallback data:', fallbackData);
-    
-    // Update stats
-    updateDashboardStats(fallbackData);
-    
-    // Render pending approvals list
-    renderPendingApprovals(fallbackData);
-    
   } catch (error) {
     console.error('❌ Error in fetchPendingStakeholders:', error);
-    showErrorMessage('Failed to load dashboard data: ' + error.message);
+    showErrorMessage('Network error loading dashboard data. Please check your connection.');
+    
+    // Show empty state
+    updateDashboardStats([]);
+    renderPendingApprovals([]);
   }
 }
 
@@ -1752,8 +1710,10 @@ function updateDashboardStats(stakeholders) {
   };
   
   stakeholders.forEach(stakeholder => {
-    if (stakeholder.type && stats.hasOwnProperty(stakeholder.type)) {
-      stats[stakeholder.type]++;
+    // Handle both 'type' and 'userType' fields from backend
+    const userType = stakeholder.userType || stakeholder.type;
+    if (userType && stats.hasOwnProperty(userType)) {
+      stats[userType]++;
     }
   });
   
@@ -1778,27 +1738,77 @@ function renderPendingApprovals(stakeholders) {
   if (!container) return;
   
   if (stakeholders.length === 0) {
-    container.innerHTML = '<div class="no-data">No pending approvals</div>';
+    container.innerHTML = '<div class="no-data">No pending approvals at the moment</div>';
     return;
   }
   
-  const approvalsHTML = stakeholders.slice(0, 5).map(stakeholder => `
-    <div class="approval-item">
-      <div class="approval-info">
-        <h4>${stakeholder.name || stakeholder.fullName || 'Unknown'}</h4>
-        <p><strong>Type:</strong> ${stakeholder.type}</p>
-        <p><strong>Email:</strong> ${stakeholder.email}</p>
-        <p><strong>Submitted:</strong> ${new Date(stakeholder.submittedAt).toLocaleDateString()}</p>
+  const approvalsHTML = stakeholders.slice(0, 5).map(stakeholder => {
+    // Handle both 'type' and 'userType' fields from backend
+    const userType = stakeholder.userType || stakeholder.type;
+    const displayName = stakeholder.fullName || stakeholder.name || stakeholder.hospitalName || stakeholder.doctorName || 'Unknown';
+    const email = stakeholder.email || 'N/A';
+    const submittedDate = stakeholder.createdAt || stakeholder.submittedAt || new Date();
+    
+    return `
+      <div class="approval-item">
+        <div class="approval-info">
+          <h4>${displayName}</h4>
+          <p><strong>Type:</strong> ${userType.charAt(0).toUpperCase() + userType.slice(1)}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Submitted:</strong> ${new Date(submittedDate).toLocaleDateString()}</p>
+        </div>
+        <div class="approval-actions">
+          <button class="btn btn-success btn-sm" onclick="viewStakeholderDetails('${stakeholder._id}', '${userType}')">
+            <i class="fas fa-eye"></i> View Details
+          </button>
+        </div>
       </div>
-      <div class="approval-actions">
-        <button class="btn btn-success btn-sm" onclick="viewStakeholderDetails('${stakeholder._id}', '${stakeholder.type}')">
-          <i class="fas fa-eye"></i> View Details
-        </button>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
   
   container.innerHTML = approvalsHTML;
+}
+
+// Show all pending approvals in a modal
+function showAllPendingApprovals() {
+  const modal = document.getElementById('approvalModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalContent = document.getElementById('modalContent');
+  
+  if (!modal || !modalTitle || !modalContent) return;
+  
+  modalTitle.textContent = 'All Pending Approvals';
+  
+  // Get current pending stakeholders data
+  const container = document.getElementById('pendingApprovalsList');
+  if (!container) return;
+  
+  const approvalItems = container.querySelectorAll('.approval-item');
+  if (approvalItems.length === 0) {
+    modalContent.innerHTML = '<div class="no-data">No pending approvals to display</div>';
+  } else {
+    const allApprovalsHTML = Array.from(approvalItems).map(item => {
+      const name = item.querySelector('h4').textContent;
+      const type = item.querySelector('p:nth-child(2)').textContent.replace('Type: ', '');
+      const email = item.querySelector('p:nth-child(3)').textContent.replace('Email: ', '');
+      const submitted = item.querySelector('p:nth-child(4)').textContent.replace('Submitted: ', '');
+      
+      return `
+        <div class="approval-item-full">
+          <div class="approval-info">
+            <h4>${name}</h4>
+            <p><strong>Type:</strong> ${type}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Submitted:</strong> ${submitted}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    modalContent.innerHTML = allApprovalsHTML;
+  }
+  
+  modal.style.display = 'block';
 }
 
 // Setup dashboard event listeners
@@ -1828,8 +1838,7 @@ function setupDashboardEventListeners() {
   const viewAllBtn = document.getElementById('viewAllBtn');
   if (viewAllBtn) {
     viewAllBtn.addEventListener('click', () => {
-      // TODO: Implement view all functionality
-      showSuccessMessage('View all functionality coming soon!');
+      showAllPendingApprovals();
     });
   }
   

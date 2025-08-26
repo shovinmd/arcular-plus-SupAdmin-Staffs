@@ -63,26 +63,51 @@ function managePlatformSettings() {
   showSuccessMessage('Platform settings management will be available in the next update.');
 }
 
+// Show success message
 function showSuccessMessage(message) {
-  // Create a temporary success message
-  const messageDiv = document.createElement('div');
-  messageDiv.style.cssText = `
+  const successDiv = document.createElement('div');
+  successDiv.className = 'success-message';
+  successDiv.textContent = message;
+  successDiv.style.cssText = `
     position: fixed;
     top: 20px;
     right: 20px;
-    background: #10b981;
+    background: #4CAF50;
     color: white;
-    padding: 15px 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 10000;
-    font-weight: 500;
+    padding: 15px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   `;
-  messageDiv.textContent = message;
-  document.body.appendChild(messageDiv);
+  
+  document.body.appendChild(successDiv);
   
   setTimeout(() => {
-    messageDiv.remove();
+    successDiv.remove();
+  }, 3000);
+}
+
+// Show error message
+function showErrorMessage(message) {
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'error-message';
+  errorDiv.textContent = message;
+  errorDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #f44336;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  `;
+  
+  document.body.appendChild(errorDiv);
+  
+  setTimeout(() => {
+    errorDiv.remove();
   }, 3000);
 }
 

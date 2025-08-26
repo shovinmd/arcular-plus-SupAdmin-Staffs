@@ -9,7 +9,20 @@
   <link rel="icon" type="image/png" href="logo1.png">
 </head>
 <body>
-  <div class="superadmin-dashboard-container">
+  <!-- Loading State -->
+  <div id="loadingState" class="loading-state">
+    <div class="loading-spinner">
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+    </div>
+    <p>Loading your admin dashboard...</p>
+    <div class="loading-progress">
+      <div class="progress-bar"></div>
+    </div>
+  </div>
+
+  <div class="superadmin-dashboard-container" id="dashboardContent" style="display: none;">
     <header>
       <div class="header-left">
         <img src="logo1.png" alt="Arcular+ Logo" style="height: 40px; margin-right: 15px;">

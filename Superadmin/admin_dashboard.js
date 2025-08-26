@@ -1,5 +1,27 @@
 // --- Admin Dashboard Logic ---
+
+// Loading state management functions
+function showLoadingState() {
+  const loadingState = document.getElementById('loadingState');
+  const dashboardContent = document.getElementById('dashboardContent');
+  if (loadingState) loadingState.style.display = 'flex';
+  if (dashboardContent) dashboardContent.style.display = 'none';
+}
+
+function hideLoadingState() {
+  const loadingState = document.getElementById('loadingState');
+  if (loadingState) loadingState.style.display = 'none';
+}
+
+function showDashboardContent() {
+  const dashboardContent = document.getElementById('dashboardContent');
+  if (dashboardContent) dashboardContent.style.display = 'block';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+  // Show loading state initially
+  showLoadingState();
+  
   // Initialize Firebase with Arcular+ config
   const firebaseConfig = {
     apiKey: "AIzaSyBzK4SQ44cv6k8EiNF9B2agNASArWQrstk",
@@ -32,6 +54,13 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
+    // Add timeout to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+      console.log('⚠️ Loading timeout reached, showing dashboard anyway');
+      hideLoadingState();
+      showDashboardContent();
+    }, 15000); // 15 seconds timeout
+    
     try {
       // Get fresh ID token
       const freshToken = await user.getIdToken();
@@ -44,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!profileRes.ok || profileRes.status === 404) {
         // No admin profile, redirect to profile page
         console.log('No admin profile found, redirecting to profile page...');
+        clearTimeout(loadingTimeout);
         window.location.href = 'admin_profile.html';
         return;
       }
@@ -52,11 +82,13 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!profileData.data || !profileData.data.profileComplete) {
         // Profile incomplete, redirect to profile page
         console.log('Profile incomplete, redirecting to profile page...');
+        clearTimeout(loadingTimeout);
         window.location.href = 'admin_profile.html';
         return;
       }
       
       // User is authenticated and profile is complete, show dashboard
+      clearTimeout(loadingTimeout);
       setupDashboard();
       setupStaffManagementUI();
       setupLogout();
@@ -65,6 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
     } catch (error) {
       console.error('Authorization error:', error);
+      clearTimeout(loadingTimeout);
       // User not authorized, redirect to login
       await firebase.auth().signOut();
       localStorage.removeItem('superadmin_idToken');
@@ -79,6 +112,11 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('admin-name').textContent = user.displayName || user.email;
       document.getElementById('welcome-admin-name').textContent = user.displayName || user.email.split('@')[0];
     }
+    
+    // Hide loading and show dashboard content
+    hideLoadingState();
+    showDashboardContent();
+    console.log('✅ Admin dashboard loaded successfully');
   }
 
   // Setup logout

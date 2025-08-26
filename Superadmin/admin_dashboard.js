@@ -587,7 +587,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Render pending profile changes in the UI
   function renderPendingProfileChanges(changes) {
-    const changesContainer = document.querySelector('.changes-list');
+    const changesContainer = document.getElementById('pending-changes-list');
     if (!changesContainer) return;
 
     if (changes.length === 0) {
@@ -696,6 +696,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 });
+
 
 // Global functions for onclick handlers
 window.editStaff = async function(firebaseUid) {

@@ -2450,8 +2450,118 @@ function generateReportType(type) {
 }
 
 function editStaffProfile() {
-  showSuccessMessage('Profile editing will be available in the next update. Changes will require admin approval.');
   closeQuickActionModal();
+  
+  // Get current staff profile data
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    showErrorMessage('User not authenticated');
+    return;
+  }
+  
+  // Show profile editing modal
+  const profileModal = document.createElement('div');
+  profileModal.className = 'modal';
+  profileModal.id = 'profileEditModal';
+  
+  profileModal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Profile</h3>
+        <span class="close" onclick="closeProfileEditModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="profileEditForm">
+          <div class="form-group">
+            <label for="edit-fullName">Full Name</label>
+            <input type="text" id="edit-fullName" value="${currentUser?.data?.fullName || ''}" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-phone">Phone Number</label>
+            <input type="tel" id="edit-phone" value="${currentUser?.data?.mobileNumber || ''}" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-department">Department</label>
+            <input type="text" id="edit-department" value="${currentUser?.data?.department || ''}" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-designation">Designation</label>
+            <input type="text" id="edit-designation" value="${currentUser?.data?.designation || ''}" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-address">Address</label>
+            <textarea id="edit-address" rows="3">${currentUser?.data?.address || ''}</textarea>
+          </div>
+          <div class="approval-notice">
+            <i class="fas fa-info-circle"></i>
+            <p>Profile changes will be submitted for admin approval. You will be notified once approved.</p>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeProfileEditModal()" class="btn btn-secondary">Cancel</button>
+        <button type="button" onclick="submitProfileChanges()" class="btn btn-primary">Submit Changes</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(profileModal);
+  profileModal.style.display = 'block';
+}
+
+function closeProfileEditModal() {
+  const modal = document.getElementById('profileEditModal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+async function submitProfileChanges() {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      showErrorMessage('User not authenticated');
+      return;
+    }
+    
+    const idToken = localStorage.getItem('staff_idToken');
+    if (!idToken) {
+      showErrorMessage('Authentication token not found');
+      return;
+    }
+    
+    const profileData = {
+      fullName: document.getElementById('edit-fullName').value,
+      mobileNumber: document.getElementById('edit-phone').value,
+      department: document.getElementById('edit-department').value,
+      designation: document.getElementById('edit-designation').value,
+      address: document.getElementById('edit-address').value,
+      requiresApproval: true,
+      submittedAt: new Date().toISOString()
+    };
+    
+    // Submit profile changes for approval
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/staff/api/staff/profile-changes`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(profileData)
+    });
+    
+    if (response.ok) {
+      showSuccessMessage('Profile changes submitted for admin approval. You will be notified once approved.');
+      closeProfileEditModal();
+    } else {
+      const error = await response.json();
+      showErrorMessage(error.message || 'Failed to submit profile changes');
+    }
+    
+  } catch (error) {
+    console.error('Error submitting profile changes:', error);
+    showErrorMessage('Failed to submit profile changes. Please try again.');
+  }
 }
 
 // Enhanced stakeholder details modal

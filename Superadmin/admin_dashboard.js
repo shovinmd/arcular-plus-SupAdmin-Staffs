@@ -18,6 +18,74 @@ function showDashboardContent() {
   if (dashboardContent) dashboardContent.style.display = 'block';
 }
 
+// Enhanced dashboard functions
+function updateCurrentDateTime() {
+  const dateTimeElement = document.getElementById('current-date-time');
+  if (dateTimeElement) {
+    const now = new Date();
+    const options = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    dateTimeElement.textContent = now.toLocaleDateString('en-US', options);
+  }
+}
+
+function openCreateStaffModal() {
+  document.getElementById('staff-modal').style.display = 'block';
+  document.getElementById('staff-modal-title').textContent = 'Add New Staff';
+  document.getElementById('staff-form').reset();
+  document.getElementById('staff-firebaseUid').value = '';
+  document.getElementById('password-group').style.display = 'block';
+}
+
+function viewSystemStatus() {
+  showSuccessMessage('System status monitoring will be available in the next update.');
+}
+
+function exportStaffData() {
+  showSuccessMessage('Staff data export will be available in the next update.');
+}
+
+function generateStaffReport() {
+  showSuccessMessage('Staff report generation will be available in the next update.');
+}
+
+function viewSystemAnalytics() {
+  showSuccessMessage('System analytics dashboard will be available in the next update.');
+}
+
+function managePlatformSettings() {
+  showSuccessMessage('Platform settings management will be available in the next update.');
+}
+
+function showSuccessMessage(message) {
+  // Create a temporary success message
+  const messageDiv = document.createElement('div');
+  messageDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #10b981;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    font-weight: 500;
+  `;
+  messageDiv.textContent = message;
+  document.body.appendChild(messageDiv);
+  
+  setTimeout(() => {
+    messageDiv.remove();
+  }, 3000);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   // Show loading state initially
   showLoadingState();
@@ -94,6 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
       setupLogout();
       await fetchAndRenderStaffList(freshToken);
       await loadDashboardStats(freshToken);
+      await loadPendingProfileChanges(freshToken);
       
     } catch (error) {
       console.error('Authorization error:', error);
@@ -111,12 +180,47 @@ document.addEventListener('DOMContentLoaded', function() {
     if (user) {
       document.getElementById('admin-name').textContent = user.displayName || user.email;
       document.getElementById('welcome-admin-name').textContent = user.displayName || user.email.split('@')[0];
+      document.getElementById('admin-email').textContent = user.email;
     }
+    
+    // Update current date/time
+    updateCurrentDateTime();
+    
+    // Setup refresh functionality
+    setupRefreshButton();
     
     // Hide loading and show dashboard content
     hideLoadingState();
     showDashboardContent();
     console.log('✅ Admin dashboard loaded successfully');
+  }
+
+  // Setup refresh button functionality
+  function setupRefreshButton() {
+    const refreshBtn = document.getElementById('refresh-dashboard');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async function() {
+        try {
+          refreshBtn.style.transform = 'rotate(360deg)';
+          refreshBtn.style.transition = 'transform 0.5s ease';
+          
+          // Refresh dashboard data
+          const freshToken = await firebase.auth().currentUser.getIdToken();
+          await fetchAndRenderStaffList(freshToken);
+          await loadDashboardStats(freshToken);
+          updateCurrentDateTime();
+          
+          showSuccessMessage('Dashboard refreshed successfully!');
+          
+          setTimeout(() => {
+            refreshBtn.style.transform = 'rotate(0deg)';
+          }, 500);
+        } catch (error) {
+          console.error('Refresh error:', error);
+          showSuccessMessage('Failed to refresh dashboard');
+        }
+      });
+    }
   }
 
   // Setup logout
@@ -139,6 +243,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelBtn = document.getElementById('cancel-staff-btn');
     const staffForm = document.getElementById('staff-form');
     const modal = document.getElementById('staff-modal');
+
+    // Setup search functionality
+    setupStaffSearch();
 
     // Open modal
     openModalBtn.addEventListener('click', function() {
@@ -416,6 +523,10 @@ document.addEventListener('DOMContentLoaded', function() {
           staffList.filter(staff => staff.status === 'active').length || 0;
         document.getElementById('pending-approvals-count').textContent = 
           staffList.filter(staff => staff.status === 'pending').length || 0;
+        
+        // Calculate unique departments
+        const departments = [...new Set(staffList.map(staff => staff.department).filter(Boolean))];
+        document.getElementById('total-departments').textContent = departments.length || 0;
       }
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -431,3 +542,28 @@ window.editStaff = async function(firebaseUid) {
 window.deleteStaff = async function(firebaseUid) {
   // This will be handled by the event listener setup
 };
+
+// Staff search functionality
+function setupStaffSearch() {
+  const searchInput = document.getElementById('staff-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const tableRows = document.querySelectorAll('#staff-table tbody tr');
+      
+      tableRows.forEach(row => {
+        const name = row.cells[0]?.textContent?.toLowerCase() || '';
+        const email = row.cells[1]?.textContent?.toLowerCase() || '';
+        const role = row.cells[2]?.textContent?.toLowerCase() || '';
+        const department = row.cells[3]?.textContent?.toLowerCase() || '';
+        
+        if (name.includes(searchTerm) || email.includes(searchTerm) || 
+            role.includes(searchTerm) || department.includes(searchTerm)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+  }
+}

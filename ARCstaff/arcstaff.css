@@ -1078,6 +1078,69 @@ body {
     padding: 25px;
 }
 
+/* Profile Edit Modal */
+#profileEditModal .modal-content {
+    max-width: 600px;
+}
+
+#profileEditModal .form-group {
+    margin-bottom: 20px;
+}
+
+#profileEditModal .form-group label {
+    display: block;
+    color: #1e293b;
+    font-weight: 500;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+#profileEditModal .form-group input,
+#profileEditModal .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+#profileEditModal .form-group input:focus,
+#profileEditModal .form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#profileEditModal .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.approval-notice {
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #93c5fd;
+    margin-top: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.approval-notice i {
+    color: #3b82f6;
+    margin-top: 2px;
+}
+
+.approval-notice p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
 .document-item a {
     color: #667eea;
     text-decoration: none;

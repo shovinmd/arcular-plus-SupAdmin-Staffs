@@ -676,6 +676,123 @@ body {
     font-size: 14px;
 }
 
+/* Pending Profile Changes Section */
+.pending-changes-section {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+}
+
+.changes-container {
+    margin-top: 20px;
+}
+
+.changes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.change-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.change-item:hover {
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.change-info {
+    flex: 1;
+}
+
+.change-staff-name {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.change-details {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.change-submitted {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.change-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.change-approve-btn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.change-approve-btn:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.change-reject-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.change-reject-btn:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.no-changes {
+    text-align: center;
+    padding: 40px 20px;
+    color: #64748b;
+}
+
+.no-changes i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.no-changes h4 {
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: #1e293b;
+}
+
+.no-changes p {
+    font-size: 14px;
+}
+
 .section-header {
     display: flex;
     justify-content: space-between;

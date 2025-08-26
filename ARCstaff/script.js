@@ -2695,8 +2695,37 @@ async function handleDocumentRequest(stakeholderId) {
     document.getElementById('deadline').value = '';
     document.getElementById('requestNotes').value = '';
     
-    // TODO: Send request to backend
-    
+    // Send document request to backend
+    try {
+      const idToken = localStorage.getItem('staff_idToken');
+      const response = await fetch(`https://arcular-plus-backend.onrender.com/staff/api/stakeholders/${stakeholderId}/request-documents`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          requiredDocuments: requiredDocuments,
+          deadline: deadline,
+          notes: notes
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        showSuccessMessage('Document request sent successfully');
+        closeDocumentRequestModal();
+        
+        // Refresh the pending approvals list
+        await fetchPendingStakeholders();
+      } else {
+        const errorData = await response.json();
+        showErrorMessage(`Failed to send document request: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('❌ Document request error:', error);
+      showErrorMessage('Failed to send document request. Please try again.');
+    }
   } catch (error) {
     console.error('❌ Document request error:', error);
     showErrorMessage('Failed to send document request: ' + error.message);

@@ -11,6 +11,9 @@ let allUsers = {
     pharmacies: []
 };
 
+// Backend API configuration
+const API_BASE_URL = 'https://arcular-plus-backend.onrender.com/api';
+
 // Firebase configuration for Arcular+ project
 const firebaseConfig = {
     apiKey: "AIzaSyBzK4SQ44cv6k8EiNF9B2agNASArWQrstk",
@@ -28,94 +31,151 @@ if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     console.warn('Firebase SDK not loaded');
 }
 
-// Mock data for demonstration
-const mockData = {
-    pendingApprovals: [
-        {
-            id: '1',
-            type: 'hospital',
-            name: 'City General Hospital',
-            registrationNumber: 'HOSP001',
-            contact: '+91-9876543210',
-            email: 'admin@cityhospital.com',
-            address: '123 Medical Street, City Center',
-            submittedAt: '2024-01-15T10:30:00',
-            documents: ['license.pdf', 'certificate.pdf'],
-            status: 'pending'
-        },
-        {
-            id: '2',
-            type: 'doctor',
-            name: 'Dr. Sarah Johnson',
-            licenseNumber: 'DOC001',
-            specialization: 'Cardiology',
-            contact: '+91-9876543211',
-            email: 'sarah.johnson@email.com',
-            experience: '15 years',
-            submittedAt: '2024-01-15T11:45:00',
-            documents: ['medical_license.pdf', 'certificate.pdf'],
-            status: 'pending'
-        },
-        {
-            id: '3',
-            type: 'nurse',
-            name: 'Nurse Maria Garcia',
-            licenseNumber: 'NUR001',
-            department: 'Emergency Care',
-            contact: '+91-9876543212',
-            email: 'maria.garcia@email.com',
-            experience: '8 years',
-            submittedAt: '2024-01-15T12:15:00',
-            documents: ['nursing_license.pdf', 'certificate.pdf'],
-            status: 'pending'
-        },
-        {
-            id: '4',
-            type: 'lab',
-            name: 'Advanced Diagnostics Lab',
-            licenseNumber: 'LAB001',
-            contact: '+91-9876543213',
-            email: 'admin@advancedlab.com',
-            address: '456 Lab Street, Medical District',
-            submittedAt: '2024-01-15T13:20:00',
-            documents: ['lab_license.pdf', 'certificate.pdf'],
-            status: 'pending'
-        },
-        {
-            id: '5',
-            type: 'pharmacy',
-            name: 'MedCare Pharmacy',
-            licenseNumber: 'PHAR001',
-            contact: '+91-9876543214',
-            email: 'admin@medcarepharmacy.com',
-            address: '789 Pharmacy Lane, Health Zone',
-            submittedAt: '2024-01-15T14:30:00',
-            documents: ['pharmacy_license.pdf', 'certificate.pdf'],
-            status: 'pending'
+// API Functions for real backend integration
+async function fetchPendingApprovals() {
+    try {
+        const token = await getAuthToken();
+        
+        // Fetch all pending approvals from different service providers
+        const [hospitals, doctors, nurses, labs, pharmacies] = await Promise.all([
+            fetch(`${API_BASE_URL}/hospitals/pending-approvals`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(res => res.json()).catch(() => ({ success: false, data: [] })),
+            
+            fetch(`${API_BASE_URL}/doctors/pending-approvals`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(res => res.json()).catch(() => ({ success: false, data: [] })),
+            
+            fetch(`${API_BASE_URL}/nurses/pending-approvals`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(res => res.json()).catch(() => ({ success: false, data: [] })),
+            
+            fetch(`${API_BASE_URL}/labs/pending-approvals`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(res => res.json()).catch(() => ({ success: false, data: [] })),
+            
+            fetch(`${API_BASE_URL}/pharmacies/pending-approvals`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(res => res.json()).catch(() => ({ success: false, data: [] }))
+        ]);
+
+        // Process and combine all pending approvals
+        const allPending = [];
+        
+        if (hospitals.success && hospitals.data) {
+            allPending.push(...hospitals.data.map(h => ({ ...h, type: 'hospital' })));
         }
-    ],
-    approvedUsers: [
-        {
-            id: '6',
-            type: 'hospital',
-            name: 'Metro Medical Center',
-            registrationNumber: 'HOSP002',
-            contact: '+91-9876543215',
-            status: 'approved',
-            approvedAt: '2024-01-14T09:00:00'
-        },
-        {
-            id: '7',
-            type: 'doctor',
-            name: 'Dr. Michael Chen',
-            licenseNumber: 'DOC002',
-            specialization: 'Neurology',
-            contact: '+91-9876543216',
-            status: 'approved',
-            approvedAt: '2024-01-14T10:30:00'
+        if (doctors.success && doctors.data) {
+            allPending.push(...doctors.data.map(d => ({ ...d, type: 'doctor' })));
         }
-    ]
-};
+        if (nurses.success && nurses.data) {
+            allPending.push(...nurses.data.map(n => ({ ...n, type: 'nurse' })));
+        }
+        if (labs.success && labs.data) {
+            allPending.push(...labs.data.map(l => ({ ...l, type: 'lab' })));
+        }
+        if (pharmacies.success && pharmacies.data) {
+            allPending.push(...pharmacies.data.map(p => ({ ...p, type: 'pharmacy' })));
+        }
+
+        return allPending;
+    } catch (error) {
+        console.error('Error fetching pending approvals:', error);
+        return [];
+    }
+}
+
+// Get Firebase auth token for API calls
+async function getAuthToken() {
+    try {
+        const user = firebase.auth().currentUser;
+        if (user) {
+            return await user.getIdToken();
+        }
+        throw new Error('No authenticated user');
+    } catch (error) {
+        console.error('Error getting auth token:', error);
+        throw error;
+    }
+}
+
+// Fetch detailed information for a specific service provider
+async function fetchServiceProviderDetails(type, id) {
+    try {
+        const token = await getAuthToken();
+        const response = await fetch(`${API_BASE_URL}/${type}/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.success ? data.data : null;
+    } catch (error) {
+        console.error(`Error fetching ${type} details:`, error);
+        return null;
+    }
+}
+
+// Approve a service provider
+async function approveServiceProvider(type, id, notes = '') {
+    try {
+        const token = await getAuthToken();
+        const response = await fetch(`${API_BASE_URL}/${type}/${id}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                approvedBy: currentUser?.uid || 'staff',
+                notes: notes
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.success;
+    } catch (error) {
+        console.error(`Error approving ${type}:`, error);
+        return false;
+    }
+}
+
+// Reject a service provider
+async function rejectServiceProvider(type, id, reason, category, nextSteps) {
+    try {
+        const token = await getAuthToken();
+        const response = await fetch(`${API_BASE_URL}/${type}/${id}/reject`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                rejectedBy: currentUser?.uid || 'staff',
+                reason: reason,
+                category: category,
+                nextSteps: nextSteps
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.success;
+    } catch (error) {
+        console.error(`Error rejecting ${type}:`, error);
+        return false;
+    }
+}
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -474,32 +534,29 @@ function loadMockData() {
 // Load pending approvals from backend
 async function loadPendingApprovalsFromBackend() {
     try {
-        const idToken = localStorage.getItem('staff_idToken');
-        if (!idToken) {
-            pendingApprovals = [];
-            updatePendingCount();
-            return;
-        }
+        console.log('🔄 Loading pending approvals from backend...');
         
-        // Load from backend
-        const response = await fetch('https://arcular-plus-backend.onrender.com/staff/api/stakeholders/pending', {
-            headers: { 'Authorization': `Bearer ${idToken}` }
-        });
+        // Use our new API function to fetch real pending approvals
+        const allPending = await fetchPendingApprovals();
         
-        if (response.ok) {
-            const data = await response.json();
-            pendingApprovals = data;
-            updatePendingCount();
+        if (allPending && allPending.length > 0) {
+            pendingApprovals = allPending;
+            console.log(`✅ Loaded ${allPending.length} pending approvals:`, allPending);
         } else {
-            // Fallback to empty
             pendingApprovals = [];
-            updatePendingCount();
+            console.log('ℹ️ No pending approvals found');
         }
+        
+        // Update the UI with real data
+        updatePendingCount();
+        renderPendingApprovalsList();
+        
     } catch (error) {
         console.error('❌ Error loading pending approvals:', error);
         // Fallback to empty
         pendingApprovals = [];
         updatePendingCount();
+        showErrorMessage('Failed to load pending approvals. Please refresh the page.');
     }
 }
 
@@ -559,18 +616,44 @@ function switchTab(tabName) {
     }
 }
 
+// Update dashboard stats with real data
 function updateDashboard() {
-    // Update statistics
-    document.getElementById('pendingStats').textContent = pendingApprovals.length;
-    document.getElementById('hospitalStats').textContent = allUsers.hospitals.length;
-    document.getElementById('doctorStats').textContent = allUsers.doctors.length;
-    document.getElementById('nurseStats').textContent = allUsers.nurses.length;
-    
-    // Update pending count badge
-    document.getElementById('pendingCount').textContent = pendingApprovals.length;
-    
-    // Load recent activity
-    loadRecentActivity();
+    try {
+        // Update counts for each service provider type
+        const hospitalCount = pendingApprovals.filter(a => a.type === 'hospital').length;
+        const doctorCount = pendingApprovals.filter(a => a.type === 'doctor').length;
+        const nurseCount = pendingApprovals.filter(a => a.type === 'nurse').length;
+        const labCount = pendingApprovals.filter(a => a.type === 'lab').length;
+        const pharmacyCount = pendingApprovals.filter(a => a.type === 'pharmacy').length;
+        const totalCount = pendingApprovals.length;
+        
+        // Update UI elements
+        const hospitalCountEl = document.getElementById('hospitalCount');
+        const doctorCountEl = document.getElementById('doctorCount');
+        const nurseCountEl = document.getElementById('nurseCount');
+        const labCountEl = document.getElementById('labCount');
+        const pharmacyCountEl = document.getElementById('pharmacyCount');
+        const totalCountEl = document.getElementById('totalCount');
+        
+        if (hospitalCountEl) hospitalCountEl.textContent = hospitalCount;
+        if (doctorCountEl) doctorCountEl.textContent = doctorCount;
+        if (nurseCountEl) nurseCountEl.textContent = nurseCount;
+        if (labCountEl) labCountEl.textContent = labCount;
+        if (pharmacyCountEl) pharmacyCountEl.textContent = pharmacyCount;
+        if (totalCountEl) totalCountEl.textContent = totalCount;
+        
+        console.log('✅ Dashboard stats updated:', {
+            hospital: hospitalCount,
+            doctor: doctorCount,
+            nurse: nurseCount,
+            lab: labCount,
+            pharmacy: pharmacyCount,
+            total: totalCount
+        });
+        
+    } catch (error) {
+        console.error('❌ Error updating dashboard stats:', error);
+    }
 }
 
 function updateDateTime() {
@@ -2862,4 +2945,765 @@ function fallbackDashboardInit() {
     hideLoadingState();
     showDashboardContent();
   }
+}
+
+// Render pending approvals list in the UI
+function renderPendingApprovalsList() {
+    const container = document.getElementById('pendingApprovalsList');
+    if (!container) return;
+    
+    if (pendingApprovals.length === 0) {
+        container.innerHTML = `
+            <div class="no-data-message">
+                <i class="fas fa-check-circle"></i>
+                <h3>No Pending Approvals</h3>
+                <p>All service provider applications have been reviewed.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const approvalsHTML = pendingApprovals.map(approval => {
+        const typeIcon = getTypeIcon(approval.type);
+        const typeColor = getTypeColor(approval.type);
+        const submittedDate = new Date(approval.createdAt || approval.submittedAt || Date.now()).toLocaleDateString();
+        
+        return `
+            <div class="approval-card ${typeColor}" data-id="${approval._id || approval.id}" data-type="${approval.type}">
+                <div class="approval-header">
+                    <div class="approval-type">
+                        <i class="${typeIcon}"></i>
+                        <span class="type-label">${approval.type.charAt(0).toUpperCase() + approval.type.slice(1)}</span>
+                    </div>
+                    <div class="approval-status pending">Pending Review</div>
+                </div>
+                
+                <div class="approval-content">
+                    <h4 class="approval-name">${approval.fullName || approval.name || approval.labName || approval.pharmacyName || 'N/A'}</h4>
+                    <div class="approval-details">
+                        <div class="detail-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>${approval.email || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-phone"></i>
+                            <span>${approval.mobileNumber || approval.contact || 'N/A'}</span>
+                        </div>
+                        ${approval.licenseNumber ? `
+                        <div class="detail-item">
+                            <i class="fas fa-id-card"></i>
+                            <span>License: ${approval.licenseNumber}</span>
+                        </div>
+                        ` : ''}
+                        ${approval.specialization ? `
+                        <div class="detail-item">
+                            <i class="fas fa-stethoscope"></i>
+                            <span>${approval.specialization}</span>
+                        </div>
+                        ` : ''}
+                        ${approval.address ? `
+                        <div class="detail-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>${approval.address}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="approval-meta">
+                        <span class="submission-date">
+                            <i class="fas fa-calendar"></i>
+                            Submitted: ${submittedDate}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="approval-actions">
+                    <button class="btn btn-primary btn-sm" onclick="viewApprovalDetails('${approval._id || approval.id}', '${approval.type}')">
+                        <i class="fas fa-eye"></i> Review
+                    </button>
+                    <button class="btn btn-success btn-sm" onclick="approveApplication('${approval._id || approval.id}', '${approval.type}')">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="rejectApplication('${approval._id || approval.id}', '${approval.type}')">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = approvalsHTML;
+}
+
+// Get icon for service provider type
+function getTypeIcon(type) {
+    const icons = {
+        'hospital': 'fas fa-hospital',
+        'doctor': 'fas fa-user-md',
+        'nurse': 'fas fa-user-nurse',
+        'lab': 'fas fa-flask',
+        'pharmacy': 'fas fa-pills'
+    };
+    return icons[type] || 'fas fa-user';
+}
+
+// Get color class for service provider type
+function getTypeColor(type) {
+    const colors = {
+        'hospital': 'hospital-card',
+        'doctor': 'doctor-card',
+        'nurse': 'nurse-card',
+        'lab': 'lab-card',
+        'pharmacy': 'pharmacy-card'
+    };
+    return colors[type] || 'default-card';
+}
+
+// View approval details in modal
+async function viewApprovalDetails(id, type) {
+    try {
+        console.log(`🔄 Loading details for ${type} with ID: ${id}`);
+        
+        // Show loading state
+        showModalLoading();
+        
+        // Fetch detailed information
+        const details = await fetchServiceProviderDetails(type, id);
+        
+        if (!details) {
+            throw new Error('Failed to fetch service provider details');
+        }
+        
+        // Populate modal with real data
+        populateApprovalModal(details, type);
+        
+        // Show the modal
+        document.getElementById('approvalModal').style.display = 'block';
+        
+    } catch (error) {
+        console.error('❌ Error loading approval details:', error);
+        showErrorMessage('Failed to load approval details. Please try again.');
+    }
+}
+
+// Populate approval modal with real data
+function populateApprovalModal(details, type) {
+    const modalTitle = document.getElementById('modalTitle');
+    const modalContent = document.getElementById('modalContent');
+    
+    if (!modalTitle || !modalContent) return;
+    
+    const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+    modalTitle.textContent = `Review ${typeLabel} Application`;
+    
+    // Create detailed view based on type
+    let detailsHTML = '';
+    
+    switch (type) {
+        case 'hospital':
+            detailsHTML = createHospitalDetailsHTML(details);
+            break;
+        case 'doctor':
+            detailsHTML = createDoctorDetailsHTML(details);
+            break;
+        case 'nurse':
+            detailsHTML = createNurseDetailsHTML(details);
+            break;
+        case 'lab':
+            detailsHTML = createLabDetailsHTML(details);
+            break;
+        case 'pharmacy':
+            detailsHTML = createPharmacyDetailsHTML(details);
+            break;
+        default:
+            detailsHTML = createGenericDetailsHTML(details, type);
+    }
+    
+    modalContent.innerHTML = detailsHTML;
+    
+    // Store current approval info for approve/reject actions
+    window.currentApproval = { id: details._id, type: type, details: details };
+}
+
+// Create HTML for hospital details
+function createHospitalDetailsHTML(hospital) {
+    return `
+        <div class="approval-details-view">
+            <div class="detail-section">
+                <h4><i class="fas fa-hospital"></i> Hospital Information</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Hospital Name:</label>
+                        <span>${hospital.hospitalName || hospital.fullName || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Email:</label>
+                        <span>${hospital.email || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Phone:</label>
+                        <span>${hospital.mobileNumber || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Address:</label>
+                        <span>${hospital.address || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>City:</label>
+                        <span>${hospital.city || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>State:</label>
+                        <span>${hospital.state || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>License Number:</label>
+                        <span>${hospital.licenseNumber || 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h4><i class="fas fa-file-alt"></i> Documents</h4>
+                <div class="documents-grid">
+                    ${hospital.licenseDocumentUrl ? `
+                        <div class="document-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>License Document</span>
+                            <a href="${hospital.licenseDocumentUrl}" target="_blank" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    ` : ''}
+                    ${hospital.registrationCertificateUrl ? `
+                        <div class="document-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>Registration Certificate</span>
+                            <a href="${hospital.registrationCertificateUrl}" target="_blank" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    ` : ''}
+                    ${hospital.buildingPermitUrl ? `
+                        <div class="document-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>Building Permit</span>
+                            <a href="${hospital.buildingPermitUrl}" target="_blank" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Create HTML for doctor details
+function createDoctorDetailsHTML(doctor) {
+    return `
+        <div class="approval-details-view">
+            <div class="detail-section">
+                <h4><i class="fas fa-user-md"></i> Doctor Information</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Full Name:</label>
+                        <span>${doctor.fullName || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Email:</label>
+                        <span>${doctor.email || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Phone:</label>
+                        <span>${doctor.mobileNumber || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Specialization:</label>
+                        <span>${doctor.specialization || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Experience:</label>
+                        <span>${doctor.experienceYears || 0} years</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>License Number:</label>
+                        <span>${doctor.licenseNumber || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Medical Registration:</label>
+                        <span>${doctor.medicalRegistrationNumber || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Qualification:</label>
+                        <span>${doctor.qualification || 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h4><i class="fas fa-file-alt"></i> Documents</h4>
+                <div class="documents-grid">
+                    ${doctor.medicalDegreeUrl ? `
+                        <div class="document-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>Medical Degree</span>
+                            <a href="${doctor.medicalDegreeUrl}" target="_blank" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    ` : ''}
+                    ${doctor.licenseDocumentUrl ? `
+                        <div class="document-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>License Certificate</span>
+                            <a href="${doctor.licenseDocumentUrl}" target="_blank" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    ` : ''}
+                    ${doctor.identityProofUrl ? `
+                        <div class="document-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>Identity Proof</span>
+                            <a href="${doctor.identityProofUrl}" target="_blank" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Create HTML for nurse details
+function createNurseDetailsHTML(nurse) {
+    return `
+        <div class="approval-details-view">
+            <div class="detail-section">
+                <h4><i class="fas fa-user-nurse"></i> Nurse Information</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Full Name:</label>
+                        <span>${nurse.fullName || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Email:</label>
+                        <span>${nurse.email || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Phone:</label>
+                        <span>${nurse.mobileNumber || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Qualification:</label>
+                        <span>${nurse.qualification || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Experience:</label>
+                        <span>${nurse.experienceYears || 0} years</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>License Number:</label>
+                        <span>${nurse.licenseNumber || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Hospital Affiliation:</label>
+                        <span>${nurse.hospitalAffiliation || 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h4><i class="fas fa-file-alt"></i> Documents</h4>
+                <div class="documents-grid">
+                    ${nurse.licenseDocumentUrl ? `
+                        <div class="document-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>Nursing License</span>
+                            <a href="${nurse.licenseDocumentUrl}" target="_blank" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    ` : ''}
+                    ${nurse.profileImageUrl ? `
+                        <div class="document-item">
+                            <i class="fas fa-image"></i>
+                            <span>Profile Picture</span>
+                            <a href="${nurse.profileImageUrl}" target="_blank" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Create HTML for lab details
+function createLabDetailsHTML(lab) {
+    return `
+        <div class="approval-details-view">
+            <div class="detail-section">
+                <h4><i class="fas fa-flask"></i> Laboratory Information</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Lab Name:</label>
+                        <span>${lab.labName || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Email:</label>
+                        <span>${lab.email || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Phone:</label>
+                        <span>${lab.mobileNumber || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>License Number:</label>
+                        <span>${lab.licenseNumber || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Owner Name:</label>
+                        <span>${lab.ownerName || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Associated Hospital:</label>
+                        <span>${lab.associatedHospital || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Address:</label>
+                        <span>${lab.address || 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h4><i class="fas fa-file-alt"></i> Documents</h4>
+                <div class="documents-grid">
+                    ${lab.licenseDocumentUrl ? `
+                        <div class="document-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>Lab License</span>
+                            <a href="${lab.licenseDocumentUrl}" target="_blank" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    ` : ''}
+                    ${lab.profileImageUrl ? `
+                        <div class="document-item">
+                            <i class="fas fa-image"></i>
+                            <span>Profile Picture</span>
+                            <a href="${lab.profileImageUrl}" target="_blank" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Create HTML for pharmacy details
+function createPharmacyDetailsHTML(pharmacy) {
+    return `
+        <div class="approval-details-view">
+            <div class="detail-section">
+                <h4><i class="fas fa-pills"></i> Pharmacy Information</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Pharmacy Name:</label>
+                        <span>${pharmacy.pharmacyName || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Email:</label>
+                        <span>${pharmacy.email || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Phone:</label>
+                        <span>${pharmacy.mobileNumber || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>License Number:</label>
+                        <span>${pharmacy.licenseNumber || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Owner Name:</label>
+                        <span>${pharmacy.ownerName || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Pharmacist Name:</label>
+                        <span>${pharmacy.pharmacistName || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Address:</label>
+                        <span>${pharmacy.address || 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h4><i class="fas fa-file-alt"></i> Documents</h4>
+                <div class="documents-grid">
+                    ${pharmacy.licenseDocumentUrl ? `
+                        <div class="document-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>Pharmacy License</span>
+                            <a href="${pharmacy.licenseDocumentUrl}" target="_blank" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    ` : ''}
+                    ${pharmacy.profileImageUrl ? `
+                        <div class="document-item">
+                            <i class="fas fa-image"></i>
+                            <span>Profile Picture</span>
+                            <a href="${pharmacy.profileImageUrl}" target="_blank" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Create generic details HTML for unknown types
+function createGenericDetailsHTML(details, type) {
+    return `
+        <div class="approval-details-view">
+            <div class="detail-section">
+                <h4><i class="fas fa-user"></i> ${type.charAt(0).toUpperCase() + type.slice(1)} Information</h4>
+                <div class="detail-grid">
+                    ${Object.entries(details).map(([key, value]) => {
+                        if (key.startsWith('_') || key === 'type') return '';
+                        return `
+                            <div class="detail-item">
+                                <label>${key.charAt(0).toUpperCase() + key.slice(1)}:</label>
+                                <span>${value || 'N/A'}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Show modal loading state
+function showModalLoading() {
+    const modalContent = document.getElementById('modalContent');
+    if (modalContent) {
+        modalContent.innerHTML = `
+            <div class="loading-state">
+                <div class="loading-spinner">
+                    <div class="spinner-ring"></div>
+                    <div class="spinner-ring"></div>
+                    <div class="spinner-ring"></div>
+                </div>
+                <p>Loading details...</p>
+            </div>
+        `;
+    }
+}
+
+// Approve application
+async function approveApplication(id, type) {
+    try {
+        if (!window.currentApproval || window.currentApproval.id !== id) {
+            throw new Error('Invalid approval data');
+        }
+        
+        console.log(`🔄 Approving ${type} with ID: ${id}`);
+        
+        // Show loading state
+        const approveBtn = document.getElementById('approveBtn');
+        const originalText = approveBtn.innerHTML;
+        approveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Approving...';
+        approveBtn.disabled = true;
+        
+        // Call approval API
+        const success = await approveServiceProvider(type, id, 'Approved by staff');
+        
+        if (success) {
+            console.log(`✅ ${type} approved successfully`);
+            
+            // Remove from pending list
+            pendingApprovals = pendingApprovals.filter(approval => 
+                approval._id !== id && approval.id !== id
+            );
+            
+            // Update UI
+            updatePendingCount();
+            renderPendingApprovalsList();
+            
+            // Close modal
+            closeModal();
+            
+            // Show success message
+            showSuccessMessage(`${type.charAt(0).toUpperCase() + type.slice(1)} approved successfully!`);
+            
+            // Refresh dashboard
+            await loadDashboardData();
+        } else {
+            throw new Error('Approval failed');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error approving application:', error);
+        showErrorMessage('Failed to approve application. Please try again.');
+        
+        // Reset button
+        const approveBtn = document.getElementById('approveBtn');
+        approveBtn.innerHTML = '<i class="fas fa-check"></i> Approve';
+        approveBtn.disabled = false;
+    }
+}
+
+// Reject application
+async function rejectApplication(id, type) {
+    try {
+        if (!window.currentApproval || window.currentApproval.id !== id) {
+            throw new Error('Invalid approval data');
+        }
+        
+        console.log(`🔄 Rejecting ${type} with ID: ${id}`);
+        
+        // Show rejection modal
+        document.getElementById('rejectionModal').style.display = 'block';
+        document.getElementById('approvalModal').style.display = 'none';
+        
+        // Store current rejection info
+        window.currentRejection = { id, type };
+        
+    } catch (error) {
+        console.error('❌ Error showing rejection modal:', error);
+        showErrorMessage('Failed to show rejection form. Please try again.');
+    }
+}
+
+// Confirm rejection
+async function confirmRejection() {
+    try {
+        if (!window.currentRejection) {
+            throw new Error('No rejection data');
+        }
+        
+        const { id, type } = window.currentRejection;
+        const reason = document.getElementById('rejectionReason').value.trim();
+        const category = document.getElementById('rejectionCategory').value;
+        const nextSteps = document.getElementById('nextSteps').value.trim();
+        
+        if (!reason || !category) {
+            throw new Error('Please fill in all required fields');
+        }
+        
+        console.log(`🔄 Confirming rejection for ${type} with ID: ${id}`);
+        
+        // Show loading state
+        const confirmBtn = document.getElementById('confirmRejectBtn');
+        const originalText = confirmBtn.innerHTML;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Rejecting...';
+        confirmBtn.disabled = true;
+        
+        // Call rejection API
+        const success = await rejectServiceProvider(type, id, reason, category, nextSteps);
+        
+        if (success) {
+            console.log(`✅ ${type} rejected successfully`);
+            
+            // Remove from pending list
+            pendingApprovals = pendingApprovals.filter(approval => 
+                approval._id !== id && approval.id !== id
+            );
+            
+            // Update UI
+            updatePendingCount();
+            renderPendingApprovalsList();
+            
+            // Close modals
+            closeRejectionModal();
+            closeModal();
+            
+            // Show success message
+            showSuccessMessage(`${type.charAt(0).toUpperCase() + type.slice(1)} rejected successfully!`);
+            
+            // Refresh dashboard
+            await loadDashboardData();
+        } else {
+            throw new Error('Rejection failed');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error rejecting application:', error);
+        showErrorMessage(error.message || 'Failed to reject application. Please try again.');
+        
+        // Reset button
+        const confirmBtn = document.getElementById('confirmRejectBtn');
+        confirmBtn.innerHTML = '<i class="fas fa-times"></i> Confirm Rejection';
+        confirmBtn.disabled = false;
+    }
+}
+
+// Close rejection modal
+function closeRejectionModal() {
+    document.getElementById('rejectionModal').style.display = 'none';
+    
+    // Clear form
+    document.getElementById('rejectionReason').value = '';
+    document.getElementById('rejectionCategory').value = '';
+    document.getElementById('nextSteps').value = '';
+    
+    // Clear current rejection
+    window.currentRejection = null;
+}
+
+// Show success message
+function showSuccessMessage(message) {
+    const messageContainer = document.getElementById('messageContainer');
+    if (messageContainer) {
+        messageContainer.innerHTML = `
+            <div class="message success">
+                <i class="fas fa-check-circle"></i>
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()" class="close-message">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (messageContainer.firstChild) {
+                messageContainer.firstChild.remove();
+            }
+        }, 5000);
+    }
+}
+
+// Show error message
+function showErrorMessage(message) {
+    const messageContainer = document.getElementById('messageContainer');
+    if (messageContainer) {
+        messageContainer.innerHTML = `
+            <div class="message error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()" class="close-message">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        // Auto-remove after 8 seconds
+        setTimeout(() => {
+            if (messageContainer.firstChild) {
+                messageContainer.firstChild.remove();
+            }
+        }, 8000);
+    }
 }

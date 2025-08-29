@@ -87,22 +87,25 @@ body {
     min-height: 100vh;
     align-items: center;
     justify-content: center;
-    background: #f8fafc;
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    padding: 20px;
 }
 
 .superadmin-login-left {
-    flex: 1.1;
-    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
     color: #fff;
-    border-radius: 28px 0 0 28px;
+    border-radius: 20px 0 0 20px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
     padding: 60px 48px 60px 60px;
-    min-width: 340px;
-    max-width: 480px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    min-width: 400px;
+    max-width: 600px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .superadmin-login-logo {
@@ -118,16 +121,18 @@ body {
 }
 
 .superadmin-login-left h1 {
-    font-size: 2.2rem;
+    font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .superadmin-login-left h3 {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     font-weight: 400;
     margin-bottom: 32px;
     color: #e0e7ff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .superadmin-login-features {
@@ -145,25 +150,29 @@ body {
     align-items: center;
     gap: 12px;
     color: #f1f5f9;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .superadmin-login-features i {
     color: #93c5fd;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .superadmin-login-right {
-    flex: 1.2;
-    background: #fff;
-    border-radius: 0 28px 28px 0;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    flex: 1;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 0 20px 20px 0;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
     padding: 60px 48px 60px 48px;
-    min-width: 340px;
-    max-width: 480px;
+    min-width: 400px;
+    max-width: 600px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .superadmin-login-right h2 {
@@ -1053,22 +1062,25 @@ body {
     .superadmin-login-split {
         flex-direction: column;
         min-height: unset;
-        background: #f8fafc;
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        padding: 20px;
     }
     
     .superadmin-login-left, .superadmin-login-right {
-        border-radius: 28px;
+        border-radius: 20px;
         min-width: unset;
         max-width: 98vw;
         width: 98vw;
-        padding: 36px 8vw 36px 8vw;
-        margin: 18px auto;
+        padding: 40px 6vw 40px 6vw;
+        margin: 15px auto;
     }
     
     .superadmin-login-left {
         align-items: center;
         text-align: center;
-        padding-bottom: 18px;
+        padding-bottom: 20px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(15px);
     }
     
     .stats-section {

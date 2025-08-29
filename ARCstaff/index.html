@@ -23,19 +23,20 @@
         }
 
         .login-card {
-            background: white;
+            background: transparent;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             overflow: hidden;
             width: 100%;
-            max-width: 1000px;
+            max-width: 1200px;
             display: flex;
             min-height: 600px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
         }
 
         .login-left {
             flex: 1;
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            background: rgba(44, 62, 80, 0.9);
+            backdrop-filter: blur(10px);
             color: white;
             padding: 60px 40px;
             display: flex;
@@ -43,6 +44,7 @@
             justify-content: center;
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .login-left::before {
@@ -109,10 +111,13 @@
 
         .login-right {
             flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             padding: 60px 40px;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .login-header {
@@ -280,17 +285,26 @@
 
         /* Responsive Design */
         @media (max-width: 768px) {
+            .login-container {
+                padding: 15px;
+            }
+            
             .login-card {
                 flex-direction: column;
-                max-width: 400px;
+                max-width: 95vw;
+                min-height: auto;
             }
 
             .login-left {
                 padding: 40px 30px;
+                background: rgba(44, 62, 80, 0.95);
+                backdrop-filter: blur(15px);
             }
 
             .login-right {
                 padding: 40px 30px;
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(15px);
             }
 
             .welcome-title {

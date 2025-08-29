@@ -518,12 +518,25 @@ async function loadAdminProfile() {
     if (!user) return;
     
     const freshToken = await user.getIdToken();
-    const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
+    
+    // Try the admin profile endpoint first
+    let response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
       headers: {
         'Authorization': `Bearer ${freshToken}`,
         'Content-Type': 'application/json'
       }
     });
+    
+    // If that fails, try the staff profile endpoint
+    if (!response.ok) {
+      console.log('Admin profile endpoint failed, trying staff profile endpoint...');
+      response = await fetch(`https://arcular-plus-backend.onrender.com/staff/api/staff/profile/${user.uid}`, {
+        headers: {
+          'Authorization': `Bearer ${freshToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
     
     if (response.ok) {
       const profileData = await response.json();
@@ -536,10 +549,28 @@ async function loadAdminProfile() {
         document.getElementById('admin-address').value = profileData.data.address || '';
         document.getElementById('admin-bio').value = profileData.data.bio || '';
       }
+    } else {
+      console.log('Profile not found, using default values');
+      // Set default values if profile doesn't exist
+      document.getElementById('admin-full-name').value = user.displayName || user.email.split('@')[0] || '';
+      document.getElementById('admin-phone').value = '';
+      document.getElementById('admin-department').value = 'Administration';
+      document.getElementById('admin-designation').value = 'Super Admin';
+      document.getElementById('admin-address').value = '';
+      document.getElementById('admin-bio').value = '';
     }
   } catch (error) {
     console.error('Error loading admin profile:', error);
-    showErrorMessage('Failed to load profile data');
+    // Set default values on error
+    const user = firebase.auth().currentUser;
+    if (user) {
+      document.getElementById('admin-full-name').value = user.displayName || user.email.split('@')[0] || '';
+      document.getElementById('admin-phone').value = '';
+      document.getElementById('admin-department').value = 'Administration';
+      document.getElementById('admin-designation').value = 'Super Admin';
+      document.getElementById('admin-address').value = '';
+      document.getElementById('admin-bio').value = '';
+    }
   }
 }
 
@@ -550,7 +581,9 @@ async function saveAdminProfile(formData) {
     if (!user) throw new Error('User not authenticated');
     
     const freshToken = await user.getIdToken();
-    const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
+    
+    // Try the admin profile endpoint first
+    let response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${freshToken}`,
@@ -558,6 +591,19 @@ async function saveAdminProfile(formData) {
       },
       body: JSON.stringify(formData)
     });
+    
+    // If that fails, try the staff profile endpoint
+    if (!response.ok) {
+      console.log('Admin profile endpoint failed, trying staff profile endpoint...');
+      response = await fetch(`https://arcular-plus-backend.onrender.com/staff/api/staff/profile/${user.uid}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${freshToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+    }
     
     if (response.ok) {
       const result = await response.json();
@@ -725,26 +771,39 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('welcome-admin-name').textContent = user.displayName || user.email.split('@')[0];
       document.getElementById('admin-email').textContent = user.email;
       
-      // Load admin profile from backend
-      try {
-        const freshToken = await user.getIdToken();
-        const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
-          headers: {
-            'Authorization': `Bearer ${freshToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const profileData = await response.json();
-          if (profileData.data && profileData.data.fullName) {
-            document.getElementById('admin-name').textContent = profileData.data.fullName;
-            document.getElementById('welcome-admin-name').textContent = profileData.data.fullName;
-          }
-        }
-      } catch (error) {
-        console.error('Error loading admin profile:', error);
-      }
+             // Load admin profile from backend
+       try {
+         const freshToken = await user.getIdToken();
+         
+         // Try admin profile endpoint first
+         let response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
+           headers: {
+             'Authorization': `Bearer ${freshToken}`,
+             'Content-Type': 'application/json'
+           }
+         });
+         
+         // If that fails, try staff profile endpoint
+         if (!response.ok) {
+           console.log('Admin profile endpoint failed, trying staff profile endpoint...');
+           response = await fetch(`https://arcular-plus-backend.onrender.com/staff/api/staff/profile/${user.uid}`, {
+             headers: {
+               'Authorization': `Bearer ${freshToken}`,
+               'Content-Type': 'application/json'
+             }
+           });
+         }
+         
+         if (response.ok) {
+           const profileData = await response.json();
+           if (profileData.data && profileData.data.fullName) {
+             document.getElementById('admin-name').textContent = profileData.data.fullName;
+             document.getElementById('welcome-admin-name').textContent = profileData.data.fullName;
+           }
+         }
+       } catch (error) {
+         console.error('Error loading admin profile:', error);
+       }
     }
     
     // Update current date/time
@@ -1197,31 +1256,31 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Load pending profile changes from staff
-  async function loadPendingProfileChanges(token) {
-    try {
-      console.log('Loading pending profile changes...');
-      
-      const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile-changes`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Pending profile changes loaded:', data);
-        renderPendingProfileChanges(data.pendingChanges || []);
-      } else {
-        console.error('Failed to load pending profile changes:', response.status);
-        renderPendingProfileChanges([]);
+async function loadPendingProfileChanges(token) {
+  try {
+    console.log('Loading pending profile changes...');
+    
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile-changes`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
-    } catch (error) {
-      console.error('Error loading pending profile changes:', error);
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Pending profile changes loaded:', data);
+      renderPendingProfileChanges(data.pendingChanges || []);
+    } else {
+      console.log('Profile changes endpoint not available (404), showing empty list');
       renderPendingProfileChanges([]);
     }
+  } catch (error) {
+    console.error('Error loading pending profile changes:', error);
+    renderPendingProfileChanges([]);
   }
+}
 
   // Render pending profile changes in the UI
   function renderPendingProfileChanges(changes) {

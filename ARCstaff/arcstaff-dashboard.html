@@ -34,7 +34,7 @@
                 <img src="logo1.png" alt="Arcular+ Logo" class="logo">
                 <div class="header-title">
                     <h1>ARC Staff Dashboard</h1>
-                    <p class="subtitle">Manage Service Provider Approvals</p>
+                    <p class="subtitle">Service Provider Management</p>
                 </div>
             </div>
             <div class="header-right">
@@ -48,8 +48,8 @@
                     </div>
                 </div>
                 <div class="header-actions">
-                    <button id="refreshBtn" class="refresh-btn" title="Refresh Dashboard">
-                        <i class="fas fa-sync-alt"></i>
+                    <button id="settingsBtn" class="settings-btn" title="Settings">
+                        <i class="fas fa-cog"></i>
                     </button>
                     <button id="logoutBtn" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Logout
@@ -58,206 +58,162 @@
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="dashboard-main">
-            <!-- Welcome Section -->
-            <section class="welcome-section">
-                <div class="welcome-content">
-                    <h2>Welcome back, <span id="welcomeUserName">Staff Member</span>! 👋</h2>
-                    <p>Here's what's happening with service provider approvals today.</p>
-                    <div class="current-time">
-                        <i class="fas fa-clock"></i>
-                        <span id="currentDateTime">Loading...</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Stats Overview -->
-            <section class="stats-section">
-                <div class="section-header">
-                    <h2>Overview Statistics</h2>
-                    <p>Real-time counts of pending approvals</p>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-card hospital-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-hospital"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="hospitalCount">0</h3>
-                            <p>Pending Hospitals</p>
-                            <div class="stat-trend">
-                                <i class="fas fa-arrow-up"></i>
-                                <span>New today</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card doctor-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-user-md"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="doctorCount">0</h3>
-                            <p>Pending Doctors</p>
-                            <div class="stat-trend">
-                                <i class="fas fa-arrow-up"></i>
-                                <span>New today</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card nurse-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-user-nurse"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="nurseCount">0</h3>
-                            <p>Pending Nurses</p>
-                            <div class="stat-trend">
-                                <i class="fas fa-arrow-up"></i>
-                                <span>New today</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card lab-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-flask"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="labCount">0</h3>
-                            <p>Pending Labs</p>
-                            <div class="stat-trend">
-                                <i class="fas fa-arrow-up"></i>
-                                <span>New today</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card pharmacy-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-pills"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="pharmacyCount">0</h3>
-                            <p>Pending Pharmacies</p>
-                            <div class="stat-trend">
-                                <i class="fas fa-arrow-up"></i>
-                                <span>New today</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card total-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-clipboard-list"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="totalCount">0</h3>
-                            <p>Total Pending</p>
-                            <div class="stat-trend">
-                                <i class="fas fa-chart-line"></i>
-                                <span>Overall</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Pending Approvals -->
-            <section class="approvals-section">
-                <div class="section-header">
-                    <h2>Pending Approvals</h2>
-                    <div class="section-actions">
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="searchApprovals" placeholder="Search applications...">
-                        </div>
-                        <select id="filterType" class="filter-select">
-                            <option value="all">All Types</option>
-                            <option value="hospital">Hospitals</option>
-                            <option value="doctor">Doctors</option>
-                            <option value="nurse">Nurses</option>
-                            <option value="lab">Labs</option>
-                            <option value="pharmacy">Pharmacies</option>
-                        </select>
-                        <button id="viewAllBtn" class="btn btn-primary">
-                            <i class="fas fa-list"></i> View All
-                        </button>
-                    </div>
+        <!-- Main Dashboard Layout -->
+        <div class="dashboard-layout">
+            <!-- Left Sidebar - Service Providers -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h3>Service Providers</h3>
                 </div>
                 
-                <div id="pendingApprovalsList" class="approvals-list">
-                    <!-- Pending approvals will be populated here -->
-                </div>
-            </section>
+                <nav class="service-provider-nav">
+                    <div class="nav-item" data-provider="hospital">
+                        <i class="fas fa-hospital"></i>
+                        <span>Hospitals</span>
+                        <div class="status-badges">
+                            <span class="badge approved" id="hospitalApprovedCount">0</span>
+                            <span class="badge pending" id="hospitalPendingCount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-item" data-provider="doctor">
+                        <i class="fas fa-user-md"></i>
+                        <span>Doctors</span>
+                        <div class="status-badges">
+                            <span class="badge approved" id="doctorApprovedCount">0</span>
+                            <span class="badge pending" id="doctorPendingCount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-item" data-provider="nurse">
+                        <i class="fas fa-user-nurse"></i>
+                        <span>Nurses</span>
+                        <div class="status-badges">
+                            <span class="badge approved" id="nurseApprovedCount">0</span>
+                            <span class="badge pending" id="nursePendingCount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-item" data-provider="lab">
+                        <i class="fas fa-flask"></i>
+                        <span>Labs</span>
+                        <div class="status-badges">
+                            <span class="badge approved" id="labApprovedCount">0</span>
+                            <span class="badge pending" id="labPendingCount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-item" data-provider="pharmacy">
+                        <i class="fas fa-pills"></i>
+                        <span>Pharmacies</span>
+                        <div class="status-badges">
+                            <span class="badge approved" id="pharmacyApprovedCount">0</span>
+                            <span class="badge pending" id="pharmacyPendingCount">0</span>
+                        </div>
+                    </div>
+                </nav>
+            </aside>
 
-            <!-- Recent Activity -->
-            <section class="activity-section">
-                <div class="section-header">
-                    <h2>Recent Activity</h2>
-                    <button id="refreshActivityBtn" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
+            <!-- Main Content Area -->
+            <main class="main-content">
+                <!-- Service Provider Lists -->
+                <div id="serviceProviderContent" class="service-provider-content">
+                    <!-- Default View - Select a service provider -->
+                    <div class="default-view">
+                        <div class="welcome-message">
+                            <i class="fas fa-hand-point-left"></i>
+                            <h2>Select a Service Provider</h2>
+                            <p>Choose a service provider type from the left sidebar to view and manage applications.</p>
+                        </div>
+                    </div>
                 </div>
-                <div id="recentActivityList" class="activity-list">
-                    <!-- Recent activity will be populated here -->
-                </div>
-            </section>
-
-            <!-- Quick Actions -->
-            <section class="quick-actions-section">
-                <div class="section-header">
-                    <h2>Quick Actions</h2>
-                </div>
-                <div class="quick-actions-grid">
-                    <button class="quick-action-btn" onclick="exportData()">
-                        <i class="fas fa-download"></i>
-                        <span>Export Data</span>
-                    </button>
-                    <button class="quick-action-btn" onclick="generateReport()">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Generate Report</span>
-                    </button>
-                    <button class="quick-action-btn" onclick="viewAnalytics()">
-                        <i class="fas fa-analytics"></i>
-                        <span>View Analytics</span>
-                    </button>
-                    <button class="quick-action-btn" onclick="manageSettings()">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </button>
-                </div>
-            </section>
-        </main>
+            </main>
+        </div>
     </div>
 
-    <!-- Enhanced Approval Modal -->
-    <div id="approvalModal" class="modal">
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle">Review Application</h3>
+                <h3>Staff Settings</h3>
                 <span class="close">&times;</span>
             </div>
             <div class="modal-body">
-                <div id="modalContent">
-                    <!-- Modal content will be populated here -->
+                <div class="settings-section">
+                    <h4>Profile Information</h4>
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label for="staffName">Full Name</label>
+                            <input type="text" id="staffName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="staffEmail">Email</label>
+                            <input type="email" id="staffEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="staffPhone">Phone</label>
+                            <input type="tel" id="staffPhone">
+                        </div>
+                        <div class="form-group">
+                            <label for="staffDepartment">Department</label>
+                            <input type="text" id="staffDepartment">
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="settings-section">
+                    <h4>Notification Preferences</h4>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="emailNotifications" checked>
+                            Email Notifications
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="dashboardNotifications" checked>
+                            Dashboard Notifications
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="approveBtn" class="btn btn-success">
+                <button id="saveSettingsBtn" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <button id="cancelSettingsBtn" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Provider Details Modal -->
+    <div id="providerDetailsModal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3 id="providerModalTitle">Service Provider Details</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="providerDetailsContent">
+                    <!-- Provider details will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="approveProviderBtn" class="btn btn-success">
                     <i class="fas fa-check"></i> Approve
                 </button>
-                <button id="rejectBtn" class="btn btn-danger">
+                <button id="rejectProviderBtn" class="btn btn-danger">
                     <i class="fas fa-times"></i> Reject
                 </button>
                 <button id="requestDocsBtn" class="btn btn-warning">
                     <i class="fas fa-file-alt"></i> Request Documents
                 </button>
-                <button id="cancelBtn" class="btn btn-secondary">
-                    Cancel
-                </button>
+                <button id="closeProviderBtn" class="btn btn-secondary">Close</button>
             </div>
         </div>
     </div>
 
-    <!-- Enhanced Rejection Modal -->
+    <!-- Rejection Modal -->
     <div id="rejectionModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -267,11 +223,11 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="rejectionReason">Reason for Rejection:</label>
-                    <textarea id="rejectionReason" rows="4" placeholder="Please provide a detailed reason for rejection..."></textarea>
+                    <textarea id="rejectionReason" rows="4" placeholder="Please provide a detailed reason for rejection..." required></textarea>
                 </div>
                 <div class="form-group">
                     <label for="rejectionCategory">Rejection Category:</label>
-                    <select id="rejectionCategory">
+                    <select id="rejectionCategory" required>
                         <option value="">Select a category</option>
                         <option value="incomplete_docs">Incomplete Documentation</option>
                         <option value="invalid_license">Invalid License</option>
@@ -282,16 +238,14 @@
                 </div>
                 <div class="form-group">
                     <label for="nextSteps">Next Steps for Applicant:</label>
-                    <textarea id="nextSteps" rows="3" placeholder="What should the applicant do next?"></textarea>
+                    <textarea id="nextSteps" rows="3" placeholder="What should the applicant do next?" required></textarea>
                 </div>
             </div>
             <div class="modal-footer">
                 <button id="confirmRejectBtn" class="btn btn-danger">
                     <i class="fas fa-times"></i> Confirm Rejection
                 </button>
-                <button id="cancelRejectBtn" class="btn btn-secondary">
-                    Cancel
-                </button>
+                <button id="cancelRejectBtn" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
     </div>
@@ -306,11 +260,11 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="documentRequest">Documents Required:</label>
-                    <textarea id="documentRequest" rows="4" placeholder="Please specify which additional documents are needed..."></textarea>
+                    <textarea id="documentRequest" rows="4" placeholder="Please specify which additional documents are needed..." required></textarea>
                 </div>
                 <div class="form-group">
                     <label for="deadline">Deadline for Submission:</label>
-                    <input type="date" id="deadline" min="">
+                    <input type="date" id="deadline" min="" required>
                 </div>
                 <div class="form-group">
                     <label for="requestNotes">Additional Notes:</label>
@@ -321,9 +275,7 @@
                 <button id="confirmRequestBtn" class="btn btn-warning">
                     <i class="fas fa-paper-plane"></i> Send Request
                 </button>
-                <button id="cancelRequestBtn" class="btn btn-secondary">
-                    Cancel
-                </button>
+                <button id="cancelRequestBtn" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
     </div>

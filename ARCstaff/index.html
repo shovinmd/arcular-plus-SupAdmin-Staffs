@@ -181,6 +181,17 @@
             padding-left: 45px;
         }
 
+        .form-group .input-icon select {
+            padding-left: 45px;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 16px;
+            padding-right: 45px;
+        }
+
         .remember-forgot {
             display: flex;
             justify-content: space-between;
@@ -316,7 +327,7 @@
                 <div class="login-left-content">
                     <div class="welcome-logo">
                         <img src="logo1.png" alt="Arcular+ Logo" style="height:140px;width:auto;display:block;margin:0 auto 32px auto;">
-                    </div>
+            </div>
                     <h1 class="welcome-title">Welcome to Arcular+</h1>
                     <p class="welcome-subtitle">Healthcare Staff Control Panel</p>
                     
@@ -324,24 +335,24 @@
                         <li>
                             <i class="fas fa-check-circle"></i>
                             <span>Verify and approve healthcare provider registrations</span>
-                        </li>
+                </li>
                         <li>
                             <i class="fas fa-check-circle"></i>
                             <span>Review documentation and certificates</span>
-                        </li>
+                </li>
                         <li>
                             <i class="fas fa-check-circle"></i>
                             <span>Manage user accounts and access control</span>
-                        </li>
+                </li>
                         <li>
                             <i class="fas fa-check-circle"></i>
                             <span>Generate reports and analytics</span>
-                        </li>
+                </li>
                         <li>
                             <i class="fas fa-check-circle"></i>
                             <span>Monitor system activity and workflows</span>
-                        </li>
-                    </ul>
+                </li>
+            </ul>
                 </div>
             </div>
 
@@ -351,24 +362,24 @@
                     <h2>Staff Login</h2>
                     <p>Access the Arcular+ control panel</p>
                 </div>
-
+                
                                  <!-- Error Message -->
                  <div class="error-message" id="errorMessage">
                      <i class="fas fa-exclamation-circle"></i>
                      <span id="errorText">Invalid credentials. Please try again.</span>
-                 </div>
+                        </div>
                  
                  <!-- Login Error Message (for Firebase errors) -->
                  <div class="error-message" id="login-error" style="display: none;">
                      <i class="fas fa-exclamation-circle"></i>
                      <span id="login-error-text"></span>
-                 </div>
+                        </div>
 
                 <!-- Success Message -->
                 <div class="success-message" id="successMessage">
                     <i class="fas fa-check-circle"></i>
                     <span>Login successful! Redirecting...</span>
-                </div>
+                    </div>
 
                 <form class="login-form" id="loginForm">
                     <div class="form-group">
@@ -384,6 +395,19 @@
                         <div class="input-icon">
                             <i class="fas fa-lock"></i>
                             <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="staffType">Staff Type</label>
+                        <div class="input-icon">
+                            <i class="fas fa-user-tag"></i>
+                            <select id="staffType" name="staffType" required>
+                                <option value="">Select your role</option>
+                                <option value="arcstaff">ARC Staff</option>
+                                <option value="backend_manager">Backend Manager</option>
+                                <option value="patient_supervisor">Patient Supervisor</option>
+                            </select>
                         </div>
                     </div>
 
@@ -404,11 +428,11 @@
                                  <div class="login-footer">
                      <p>© 2025 Arcular+ Healthcare Platform. All rights reserved.</p>
                      <p>For technical support, contact: support@arcularplus.com</p>
-                 </div>
+                </div>
             </div>
-        </div>
-    </div>
-
+                    </div>
+                </div>
+                
     <script>
         // Firebase configuration for Arcular+ project
         const firebaseConfig = {
@@ -433,7 +457,14 @@
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const staffType = document.getElementById('staffType').value;
             const remember = document.getElementById('remember').checked;
+            
+            // Validate staff type selection
+            if (!staffType) {
+                showErrorMessage('Please select your staff type.');
+                return;
+            }
             
             // Hide any existing messages
             hideMessages();
@@ -495,10 +526,29 @@
                         // Show success message
                         showSuccessMessage('Login successful! Redirecting to dashboard...');
                         
-                        // Redirect to dashboard after delay
+                        // Redirect to appropriate dashboard based on staff type
                         setTimeout(() => {
-                            console.log('🔄 Redirecting to dashboard...');
-                            window.location.href = 'arcstaff-dashboard.html';
+                            console.log('🔄 Redirecting to dashboard for staff type:', staffType);
+                            
+                            let dashboardUrl;
+                            switch (staffType) {
+                                case 'arcstaff':
+                                    dashboardUrl = 'arcstaff-dashboard.html';
+                                    break;
+                                case 'backend_manager':
+                                    dashboardUrl = '../BackendManager/index.html';
+                                    break;
+                                case 'patient_supervisor':
+                                    dashboardUrl = '../PatientSupervisor/index.html';
+                                    break;
+                                default:
+                                    dashboardUrl = 'arcstaff-dashboard.html';
+                            }
+                            
+                            // Store staff type for future use
+                            localStorage.setItem('staff_type', staffType);
+                            
+                            window.location.href = dashboardUrl;
                         }, 2000);
                         
                     } else {
@@ -567,11 +617,29 @@
             
             // Check if we have a valid token first
             const hasToken = localStorage.getItem('staff_idToken');
-            if (hasToken) {
-                console.log('✅ Token found in storage, redirecting to dashboard');
+            const staffType = localStorage.getItem('staff_type');
+            
+            if (hasToken && staffType) {
+                console.log('✅ Token and staff type found in storage, redirecting to dashboard');
+                
+                let dashboardUrl;
+                switch (staffType) {
+                    case 'arcstaff':
+                        dashboardUrl = 'arcstaff-dashboard.html';
+                        break;
+                    case 'backend_manager':
+                        dashboardUrl = '../BackendManager/index.html';
+                        break;
+                    case 'patient_supervisor':
+                        dashboardUrl = '../PatientSupervisor/index.html';
+                        break;
+                    default:
+                        dashboardUrl = 'arcstaff-dashboard.html';
+                }
+                
                 // Add a small delay to prevent rapid redirects
                 setTimeout(() => {
-                    window.location.href = 'arcstaff-dashboard.html';
+                    window.location.href = dashboardUrl;
                 }, 500);
                 return;
             }
@@ -585,8 +653,26 @@
                     if (idToken) {
                         // User is authenticated and has token, redirect to dashboard
                         console.log('✅ User already authenticated, redirecting to dashboard');
+                        
+                        const staffType = localStorage.getItem('staff_type');
+                        let dashboardUrl = 'arcstaff-dashboard.html'; // Default
+                        
+                        if (staffType) {
+                            switch (staffType) {
+                                case 'arcstaff':
+                                    dashboardUrl = 'arcstaff-dashboard.html';
+                                    break;
+                                case 'backend_manager':
+                                    dashboardUrl = '../BackendManager/index.html';
+                                    break;
+                                case 'patient_supervisor':
+                                    dashboardUrl = '../PatientSupervisor/index.html';
+                                    break;
+                            }
+                        }
+                        
                         setTimeout(() => {
-                            window.location.href = 'arcstaff-dashboard.html';
+                            window.location.href = dashboardUrl;
                         }, 500);
                     }
                 } else {

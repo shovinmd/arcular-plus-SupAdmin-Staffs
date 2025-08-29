@@ -10,6 +10,7 @@ let allUsers = {
     labs: [],
     pharmacies: []
 };
+let redirectInProgress = false; // Flag to prevent multiple redirects
 
 // Stats data
 let dashboardStats = {
@@ -531,6 +532,10 @@ async function restoreServiceProvider(type, id) {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    // Reset redirect flag on page load
+    redirectInProgress = false;
+    console.log('🔄 Page loaded, redirect flag reset');
+    
     // Check if we're on the dashboard page
     if (window.location.pathname.includes('arcstaff-dashboard.html')) {
         checkArcStaffSession();
@@ -594,6 +599,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Redirect based on staff type
                         const staffType = document.getElementById('staffType').value;
                         console.log('🔀 Staff type selected:', staffType);
+                        console.log('✅ Token and staff type stored in localStorage');
+                        
+                        // Set redirect flag to prevent multiple redirects
+                        redirectInProgress = true;
+                        console.log('🚩 Redirect flag set to prevent conflicts');
                         
                         switch(staffType) {
                             case 'arcstaff':
@@ -665,7 +675,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- ARC Staff Dashboard Logic ---
-    checkArcStaffSession();
+    // checkArcStaffSession(); // Removed duplicate call to prevent conflicts
     
     // Check authentication state
     firebase.auth().onAuthStateChanged(async function(user) {
@@ -698,15 +708,31 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Check staff type and redirect if needed
                     const staffType = localStorage.getItem('staffType');
-                    if (staffType && staffType !== 'arcstaff') {
+                    console.log('🔍 Checking staff type for redirection:', staffType);
+                    
+                    // Only redirect if we're on the ARC Staff dashboard and user is not ARC Staff
+                    if (window.location.pathname.includes('arcstaff-dashboard.html') && staffType && staffType !== 'arcstaff' && !redirectInProgress) {
                         console.log('🔄 Staff type mismatch, redirecting to appropriate dashboard');
+                        redirectInProgress = true; // Set flag to prevent multiple redirects
+                        
                         switch(staffType) {
                             case 'backend_manager':
+                                console.log('🔄 Redirecting Backend Manager to:', '../BackendManager/index.html');
                                 window.location.href = '../BackendManager/index.html';
                                 return;
                             case 'patient_supervisor':
+                                console.log('🔄 Redirecting Patient Supervisor to:', '../PatientSupervisor/index.html');
                                 window.location.href = '../PatientSupervisor/index.html';
                                 return;
+                            default:
+                                console.log('⚠️ Unknown staff type:', staffType);
+                                break;
+                        }
+                    } else {
+                        if (redirectInProgress) {
+                            console.log('🚩 Redirect already in progress, skipping additional redirects');
+                        } else {
+                            console.log('✅ Staff type is ARC Staff or not on ARC Staff dashboard, staying put');
                         }
                     }
                     
@@ -2210,6 +2236,12 @@ function checkArcStaffSession() {
   const idToken = localStorage.getItem('staff_idToken');
   const staffType = localStorage.getItem('staffType');
   
+  // Only run this function if we're on the ARC Staff dashboard
+  if (!window.location.pathname.includes('arcstaff-dashboard.html')) {
+    console.log('🚫 Not on ARC Staff dashboard, skipping session check');
+    return;
+  }
+  
   if (!idToken) {
     console.log('❌ No token found, checking Firebase auth state');
     // Check if user is already authenticated with Firebase
@@ -2234,32 +2266,27 @@ function checkArcStaffSession() {
     } else {
       console.log('✅ Firebase user verified, session valid');
       
-      // Check if we're on the correct dashboard for the staff type
-      const currentPath = window.location.pathname;
-      let shouldRedirect = false;
-      let redirectUrl = '';
-      
-      if (staffType === 'backend_manager' && !currentPath.includes('BackendManager')) {
-        shouldRedirect = true;
-        redirectUrl = '../BackendManager/index.html';
-      } else if (staffType === 'patient_supervisor' && !currentPath.includes('PatientSupervisor')) {
-        shouldRedirect = true;
-        redirectUrl = '../PatientSupervisor/index.html';
-      } else if (staffType === 'arcstaff' && !currentPath.includes('arcstaff-dashboard')) {
-        shouldRedirect = true;
-        redirectUrl = 'arcstaff-dashboard.html';
+      // Only redirect if user is not ARC Staff (let main onAuthStateChanged handle other redirects)
+      if (staffType && staffType !== 'arcstaff' && !redirectInProgress) {
+        console.log('🔄 User is not ARC Staff, redirecting to appropriate dashboard');
+        redirectInProgress = true; // Set flag to prevent multiple redirects
+        
+        switch(staffType) {
+          case 'backend_manager':
+            console.log('🔄 checkArcStaffSession: Redirecting Backend Manager to:', '../BackendManager/index.html');
+            window.location.href = '../BackendManager/index.html';
+            return;
+          case 'patient_supervisor':
+            console.log('🔄 checkArcStaffSession: Redirecting Patient Supervisor to:', '../PatientSupervisor/index.html');
+            window.location.href = '../PatientSupervisor/index.html';
+            return;
+        }
+      } else if (redirectInProgress) {
+        console.log('🚩 checkArcStaffSession: Redirect already in progress, skipping');
       }
       
-      if (shouldRedirect) {
-        console.log('🔄 Redirecting to correct dashboard for staff type:', staffType);
-        window.location.href = redirectUrl;
-        return;
-      }
-      
-      // Initialize dashboard if we're on the correct dashboard page
-      if (currentPath.includes('arcstaff-dashboard.html')) {
-        initializeArcStaffDashboard();
-      }
+      // Initialize dashboard for ARC Staff
+      initializeArcStaffDashboard();
     }
   });
 }

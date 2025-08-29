@@ -58,6 +58,70 @@
             </div>
         </header>
 
+        <!-- Stats Overview Section -->
+        <section class="stats-section">
+            <div class="section-header">
+                <h3>Platform Overview</h3>
+                <div class="stats-filters">
+                    <select id="stats-period">
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month" selected>This Month</option>
+                    </select>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-providers-count">0</h3>
+                        <p>Total Providers</p>
+                        <div class="stat-trend positive">
+                            <i class="fas fa-arrow-up"></i> <span>12%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="approved-providers-count">0</h3>
+                        <p>Approved Providers</p>
+                        <div class="stat-trend positive">
+                            <i class="fas fa-arrow-up"></i> <span>8%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="pending-approvals-count">0</h3>
+                        <p>Pending Approvals</p>
+                        <div class="stat-trend neutral">
+                            <i class="fas fa-minus"></i> <span>0%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-departments">0</h3>
+                        <p>Departments</p>
+                        <div class="stat-trend positive">
+                            <i class="fas fa-arrow-up"></i> <span>5%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Main Dashboard Layout -->
         <div class="dashboard-layout">
             <!-- Left Sidebar - Service Providers -->
@@ -143,20 +207,28 @@
                     <h4>Profile Information</h4>
                     <form id="profileForm">
                         <div class="form-group">
-                            <label for="staffName">Full Name</label>
+                            <label for="staffName">Full Name *</label>
                             <input type="text" id="staffName" required>
                         </div>
                         <div class="form-group">
-                            <label for="staffEmail">Email</label>
-                            <input type="email" id="staffEmail" required>
+                            <label for="staffEmail">Email *</label>
+                            <input type="email" id="staffEmail" required readonly>
                         </div>
                         <div class="form-group">
-                            <label for="staffPhone">Phone</label>
-                            <input type="tel" id="staffPhone">
+                            <label for="staffPhone">Phone Number *</label>
+                            <input type="tel" id="staffPhone" required>
                         </div>
                         <div class="form-group">
-                            <label for="staffDepartment">Department</label>
-                            <input type="text" id="staffDepartment">
+                            <label for="staffDepartment">Department *</label>
+                            <input type="text" id="staffDepartment" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="staffAddress">Address</label>
+                            <textarea id="staffAddress" rows="3" placeholder="Enter your full address"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="staffBio">Bio</label>
+                            <textarea id="staffBio" rows="3" placeholder="Tell us about yourself"></textarea>
                         </div>
                     </form>
                 </div>
@@ -204,6 +276,9 @@
                 </button>
                 <button id="rejectProviderBtn" class="btn btn-danger">
                     <i class="fas fa-times"></i> Reject
+                </button>
+                <button id="restoreProviderBtn" class="btn btn-info" style="display: none;">
+                    <i class="fas fa-undo"></i> Restore
                 </button>
                 <button id="requestDocsBtn" class="btn btn-warning">
                     <i class="fas fa-file-alt"></i> Request Documents

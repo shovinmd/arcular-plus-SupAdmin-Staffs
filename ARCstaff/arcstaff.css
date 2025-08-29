@@ -1,7 +1,7 @@
 /* Reset and Base Styles */
 * {
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
     box-sizing: border-box;
 }
 
@@ -229,10 +229,131 @@ body {
     background: #f8fafc;
 }
 
+/* Stats Section */
+.stats-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 25px;
+    margin: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.section-header h3 {
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.stats-filters select {
+    padding: 8px 15px;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.9rem;
+    color: #2c3e50;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.stats-filters select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    opacity: 0.9;
+}
+
+.stat-content h3 {
+    font-size: 2.5rem;
+  font-weight: 700;
+    margin: 0 0 10px 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-content p {
+    font-size: 1rem;
+    margin: 0 0 15px 0;
+    opacity: 0.9;
+}
+
+.stat-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.stat-trend.positive {
+    color: #2ecc71;
+}
+
+.stat-trend.negative {
+    color: #e74c3c;
+}
+
+.stat-trend.neutral {
+    color: #95a5a6;
+}
+
 /* Dashboard Layout */
 .dashboard-layout {
     display: flex;
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 200px);
 }
 
 /* Sidebar */
@@ -349,7 +470,7 @@ body {
 
 .welcome-message h2 {
     margin-bottom: 10px;
-    color: #333;
+  color: #333;
 }
 
 .welcome-message p {
@@ -621,7 +742,7 @@ body {
     }
     
     .sidebar {
-        width: 100%;
+  width: 100%;
         border-right: none;
         border-bottom: 1px solid #e1e5e9;
     }
@@ -731,7 +852,7 @@ body {
 .refresh-btn, .logout-btn {
     padding: 10px 15px;
     border: none;
-    border-radius: 8px;
+  border-radius: 8px;
     cursor: pointer;
     font-weight: 500;
     transition: all 0.3s ease;
@@ -849,7 +970,7 @@ body {
 }
 
 .search-box input:focus {
-    outline: none;
+  outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
@@ -858,7 +979,7 @@ body {
 .filter-select {
     padding: 12px 15px;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
+  border-radius: 8px;
     background: white;
     font-size: 14px;
     cursor: pointer;
@@ -930,7 +1051,7 @@ body {
 
 .stat-content p {
     color: #64748b;
-    font-size: 16px;
+  font-size: 16px;
     font-weight: 500;
     margin-bottom: 15px;
 }
@@ -976,7 +1097,7 @@ body {
 
 .approval-info h4 {
     font-size: 18px;
-    font-weight: 600;
+  font-weight: 600;
     color: #1e293b;
     margin-bottom: 8px;
 }
@@ -1071,7 +1192,7 @@ body {
     background: none;
     border: none;
     padding: 15px 25px;
-    cursor: pointer;
+  cursor: pointer;
     font-size: 16px;
     font-weight: 500;
     color: #64748b;
@@ -1153,8 +1274,8 @@ body {
 
 /* Enhanced Table Styles */
 .data-table {
-    width: 100%;
-    border-collapse: collapse;
+  width: 100%;
+  border-collapse: collapse;
     background: white;
     border-radius: 8px;
     overflow: hidden;
@@ -1165,7 +1286,7 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 15px 12px;
-    text-align: left;
+  text-align: left;
     font-weight: 600;
     font-size: 0.9rem;
     text-transform: uppercase;

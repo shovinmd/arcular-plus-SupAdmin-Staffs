@@ -11,6 +11,14 @@ let allUsers = {
     pharmacies: []
 };
 
+// Stats data
+let dashboardStats = {
+    totalProviders: 0,
+    approvedProviders: 0,
+    pendingApprovals: 0,
+    totalDepartments: 5
+};
+
 // Current selected service provider
 let currentProviderType = null;
 let currentProviderData = {
@@ -36,6 +44,130 @@ if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 } else if (typeof firebase === 'undefined') {
     console.warn('Firebase SDK not loaded');
+}
+
+// Stats Functions
+function updateDashboardStats() {
+    console.log('📊 Updating dashboard stats...');
+    
+    // Update stats display
+    document.getElementById('total-providers-count').textContent = dashboardStats.totalProviders;
+    document.getElementById('approved-providers-count').textContent = dashboardStats.approvedProviders;
+    document.getElementById('pending-approvals-count').textContent = dashboardStats.pendingApprovals;
+    document.getElementById('total-departments').textContent = dashboardStats.totalDepartments;
+    
+    // Update sidebar counts
+    updateSidebarCounts();
+    
+    console.log('✅ Dashboard stats updated:', dashboardStats);
+}
+
+// Setup stats filtering
+function setupStatsFilter() {
+    const statsPeriodSelect = document.getElementById('stats-period');
+    if (statsPeriodSelect) {
+        statsPeriodSelect.addEventListener('change', function() {
+            const selectedPeriod = this.value;
+            console.log('📊 Stats period changed to:', selectedPeriod);
+            loadFilteredStats(selectedPeriod);
+        });
+    }
+}
+
+// Load filtered stats based on period
+async function loadFilteredStats(period) {
+    try {
+        const token = await getAuthToken();
+        const response = await fetch(`${API_BASE_URL}/arc-staff/stats?period=${period}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                const stats = result.data;
+                
+                // Update dashboard stats with filtered data
+                dashboardStats.totalProviders = stats.totalProviders || 0;
+                dashboardStats.approvedProviders = stats.approvedProviders || 0;
+                dashboardStats.pendingApprovals = stats.pendingApprovals || 0;
+                dashboardStats.totalDepartments = stats.totalDepartments || 5;
+                
+                // Update display
+                updateDashboardStats();
+                
+                // Update trend indicators
+                updateTrendIndicators(stats.trends || {});
+                
+                console.log(`✅ ${period} stats loaded:`, stats);
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error loading filtered stats:', error);
+        // Fallback to current stats if API fails
+        updateDashboardStats();
+    }
+}
+
+// Update trend indicators
+function updateTrendIndicators(trends) {
+    const trendElements = document.querySelectorAll('.stat-trend');
+    trendElements.forEach((element, index) => {
+        const trend = trends[index] || { type: 'neutral', value: 0 };
+        
+        // Remove existing classes
+        element.className = 'stat-trend';
+        
+        // Add appropriate class and content
+        if (trend.type === 'positive') {
+            element.classList.add('positive');
+            element.innerHTML = `<i class="fas fa-arrow-up"></i> <span>${trend.value}%</span>`;
+        } else if (trend.type === 'negative') {
+            element.classList.add('negative');
+            element.innerHTML = `<i class="fas fa-arrow-down"></i> <span>${trend.value}%</span>`;
+        } else {
+            element.classList.add('neutral');
+            element.innerHTML = `<i class="fas fa-minus"></i> <span>${trend.value}%</span>`;
+        }
+    });
+}
+
+function updateSidebarCounts() {
+    // Update hospital counts
+    const hospitalApproved = allUsers.hospitals.filter(user => user.isApproved).length;
+    const hospitalPending = allUsers.hospitals.filter(user => !user.isApproved).length;
+    document.getElementById('hospitalApprovedCount').textContent = hospitalApproved;
+    document.getElementById('hospitalPendingCount').textContent = hospitalPending;
+    
+    // Update doctor counts
+    const doctorApproved = allUsers.doctors.filter(user => user.isApproved).length;
+    const doctorPending = allUsers.doctors.filter(user => !user.isApproved).length;
+    document.getElementById('doctorApprovedCount').textContent = doctorApproved;
+    document.getElementById('doctorPendingCount').textContent = doctorPending;
+    
+    // Update nurse counts
+    const nurseApproved = allUsers.nurses.filter(user => user.isApproved).length;
+    const nursePending = allUsers.nurses.filter(user => !user.isApproved).length;
+    document.getElementById('nurseApprovedCount').textContent = nurseApproved;
+    document.getElementById('nursePendingCount').textContent = nursePending;
+    
+    // Update lab counts
+    const labApproved = allUsers.labs.filter(user => user.isApproved).length;
+    const labPending = allUsers.labs.filter(user => !user.isApproved).length;
+    document.getElementById('labApprovedCount').textContent = labApproved;
+    document.getElementById('labPendingCount').textContent = labPending;
+    
+    // Update pharmacy counts
+    const pharmacyApproved = allUsers.pharmacies.filter(user => user.isApproved).length;
+    const pharmacyPending = allUsers.pharmacies.filter(user => !user.isApproved).length;
+    document.getElementById('pharmacyApprovedCount').textContent = pharmacyApproved;
+    document.getElementById('pharmacyPendingCount').textContent = pharmacyPending;
+    
+    // Update total stats
+    dashboardStats.totalProviders = allUsers.hospitals.length + allUsers.doctors.length + 
+                                   allUsers.nurses.length + allUsers.labs.length + allUsers.pharmacies.length;
+    dashboardStats.approvedProviders = hospitalApproved + doctorApproved + nurseApproved + labApproved + pharmacyApproved;
+    dashboardStats.pendingApprovals = hospitalPending + doctorPending + nursePending + labPending + pharmacyPending;
 }
 
 // API Functions for real backend integration
@@ -360,6 +492,39 @@ async function rejectServiceProvider(type, id, reason, category, nextSteps) {
         return data.success;
     } catch (error) {
         console.error(`Error rejecting ${type}:`, error);
+        return false;
+    }
+}
+
+// Restore a rejected service provider
+async function restoreServiceProvider(type, id) {
+    try {
+        const token = await getAuthToken();
+        
+        const response = await fetch(`${API_BASE_URL}/arc-staff/restore/${type}/${id}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                console.log('✅ Service provider restored successfully');
+                showSuccessMessage('Service provider restored successfully!');
+                return true;
+            } else {
+                throw new Error(result.message || 'Failed to restore service provider');
+            }
+        } else {
+            throw new Error('Failed to restore service provider');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error restoring service provider:', error);
+        showErrorMessage('Failed to restore service provider. Please try again.');
         return false;
     }
 }
@@ -5031,6 +5196,77 @@ function populateProviderDetailsModal(provider, providerType) {
     
     // Store current provider for approval/rejection
     window.currentProvider = { ...provider, type: providerType };
+    
+    // Setup modal event listeners
+    setupProviderModalEventListeners(provider, providerType);
+}
+
+// Setup provider modal event listeners
+function setupProviderModalEventListeners(provider, providerType) {
+    const approveBtn = document.getElementById('approveProviderBtn');
+    const rejectBtn = document.getElementById('rejectProviderBtn');
+    const restoreBtn = document.getElementById('restoreProviderBtn');
+    const requestDocsBtn = document.getElementById('requestDocsBtn');
+    const closeBtn = document.getElementById('closeProviderBtn');
+    
+    // Show/hide buttons based on provider status
+    if (approveBtn) {
+        approveBtn.style.display = provider.approvalStatus === 'pending' ? 'inline-block' : 'none';
+        approveBtn.onclick = () => handleApproveProvider(provider, providerType);
+    }
+    
+    if (rejectBtn) {
+        rejectBtn.style.display = provider.approvalStatus === 'pending' ? 'inline-block' : 'none';
+        rejectBtn.onclick = () => showRejectionModal(provider, providerType);
+    }
+    
+    if (restoreBtn) {
+        restoreBtn.style.display = provider.approvalStatus === 'rejected' ? 'inline-block' : 'none';
+        restoreBtn.onclick = () => handleRestoreProvider(provider, providerType);
+    }
+    
+    if (requestDocsBtn) {
+        requestDocsBtn.onclick = () => showDocumentRequestModal(provider, providerType);
+    }
+    
+    if (closeBtn) {
+        closeBtn.onclick = () => closeProviderDetailsModal();
+    }
+}
+
+// Handle approve provider
+async function handleApproveProvider(provider, providerType) {
+    try {
+        const success = await approveServiceProvider(providerType, provider.uid || provider.id, 'Approved by staff');
+        if (success) {
+            showSuccessMessage(`${providerType.charAt(0).toUpperCase() + providerType.slice(1)} approved successfully!`);
+            closeProviderDetailsModal();
+            // Refresh the current view
+            if (currentProviderType) {
+                loadServiceProviderData(currentProviderType);
+            }
+        }
+    } catch (error) {
+        console.error('Error approving provider:', error);
+        showErrorMessage('Failed to approve provider');
+    }
+}
+
+// Handle restore provider
+async function handleRestoreProvider(provider, providerType) {
+    try {
+        const success = await restoreServiceProvider(providerType, provider.uid || provider.id);
+        if (success) {
+            closeProviderDetailsModal();
+            // Refresh the current view
+            if (currentProviderType) {
+                loadServiceProviderData(currentProviderType);
+            }
+        }
+    } catch (error) {
+        console.error('Error restoring provider:', error);
+        showErrorMessage('Failed to restore provider');
+    }
 }
 
 // Render document section
@@ -5189,10 +5425,15 @@ async function loadStaffProfile() {
                 document.getElementById('staffEmail').value = profile.email || '';
                 document.getElementById('staffPhone').value = profile.mobileNumber || '';
                 document.getElementById('staffDepartment').value = profile.department || '';
+                document.getElementById('staffAddress').value = profile.address || '';
+                document.getElementById('staffBio').value = profile.bio || '';
+                
+                console.log('📋 Staff profile loaded:', profile);
             }
         }
     } catch (error) {
         console.error('❌ Error loading staff profile:', error);
+        showErrorMessage('Failed to load profile data');
     }
 }
 
@@ -5203,13 +5444,19 @@ async function saveStaffSettings() {
             fullName: document.getElementById('staffName').value,
             mobileNumber: document.getElementById('staffPhone').value,
             department: document.getElementById('staffDepartment').value,
+            address: document.getElementById('staffAddress').value,
+            bio: document.getElementById('staffBio').value,
             emailNotifications: document.getElementById('emailNotifications').checked,
-            dashboardNotifications: document.getElementById('dashboardNotifications').checked
+            dashboardNotifications: document.getElementById('dashboardNotifications').checked,
+            requiresApproval: true,
+            submittedAt: new Date().toISOString()
         };
         
         const token = await getAuthToken();
-        const response = await fetch(`${API_BASE_URL}/arc-staff/update-profile`, {
-            method: 'PUT',
+        
+        // Submit profile changes for admin approval instead of direct update
+        const response = await fetch(`${API_BASE_URL}/arc-staff/profile-changes`, {
+            method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -5220,23 +5467,21 @@ async function saveStaffSettings() {
         if (response.ok) {
             const result = await response.json();
             if (result.success) {
-                showSuccessMessage('Settings saved successfully!');
+                showSuccessMessage('Profile changes submitted for admin approval. You will be notified once approved.');
                 document.getElementById('settingsModal').style.display = 'none';
                 
-                // Update header display
-                if (formData.fullName) {
-                    document.getElementById('userName').textContent = formData.fullName;
-                }
+                // Don't update header display yet - wait for admin approval
+                console.log('📝 Profile changes submitted for approval:', formData);
             } else {
-                throw new Error(result.message || 'Failed to save settings');
+                throw new Error(result.message || 'Failed to submit profile changes');
             }
         } else {
-            throw new Error('Failed to save settings');
+            throw new Error('Failed to submit profile changes');
         }
         
     } catch (error) {
-        console.error('❌ Error saving settings:', error);
-        showErrorMessage('Failed to save settings');
+        console.error('❌ Error submitting profile changes:', error);
+        showErrorMessage('Failed to submit profile changes. Please try again.');
     }
 }
 
@@ -5261,6 +5506,9 @@ function initializeNewDashboard() {
     
     // Initialize settings
     initializeSettings();
+    
+    // Setup stats filtering
+    setupStatsFilter();
     
     // Load initial counts
     loadInitialCounts();

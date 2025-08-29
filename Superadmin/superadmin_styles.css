@@ -1134,4 +1134,147 @@ body {
     .stat-info span {
         font-size: 1.5rem;
     }
-} 
+}
+
+/* Report Options Modal Styles */
+.report-options-modal {
+    padding: 20px;
+}
+
+.report-options-modal h3 {
+    color: #1e40af;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+.report-type-selection,
+.report-format-selection,
+.report-date-range {
+    margin-bottom: 25px;
+}
+
+.report-options-modal h4 {
+    color: #374151;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.report-option,
+.format-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.report-option:hover,
+.format-option:hover {
+    background-color: #f3f4f6;
+}
+
+.report-option input[type="radio"],
+.format-option input[type="radio"] {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+    accent-color: #1e40af;
+}
+
+.report-option label,
+.format-option label {
+    font-size: 1rem;
+    color: #374151;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.report-date-range select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #374151;
+    background-color: white;
+    transition: border-color 0.2s ease;
+}
+
+.report-date-range select:focus {
+    outline: none;
+    border-color: #1e40af;
+}
+
+.report-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.report-actions .btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.report-actions .btn-primary {
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    color: white;
+}
+
+.report-actions .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
+}
+
+.report-actions .btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.report-actions .btn-secondary:hover {
+    background: #4b5563;
+}
+
+/* Success and Error Message Enhancements */
+.success-message,
+.error-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    z-index: 1001;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    animation: slideInRight 0.3s ease;
+}
+
+.success-message {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: white;
+}
+
+.error-message {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: white;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

@@ -53,16 +53,458 @@ function viewSystemStatus() {
 }
 
 function exportStaffData() {
-  showSuccessMessage('Staff data export will be available in the next update.');
+  showSuccessMessage('Exporting staff data...');
+  exportStaffDataToCSV();
 }
 
 function generateStaffReport() {
-  showSuccessMessage('Staff report generation will be available in the next update.');
+  showSuccessMessage('Generating staff report...');
+  generateStaffReportDetailed();
+}
+
+// Export staff data to CSV
+async function exportStaffDataToCSV() {
+  try {
+    const user = firebase.auth().currentUser;
+    const freshToken = await user.getIdToken();
+    
+    // Fetch staff data
+    const response = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/staff', {
+      headers: { 'Authorization': `Bearer ${freshToken}` }
+    });
+    
+    if (response.ok) {
+      const staffList = await response.json();
+      
+      // Convert to CSV
+      const csvContent = convertStaffToCSV(staffList);
+      
+      // Download CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `staff_data_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      showSuccessMessage('Staff data exported successfully!');
+      
+      // Clean up
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+    } else {
+      throw new Error('Failed to fetch staff data');
+    }
+    
+  } catch (error) {
+    console.error('Error exporting staff data:', error);
+    showErrorMessage('Failed to export staff data: ' + error.message);
+  }
+}
+
+// Convert staff data to CSV format
+function convertStaffToCSV(staffList) {
+  const headers = ['Name', 'Email', 'Role', 'Department', 'Status', 'Created At', 'Phone', 'Designation'];
+  
+  const csvRows = [headers.join(',')];
+  
+  staffList.forEach(staff => {
+    const row = [
+      staff.fullName || 'N/A',
+      staff.email || 'N/A',
+      staff.role || 'N/A',
+      staff.department || 'N/A',
+      staff.status || 'Active',
+      staff.createdAt ? new Date(staff.createdAt).toLocaleDateString() : 'N/A',
+      staff.mobileNumber || 'N/A',
+      staff.designation || 'N/A'
+    ].map(field => `"${field}"`).join(',');
+    
+    csvRows.push(row);
+  });
+  
+  return csvRows.join('\n');
+}
+
+// Generate detailed staff report
+async function generateStaffReportDetailed() {
+  try {
+    const user = firebase.auth().currentUser;
+    const freshToken = await user.getIdToken();
+    
+    // Fetch staff data
+    const response = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/staff', {
+      headers: { 'Authorization': `Bearer ${freshToken}` }
+    });
+    
+    if (response.ok) {
+      const staffList = await response.json();
+      
+      // Generate comprehensive report
+      const reportContent = generateComprehensiveStaffReport(staffList);
+      
+      // Download report
+      const blob = new Blob([reportContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `comprehensive_staff_report_${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      showSuccessMessage('Comprehensive staff report generated successfully!');
+      
+      // Clean up
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+    } else {
+      throw new Error('Failed to fetch staff data');
+    }
+    
+  } catch (error) {
+    console.error('Error generating staff report:', error);
+    showErrorMessage('Failed to generate staff report: ' + error.message);
+  }
+}
+
+// Generate comprehensive staff report content
+function generateComprehensiveStaffReport(staffList) {
+  const now = new Date();
+  
+  let report = `
+    COMPREHENSIVE STAFF REPORT
+    Generated: ${now.toLocaleDateString()} at ${now.toLocaleTimeString()}
+    ================================================================
+    
+    EXECUTIVE SUMMARY:
+    =================
+    Total Staff Members: ${staffList.length}
+    Active Staff: ${staffList.filter(s => s.status === 'active').length}
+    Pending Approvals: ${staffList.filter(s => s.status === 'pending').length}
+    Inactive Staff: ${staffList.filter(s => s.status === 'inactive').length}
+    
+    DEPARTMENT BREAKDOWN:
+    ===================
+  `;
+  
+  // Group by department
+  const departmentGroups = {};
+  staffList.forEach(staff => {
+    const dept = staff.department || 'Unassigned';
+    if (!departmentGroups[dept]) {
+      departmentGroups[dept] = [];
+    }
+    departmentGroups[dept].push(staff);
+  });
+  
+  Object.keys(departmentGroups).forEach(dept => {
+    const staffInDept = departmentGroups[dept];
+    report += `
+    ${dept}: ${staffInDept.length} staff members
+    `;
+  });
+  
+  report += `
+    
+    ROLE DISTRIBUTION:
+    =================
+  `;
+  
+  // Group by role
+  const roleGroups = {};
+  staffList.forEach(staff => {
+    const role = staff.role || 'Unassigned';
+    if (!roleGroups[role]) {
+      roleGroups[role] = [];
+    }
+    roleGroups[role].push(staff);
+  });
+  
+  Object.keys(roleGroups).forEach(role => {
+    const staffInRole = roleGroups[role];
+    report += `
+    ${role}: ${staffInRole.length} staff members
+    `;
+  });
+  
+  report += `
+    
+    DETAILED STAFF LISTING:
+    ======================
+  `;
+  
+  staffList.forEach((staff, index) => {
+    report += `
+    ${index + 1}. ${staff.fullName || 'N/A'}
+       Email: ${staff.email || 'N/A'}
+       Role: ${staff.role || 'N/A'}
+       Department: ${staff.department || 'N/A'}
+       Status: ${staff.status || 'Active'}
+       Created: ${staff.createdAt ? new Date(staff.createdAt).toLocaleDateString() : 'N/A'}
+       Phone: ${staff.mobileNumber || 'N/A'}
+       Designation: ${staff.designation || 'N/A'}
+    `;
+  });
+  
+  report += `
+    
+    RECOMMENDATIONS:
+    ================
+    - Monitor staff performance metrics
+    - Review pending approvals regularly
+    - Ensure proper role distribution
+    - Maintain department balance
+    
+    Report generated by Arcular+ Admin Dashboard
+    ===========================================
+  `;
+  
+  return report;
 }
 
 function generateReports() {
-  showSuccessMessage('Generating reports in DOC/PDF format...');
-  // Implement report generation functionality
+  showSuccessMessage('Generating comprehensive reports...');
+  
+  // Show report options modal
+  const reportOptions = `
+    <div class="report-options-modal">
+      <h3>Generate Reports</h3>
+      <div class="report-type-selection">
+        <div class="report-option">
+          <input type="radio" id="staff-report" name="report-type" value="staff" checked>
+          <label for="staff-report">Staff Report</label>
+        </div>
+        <div class="report-option">
+          <input type="radio" id="department-report" name="report-type" value="department">
+          <label for="department-report">Department Report</label>
+        </div>
+        <div class="report-option">
+          <input type="radio" id="activity-report" name="report-type" value="activity">
+          <label for="activity-report">Activity Report</label>
+        </div>
+      </div>
+      
+      <div class="report-format-selection">
+        <h4>Format:</h4>
+        <div class="format-option">
+          <input type="radio" id="pdf-format" name="report-format" value="pdf" checked>
+          <label for="pdf-format">PDF</label>
+        </div>
+        <div class="format-option">
+          <input type="radio" id="doc-format" name="report-format" value="doc">
+          <label for="doc-format">DOC</label>
+        </div>
+      </div>
+      
+      <div class="report-date-range">
+        <h4>Date Range:</h4>
+        <select id="report-date-range">
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month" selected>This Month</option>
+          <option value="quarter">This Quarter</option>
+          <option value="year">This Year</option>
+          <option value="custom">Custom Range</option>
+        </select>
+      </div>
+      
+      <div class="report-actions">
+        <button onclick="generateSelectedReport()" class="btn btn-primary">Generate Report</button>
+        <button onclick="closeReportModal()" class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  `;
+  
+  // Create modal
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'block';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+      ${reportOptions}
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+}
+
+function generateSelectedReport() {
+  const reportType = document.querySelector('input[name="report-type"]:checked').value;
+  const reportFormat = document.querySelector('input[name="report-format"]:checked').value;
+  const dateRange = document.getElementById('report-date-range').value;
+  
+  showSuccessMessage(`Generating ${reportType} report in ${reportFormat.toUpperCase()} format...`);
+  
+  // Generate the actual report
+  generateReport(reportType, reportFormat, dateRange);
+  
+  // Close modal
+  document.querySelector('.modal').remove();
+}
+
+function closeReportModal() {
+  document.querySelector('.modal').remove();
+}
+
+async function generateReport(type, format, dateRange) {
+  try {
+    const user = firebase.auth().currentUser;
+    const freshToken = await user.getIdToken();
+    
+    // Call backend API to generate report
+    const response = await fetch('https://arcular-plus-backend.onrender.com/admin/api/admin/generate-report', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${freshToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        reportType: type,
+        format: format,
+        dateRange: dateRange
+      })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      
+      if (result.downloadUrl) {
+        // Download the generated report
+        downloadReport(result.downloadUrl, `${type}_report_${new Date().toISOString().split('T')[0]}.${format}`);
+        showSuccessMessage('Report generated and downloaded successfully!');
+      } else {
+        showErrorMessage('Report generated but download URL not provided');
+      }
+    } else {
+      throw new Error('Failed to generate report');
+    }
+    
+  } catch (error) {
+    console.error('Error generating report:', error);
+    showErrorMessage('Failed to generate report: ' + error.message);
+    
+    // Fallback: Generate mock report for demonstration
+    generateMockReport(type, format, dateRange);
+  }
+}
+
+function generateMockReport(type, format, dateRange) {
+  showSuccessMessage('Generating mock report for demonstration...');
+  
+  // Create mock report content
+  let reportContent = '';
+  let fileName = '';
+  
+  switch (type) {
+    case 'staff':
+      reportContent = generateStaffReportContent();
+      fileName = `staff_report_${new Date().toISOString().split('T')[0]}`;
+      break;
+    case 'department':
+      reportContent = generateDepartmentReportContent();
+      fileName = `department_report_${new Date().toISOString().split('T')[0]}`;
+      break;
+    case 'activity':
+      reportContent = generateActivityReportContent();
+      fileName = `activity_report_${new Date().toISOString().split('T')[0]}`;
+      break;
+  }
+  
+  // Generate and download the file
+  if (format === 'pdf') {
+    generatePDF(reportContent, fileName);
+  } else {
+    generateDOC(reportContent, fileName);
+  }
+}
+
+function generateStaffReportContent() {
+  return `
+    STAFF REPORT
+    Generated: ${new Date().toLocaleDateString()}
+    
+    SUMMARY:
+    - Total Staff: ${document.getElementById('total-staff-count').textContent}
+    - Active Staff: ${document.getElementById('active-staff-count').textContent}
+    - Pending Approvals: ${document.getElementById('pending-approvals-count').textContent}
+    - Total Departments: ${document.getElementById('total-departments').textContent}
+    
+    DETAILS:
+    This report contains comprehensive information about all staff members,
+    their roles, departments, and current status.
+  `;
+}
+
+function generateDepartmentReportContent() {
+  return `
+    DEPARTMENT REPORT
+    Generated: ${new Date().toLocaleDateString()}
+    
+    DEPARTMENT OVERVIEW:
+    - Total Departments: ${document.getElementById('total-departments').textContent}
+    
+    STAFF DISTRIBUTION:
+    - ARC Staff: Various departments
+    - Patient Supervisors: Patient support teams
+    - Backend Managers: Technical teams
+    - Super Admins: Management team
+    
+    PERFORMANCE METRICS:
+    - Department efficiency ratings
+    - Staff productivity metrics
+    - Resource allocation data
+  `;
+}
+
+function generateActivityReportContent() {
+  return `
+    ACTIVITY REPORT
+    Generated: ${new Date().toLocaleDateString()}
+    
+    RECENT ACTIVITIES:
+    - Staff profile updates
+    - New staff registrations
+    - Department changes
+    - System access logs
+    
+    PERFORMANCE INDICATORS:
+    - Response times
+    - Completion rates
+    - User satisfaction scores
+    - System uptime metrics
+  `;
+}
+
+function generatePDF(content, fileName) {
+  // For demonstration, create a text file that can be converted to PDF
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  downloadReport(url, `${fileName}.txt`);
+  
+  showSuccessMessage('Report generated! (Text file - can be converted to PDF)');
+}
+
+function generateDOC(content, fileName) {
+  // For demonstration, create a text file that can be opened in Word
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  downloadReport(url, `${fileName}.txt`);
+  
+  showSuccessMessage('Report generated! (Text file - can be opened in Word)');
+}
+
+function downloadReport(url, fileName) {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  // Clean up the URL object
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
 function managePlatformSettings() {

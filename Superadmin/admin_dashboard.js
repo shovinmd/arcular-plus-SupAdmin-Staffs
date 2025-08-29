@@ -285,17 +285,13 @@ function generateReports() {
         </div>
       </div>
       
-      <div class="report-format-selection">
-        <h4>Format:</h4>
-        <div class="format-option">
-          <input type="radio" id="pdf-format" name="report-format" value="pdf" checked>
-          <label for="pdf-format">PDF</label>
-        </div>
-        <div class="format-option">
-          <input type="radio" id="doc-format" name="report-format" value="doc">
-          <label for="doc-format">DOC</label>
-        </div>
-      </div>
+             <div class="report-format-selection">
+         <h4>Format:</h4>
+         <div class="format-option">
+           <input type="radio" id="doc-format" name="report-format" value="doc" checked>
+           <label for="doc-format">DOC (Word Document)</label>
+         </div>
+       </div>
       
       <div class="report-date-range">
         <h4>Date Range:</h4>
@@ -332,13 +328,12 @@ function generateReports() {
 
 function generateSelectedReport() {
   const reportType = document.querySelector('input[name="report-type"]:checked').value;
-  const reportFormat = document.querySelector('input[name="report-format"]:checked').value;
   const dateRange = document.getElementById('report-date-range').value;
   
-  showSuccessMessage(`Generating ${reportType} report in ${reportFormat.toUpperCase()} format...`);
+  showSuccessMessage(`Generating ${reportType} report in DOC format...`);
   
-  // Generate the actual report
-  generateReport(reportType, reportFormat, dateRange);
+  // Generate the actual report (always DOC format)
+  generateReport(reportType, 'doc', dateRange);
   
   // Close modal
   document.querySelector('.modal').remove();
@@ -362,7 +357,7 @@ async function generateReport(type, format, dateRange) {
       },
       body: JSON.stringify({
         reportType: type,
-        format: format,
+        format: 'doc', // Always use DOC format
         dateRange: dateRange
       })
     });
@@ -372,7 +367,7 @@ async function generateReport(type, format, dateRange) {
       
       if (result.downloadUrl) {
         // Download the generated report
-        downloadReport(result.downloadUrl, `${type}_report_${new Date().toISOString().split('T')[0]}.${format}`);
+        downloadReport(result.downloadUrl, `${type}_report_${new Date().toISOString().split('T')[0]}.doc`);
         showSuccessMessage('Report generated and downloaded successfully!');
       } else {
         showErrorMessage('Report generated but download URL not provided');
@@ -386,12 +381,12 @@ async function generateReport(type, format, dateRange) {
     showErrorMessage('Failed to generate report: ' + error.message);
     
     // Fallback: Generate mock report for demonstration
-    generateMockReport(type, format, dateRange);
+    generateMockReport(type, 'doc', dateRange);
   }
 }
 
 function generateMockReport(type, format, dateRange) {
-  showSuccessMessage('Generating mock report for demonstration...');
+  showSuccessMessage('Generating DOC report...');
   
   // Create mock report content
   let reportContent = '';
@@ -412,12 +407,8 @@ function generateMockReport(type, format, dateRange) {
       break;
   }
   
-  // Generate and download the file
-  if (format === 'pdf') {
-    generatePDF(reportContent, fileName);
-  } else {
-    generateDOC(reportContent, fileName);
-  }
+  // Always generate DOC format
+  generateDOC(reportContent, fileName);
 }
 
 function generateStaffReportContent() {
@@ -552,98 +543,88 @@ function generateActivityReportContent() {
   `;
 }
 
-function generatePDF(content, fileName) {
-  // Create a proper PDF using jsPDF library
-  try {
-    // Check if jsPDF is available
-    if (typeof jsPDF === 'undefined') {
-      // Fallback to text file if jsPDF not available
-      const blob = new Blob([content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      downloadReport(url, `${fileName}.txt`);
-      showSuccessMessage('Report generated! (Text file - can be converted to PDF)');
-      return;
-    }
-
-    // Create PDF document
-    const { jsPDF } = window.jsPDF;
-    const doc = new jsPDF();
-    
-    // Set font and size
-    doc.setFont('helvetica');
-    doc.setFontSize(12);
-    
-    // Split content into lines that fit page width
-    const maxWidth = 190; // Maximum width for text
-    const lines = doc.splitTextToSize(content, maxWidth);
-    
-    // Add content to PDF
-    let yPosition = 20;
-    const lineHeight = 7;
-    
-    lines.forEach((line, index) => {
-      // Check if we need a new page
-      if (yPosition > 270) {
-        doc.addPage();
-        yPosition = 20;
-      }
-      
-      doc.text(line, 10, yPosition);
-      yPosition += lineHeight;
-    });
-    
-    // Save the PDF
-    doc.save(`${fileName}.pdf`);
-    showSuccessMessage('PDF report generated and downloaded successfully!');
-    
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    // Fallback to text file
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    downloadReport(url, `${fileName}.txt`);
-    showSuccessMessage('Report generated! (Text file - can be converted to PDF)');
-  }
-}
+// PDF generation removed - only DOC format supported
 
 function generateDOC(content, fileName) {
-  // Create a proper DOC file using docx library or create a rich text format
   try {
-    // Create a rich text format that Word can open
+    // Create a rich HTML document that Word can open properly
     const richContent = `
-      <html>
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
         <head>
           <meta charset="utf-8">
+          <meta name="ProgId" content="Word.Document">
+          <meta name="Generator" content="Microsoft Word 15">
+          <meta name="Originator" content="Microsoft Word 15">
           <title>${fileName}</title>
           <style>
-            body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.4; }
-            h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-            h2 { color: #34495e; margin-top: 20px; }
-            .section { margin: 15px 0; }
-            .highlight { background-color: #f8f9fa; padding: 10px; border-left: 4px solid #3498db; }
+            body { 
+              font-family: 'Times New Roman', serif; 
+              font-size: 12pt; 
+              line-height: 1.5; 
+              margin: 1in;
+              color: #000000;
+            }
+            h1 { 
+              color: #2c3e50; 
+              border-bottom: 2px solid #3498db; 
+              padding-bottom: 10px;
+              font-size: 18pt;
+              font-weight: bold;
+            }
+            h2 { 
+              color: #34495e; 
+              margin-top: 20pt; 
+              font-size: 14pt;
+              font-weight: bold;
+            }
+            .section { margin: 15pt 0; }
+            .highlight { 
+              background-color: #f8f9fa; 
+              padding: 10pt; 
+              border-left: 4px solid #3498db;
+              margin: 10pt 0;
+            }
+            .content {
+              white-space: pre-wrap; 
+              font-family: 'Courier New', monospace;
+              font-size: 11pt;
+              line-height: 1.4;
+            }
+            .footer {
+              margin-top: 20pt;
+              padding-top: 10pt;
+              border-top: 1px solid #ddd;
+              font-size: 10pt;
+              color: #666;
+            }
           </style>
         </head>
         <body>
           <h1>${fileName.replace(/_/g, ' ').toUpperCase()}</h1>
           <div class="section">
-            <pre style="white-space: pre-wrap; font-family: 'Courier New', monospace;">${content}</pre>
+            <div class="content">${content}</div>
           </div>
           <div class="highlight">
             <p><strong>Generated by:</strong> Arcular+ Admin Dashboard</p>
             <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+            <p><strong>Time:</strong> ${new Date().toLocaleTimeString()}</p>
+          </div>
+          <div class="footer">
+            <p>This document was automatically generated by the Arcular+ Admin Dashboard.</p>
+            <p>You can open this file in Microsoft Word or any compatible word processor.</p>
           </div>
         </body>
       </html>
     `;
     
-    // Create HTML blob
-    const blob = new Blob([richContent], { type: 'text/html' });
+    // Create HTML blob with proper MIME type
+    const blob = new Blob([richContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
     const url = URL.createObjectURL(blob);
     
-    // Download as HTML file (Word can open HTML files)
+    // Download as .doc file
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${fileName}.html`;
+    link.download = `${fileName}.doc`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -651,15 +632,15 @@ function generateDOC(content, fileName) {
     // Clean up
     setTimeout(() => URL.revokeObjectURL(url), 100);
     
-    showSuccessMessage('DOC report generated! (HTML file - can be opened in Word)');
+    showSuccessMessage('DOC report generated successfully! (Can be opened in Microsoft Word)');
     
   } catch (error) {
     console.error('Error generating DOC:', error);
-    // Fallback to text file
+    // Fallback to text file if HTML generation fails
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     downloadReport(url, `${fileName}.txt`);
-    showSuccessMessage('Report generated! (Text file - can be opened in Word)');
+    showSuccessMessage('Report generated as text file (can be opened in Word)');
   }
 }
 
@@ -687,7 +668,7 @@ async function loadAdminProfile() {
     
     const freshToken = await user.getIdToken();
     
-    // Try the admin profile endpoint first
+    // Try the admin profile endpoint first (GET method)
     let response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
       headers: {
         'Authorization': `Bearer ${freshToken}`,
@@ -750,26 +731,29 @@ async function saveAdminProfile(formData) {
     
     const freshToken = await user.getIdToken();
     
-    // Try the admin profile endpoint first
-    let response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
-      method: 'PUT',
+    // Try the admin profile endpoint first (POST method as per backend)
+    let response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile`, {
+      method: 'POST',
       headers: {
         'Authorization': `Bearer ${freshToken}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(formData)
+      body: JSON.stringify({
+        uid: user.uid,
+        email: user.email,
+        ...formData
+      })
     });
     
     // If that fails, try the staff profile endpoint
     if (!response.ok) {
       console.log('Admin profile endpoint failed, trying staff profile endpoint...');
       response = await fetch(`https://arcular-plus-backend.onrender.com/staff/api/staff/profile/${user.uid}`, {
-        method: 'PUT',
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${freshToken}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
+        }
       });
     }
     
@@ -943,24 +927,24 @@ document.addEventListener('DOMContentLoaded', function() {
        try {
          const freshToken = await user.getIdToken();
          
-         // Try admin profile endpoint first
-         let response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
-           headers: {
-             'Authorization': `Bearer ${freshToken}`,
-             'Content-Type': 'application/json'
-           }
-         });
-         
-         // If that fails, try staff profile endpoint
-         if (!response.ok) {
-           console.log('Admin profile endpoint failed, trying staff profile endpoint...');
-           response = await fetch(`https://arcular-plus-backend.onrender.com/staff/api/staff/profile/${user.uid}`, {
-             headers: {
-               'Authorization': `Bearer ${freshToken}`,
-               'Content-Type': 'application/json'
-             }
-           });
-         }
+                   // Try admin profile endpoint first (GET method)
+          let response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
+            headers: {
+              'Authorization': `Bearer ${freshToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          // If that fails, try staff profile endpoint
+          if (!response.ok) {
+            console.log('Admin profile endpoint failed, trying staff profile endpoint...');
+            response = await fetch(`https://arcular-plus-backend.onrender.com/staff/api/staff/profile/${user.uid}`, {
+              headers: {
+                'Authorization': `Bearer ${freshToken}`,
+                'Content-Type': 'application/json'
+              }
+            });
+          }
          
          if (response.ok) {
            const profileData = await response.json();

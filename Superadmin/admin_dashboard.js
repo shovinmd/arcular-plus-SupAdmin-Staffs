@@ -692,7 +692,7 @@ async function loadAdminProfile() {
       if (profileData.data) {
         // Populate form fields
         document.getElementById('admin-full-name').value = profileData.data.fullName || '';
-        document.getElementById('admin-phone').value = profileData.data.phone || '';
+        document.getElementById('admin-phone').value = profileData.data.mobileNumber || profileData.data.phone || '';
         document.getElementById('admin-department').value = profileData.data.department || '';
         document.getElementById('admin-designation').value = profileData.data.designation || '';
         document.getElementById('admin-address').value = profileData.data.address || '';

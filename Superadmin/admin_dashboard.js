@@ -288,8 +288,8 @@ function generateReports() {
              <div class="report-format-selection">
          <h4>Format:</h4>
          <div class="format-option">
-           <input type="radio" id="doc-format" name="report-format" value="doc" checked>
-           <label for="doc-format">DOC (Word Document)</label>
+           <input type="radio" id="xls-format" name="report-format" value="xls" checked>
+           <label for="xls-format">XLS (Excel Spreadsheet)</label>
          </div>
        </div>
       
@@ -330,10 +330,10 @@ function generateSelectedReport() {
   const reportType = document.querySelector('input[name="report-type"]:checked').value;
   const dateRange = document.getElementById('report-date-range').value;
   
-  showSuccessMessage(`Generating ${reportType} report in DOC format...`);
+  showSuccessMessage(`Generating ${reportType} report in XLS format...`);
   
-  // Generate the actual report (always DOC format)
-  generateReport(reportType, 'doc', dateRange);
+  // Generate the actual report (always XLS format)
+  generateReport(reportType, 'xls', dateRange);
   
   // Close modal
   document.querySelector('.modal').remove();
@@ -357,7 +357,7 @@ async function generateReport(type, format, dateRange) {
       },
       body: JSON.stringify({
         reportType: type,
-        format: 'doc', // Always use DOC format
+        format: 'xls', // Always use XLS format
         dateRange: dateRange
       })
     });
@@ -367,7 +367,7 @@ async function generateReport(type, format, dateRange) {
       
       if (result.downloadUrl) {
         // Download the generated report
-        downloadReport(result.downloadUrl, `${type}_report_${new Date().toISOString().split('T')[0]}.doc`);
+        downloadReport(result.downloadUrl, `${type}_report_${new Date().toISOString().split('T')[0]}.xls`);
         showSuccessMessage('Report generated and downloaded successfully!');
       } else {
         showErrorMessage('Report generated but download URL not provided');
@@ -381,12 +381,12 @@ async function generateReport(type, format, dateRange) {
     showErrorMessage('Failed to generate report: ' + error.message);
     
     // Fallback: Generate mock report for demonstration
-    generateMockReport(type, 'doc', dateRange);
+    generateMockReport(type, 'xls', dateRange);
   }
 }
 
 function generateMockReport(type, format, dateRange) {
-  showSuccessMessage('Generating DOC report...');
+  showSuccessMessage('Generating XLS report...');
   
   // Create mock report content
   let reportContent = '';
@@ -407,8 +407,8 @@ function generateMockReport(type, format, dateRange) {
       break;
   }
   
-  // Always generate DOC format
-  generateDOC(reportContent, fileName);
+  // Always generate XLS format
+  generateXLS(reportContent, fileName);
 }
 
 function generateStaffReportContent() {
@@ -545,86 +545,38 @@ function generateActivityReportContent() {
 
 // PDF generation removed - only DOC format supported
 
-function generateDOC(content, fileName) {
+function generateXLS(content, fileName) {
   try {
-    // Create a rich HTML document that Word can open properly
-    const richContent = `
-      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
-        <head>
-          <meta charset="utf-8">
-          <meta name="ProgId" content="Word.Document">
-          <meta name="Generator" content="Microsoft Word 15">
-          <meta name="Originator" content="Microsoft Word 15">
-          <title>${fileName}</title>
-          <style>
-            body { 
-              font-family: 'Times New Roman', serif; 
-              font-size: 12pt; 
-              line-height: 1.5; 
-              margin: 1in;
-              color: #000000;
-            }
-            h1 { 
-              color: #2c3e50; 
-              border-bottom: 2px solid #3498db; 
-              padding-bottom: 10px;
-              font-size: 18pt;
-              font-weight: bold;
-            }
-            h2 { 
-              color: #34495e; 
-              margin-top: 20pt; 
-              font-size: 14pt;
-              font-weight: bold;
-            }
-            .section { margin: 15pt 0; }
-            .highlight { 
-              background-color: #f8f9fa; 
-              padding: 10pt; 
-              border-left: 4px solid #3498db;
-              margin: 10pt 0;
-            }
-            .content {
-              white-space: pre-wrap; 
-              font-family: 'Courier New', monospace;
-              font-size: 11pt;
-              line-height: 1.4;
-            }
-            .footer {
-              margin-top: 20pt;
-              padding-top: 10pt;
-              border-top: 1px solid #ddd;
-              font-size: 10pt;
-              color: #666;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>${fileName.replace(/_/g, ' ').toUpperCase()}</h1>
-          <div class="section">
-            <div class="content">${content}</div>
-          </div>
-          <div class="highlight">
-            <p><strong>Generated by:</strong> Arcular+ Admin Dashboard</p>
-            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-            <p><strong>Time:</strong> ${new Date().toLocaleTimeString()}</p>
-          </div>
-          <div class="footer">
-            <p>This document was automatically generated by the Arcular+ Admin Dashboard.</p>
-            <p>You can open this file in Microsoft Word or any compatible word processor.</p>
-          </div>
-        </body>
-      </html>
-    `;
+    // Convert content to CSV format that Excel can open
+    const lines = content.split('\n');
+    const csvContent = lines.map(line => {
+      // Split by common delimiters and wrap in quotes if needed
+      if (line.includes(':')) {
+        const parts = line.split(':');
+        if (parts.length === 2) {
+          return `"${parts[0].trim()}","${parts[1].trim()}"`;
+        }
+      }
+      // For section headers, make them stand out
+      if (line.includes('===') || line.includes('==')) {
+        return `"${line.replace(/=/g, '').trim()}",""`;
+      }
+      // For regular content
+      return `"${line.trim()}",""`;
+    }).join('\n');
     
-    // Create HTML blob with proper MIME type
-    const blob = new Blob([richContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    // Add CSV headers for better Excel compatibility
+    const csvHeaders = 'Field,Value\n';
+    const fullCsvContent = csvHeaders + csvContent;
+    
+    // Create CSV blob with proper MIME type for Excel
+    const blob = new Blob([fullCsvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     
-    // Download as .doc file
+    // Download as .xls file (Excel will open CSV files)
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${fileName}.doc`;
+    link.download = `${fileName}.xls`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -632,15 +584,15 @@ function generateDOC(content, fileName) {
     // Clean up
     setTimeout(() => URL.revokeObjectURL(url), 100);
     
-    showSuccessMessage('DOC report generated successfully! (Can be opened in Microsoft Word)');
+    showSuccessMessage('XLS report generated successfully! (Can be opened in Microsoft Excel)');
     
   } catch (error) {
-    console.error('Error generating DOC:', error);
-    // Fallback to text file if HTML generation fails
+    console.error('Error generating XLS:', error);
+    // Fallback to text file if CSV generation fails
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     downloadReport(url, `${fileName}.txt`);
-    showSuccessMessage('Report generated as text file (can be opened in Word)');
+    showSuccessMessage('Report generated as text file (can be opened in Excel)');
   }
 }
 

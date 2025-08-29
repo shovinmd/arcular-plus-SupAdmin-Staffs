@@ -690,7 +690,13 @@ function setupEventListeners() {
     });
     
     // Logout
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        console.log('✅ Logout button found, adding event listener');
+        logoutBtn.addEventListener('click', logout);
+    } else {
+        console.error('❌ Logout button not found!');
+    }
     
     // Modal close
     document.querySelector('.close').addEventListener('click', closeModal);
@@ -1714,7 +1720,10 @@ function downloadDocument(filename) {
 // Removed duplicate viewUserDetails function
 
 function logout() {
+    console.log('🚪 Logout function called');
     if (confirm('Are you sure you want to logout?')) {
+        console.log('✅ Logout confirmed, clearing data...');
+        
         // Clear authentication data
         localStorage.removeItem('adminLoggedIn');
         localStorage.removeItem('adminEmail');
@@ -1724,16 +1733,25 @@ function logout() {
         sessionStorage.removeItem('adminLoggedIn');
         sessionStorage.removeItem('adminEmail');
         
+        console.log('🧹 Authentication data cleared');
+        
         // Sign out from Firebase
-        firebase.auth().signOut();
+        firebase.auth().signOut().then(() => {
+            console.log('✅ Firebase signout successful');
+        }).catch((error) => {
+            console.error('❌ Firebase signout error:', error);
+        });
         
         // Show logout message
         showNotification('Logging out...', 'info');
         
         // Redirect to login page
         setTimeout(() => {
+            console.log('🔄 Redirecting to login page...');
             window.location.href = 'index.html';
         }, 1000);
+    } else {
+        console.log('❌ Logout cancelled');
     }
 }
 

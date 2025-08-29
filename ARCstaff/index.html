@@ -18,7 +18,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             padding: 20px;
         }
 
@@ -187,7 +187,13 @@
         }
 
         .form-group .input-icon select {
-            padding-left: 45px;
+            width: 100%;
+            padding: 15px 20px 15px 45px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
             cursor: pointer;
             appearance: none;
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -195,6 +201,33 @@
             background-position: right 15px center;
             background-size: 16px;
             padding-right: 45px;
+            color: #2c3e50;
+        }
+
+        .form-group .input-icon select:focus {
+            outline: none;
+            border-color: #3498db;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-group .input-icon select:hover {
+            border-color: #3498db;
+            background-color: white;
+        }
+
+        .form-group .input-icon select option {
+            padding: 10px;
+            background: white;
+            color: #2c3e50;
+        }
+
+        .form-help {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.8rem;
+            color: #666;
+            font-style: italic;
         }
 
         .remember-forgot {
@@ -413,7 +446,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="staffType">Staff Type</label>
+                        <label for="staffType">Staff Type *</label>
                         <div class="input-icon">
                             <i class="fas fa-user-tag"></i>
                             <select id="staffType" name="staffType" required>
@@ -423,6 +456,7 @@
                                 <option value="patient_supervisor">Patient Supervisor</option>
                             </select>
                         </div>
+                        <small class="form-help">Please select your role to continue</small>
                     </div>
 
                     <div class="remember-forgot">

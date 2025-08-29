@@ -43,6 +43,11 @@ function openCreateStaffModal() {
   document.getElementById('password-group').style.display = 'block';
 }
 
+function openPlatformSettingsModal() {
+  document.getElementById('platform-settings-modal').style.display = 'block';
+  loadAdminProfile();
+}
+
 function viewSystemStatus() {
   showSuccessMessage('System status monitoring will be available in the next update.');
 }
@@ -55,12 +60,82 @@ function generateStaffReport() {
   showSuccessMessage('Staff report generation will be available in the next update.');
 }
 
-function viewSystemAnalytics() {
-  showSuccessMessage('System analytics dashboard will be available in the next update.');
+function generateReports() {
+  showSuccessMessage('Generating reports in DOC/PDF format...');
+  // Implement report generation functionality
 }
 
 function managePlatformSettings() {
-  showSuccessMessage('Platform settings management will be available in the next update.');
+  openPlatformSettingsModal();
+}
+
+// Load admin profile data
+async function loadAdminProfile() {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    
+    const freshToken = await user.getIdToken();
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
+      headers: {
+        'Authorization': `Bearer ${freshToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const profileData = await response.json();
+      if (profileData.data) {
+        // Populate form fields
+        document.getElementById('admin-full-name').value = profileData.data.fullName || '';
+        document.getElementById('admin-phone').value = profileData.data.phone || '';
+        document.getElementById('admin-department').value = profileData.data.department || '';
+        document.getElementById('admin-designation').value = profileData.data.designation || '';
+        document.getElementById('admin-address').value = profileData.data.address || '';
+        document.getElementById('admin-bio').value = profileData.data.bio || '';
+      }
+    }
+  } catch (error) {
+    console.error('Error loading admin profile:', error);
+    showErrorMessage('Failed to load profile data');
+  }
+}
+
+// Save admin profile changes
+async function saveAdminProfile(formData) {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) throw new Error('User not authenticated');
+    
+    const freshToken = await user.getIdToken();
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${freshToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      showSuccessMessage('Profile updated successfully!');
+      
+      // Update display
+      if (formData.fullName) {
+        document.getElementById('admin-name').textContent = formData.fullName;
+        document.getElementById('welcome-admin-name').textContent = formData.fullName;
+      }
+      
+      return result;
+    } else {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update profile');
+    }
+  } catch (error) {
+    console.error('Error updating admin profile:', error);
+    throw error;
+  }
 }
 
 // Show success message
@@ -200,12 +275,34 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Setup dashboard
-  function setupDashboard() {
+  async function setupDashboard() {
     const user = firebase.auth().currentUser;
     if (user) {
+      // Set default values
       document.getElementById('admin-name').textContent = user.displayName || user.email;
       document.getElementById('welcome-admin-name').textContent = user.displayName || user.email.split('@')[0];
       document.getElementById('admin-email').textContent = user.email;
+      
+      // Load admin profile from backend
+      try {
+        const freshToken = await user.getIdToken();
+        const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile/${user.uid}`, {
+          headers: {
+            'Authorization': `Bearer ${freshToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const profileData = await response.json();
+          if (profileData.data && profileData.data.fullName) {
+            document.getElementById('admin-name').textContent = profileData.data.fullName;
+            document.getElementById('welcome-admin-name').textContent = profileData.data.fullName;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading admin profile:', error);
+      }
     }
     
     // Update current date/time
@@ -214,39 +311,116 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup refresh functionality
     setupRefreshButton();
     
+    // Setup stats filter
+    setupStatsFilter();
+    
+    // Setup platform settings modal
+    setupPlatformSettingsModal();
+    
     // Hide loading and show dashboard content
     hideLoadingState();
     showDashboardContent();
     console.log('✅ Admin dashboard loaded successfully');
   }
 
-  // Setup refresh button functionality
-  function setupRefreshButton() {
-    const refreshBtn = document.getElementById('refresh-dashboard');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', async function() {
+      // Setup refresh button functionality
+    function setupRefreshButton() {
+      const refreshBtn = document.getElementById('refresh-dashboard');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', async function() {
+          try {
+            refreshBtn.style.transform = 'rotate(360deg)';
+            refreshBtn.style.transition = 'transform 0.5s ease';
+            
+            // Refresh dashboard data
+            const freshToken = await firebase.auth().currentUser.getIdToken();
+            await fetchAndRenderStaffList(freshToken);
+            await loadDashboardStats(freshToken);
+            updateCurrentDateTime();
+            
+            showSuccessMessage('Dashboard refreshed successfully!');
+            
+            setTimeout(() => {
+              refreshBtn.style.transform = 'rotate(0deg)';
+            }, 500);
+          } catch (error) {
+            console.error('Refresh error:', error);
+            showSuccessMessage('Failed to refresh dashboard');
+          }
+        });
+      }
+    }
+
+    // Setup stats period filter
+    function setupStatsFilter() {
+      const statsPeriodSelect = document.getElementById('stats-period');
+      if (statsPeriodSelect) {
+        statsPeriodSelect.addEventListener('change', async function() {
+          try {
+            const freshToken = await firebase.auth().currentUser.getIdToken();
+            await loadDashboardStats(freshToken);
+            showSuccessMessage('Stats updated for selected period!');
+          } catch (error) {
+            console.error('Stats filter error:', error);
+            showErrorMessage('Failed to update stats');
+          }
+        });
+      }
+    }
+
+    // Setup platform settings modal
+    function setupPlatformSettingsModal() {
+      const modal = document.getElementById('platform-settings-modal');
+      const closeBtn = document.getElementById('close-platform-settings-modal');
+      const cancelBtn = document.getElementById('cancel-platform-settings-btn');
+      const form = document.getElementById('platform-settings-form');
+      
+      // Close modal
+      closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+      
+      // Cancel button
+      cancelBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+      
+      // Close modal when clicking outside
+      window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+      
+      // Handle form submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('save-platform-settings-btn');
+        submitBtn.textContent = 'Saving...';
+        submitBtn.disabled = true;
+        
         try {
-          refreshBtn.style.transform = 'rotate(360deg)';
-          refreshBtn.style.transition = 'transform 0.5s ease';
+          const formData = {
+            fullName: document.getElementById('admin-full-name').value,
+            phone: document.getElementById('admin-phone').value,
+            department: document.getElementById('admin-department').value,
+            designation: document.getElementById('admin-designation').value,
+            address: document.getElementById('admin-address').value,
+            bio: document.getElementById('admin-bio').value
+          };
           
-          // Refresh dashboard data
-          const freshToken = await firebase.auth().currentUser.getIdToken();
-          await fetchAndRenderStaffList(freshToken);
-          await loadDashboardStats(freshToken);
-          updateCurrentDateTime();
+          await saveAdminProfile(formData);
+          modal.style.display = 'none';
           
-          showSuccessMessage('Dashboard refreshed successfully!');
-          
-          setTimeout(() => {
-            refreshBtn.style.transform = 'rotate(0deg)';
-          }, 500);
         } catch (error) {
-          console.error('Refresh error:', error);
-          showSuccessMessage('Failed to refresh dashboard');
+          showErrorMessage('Error updating profile: ' + error.message);
+        } finally {
+          submitBtn.textContent = 'Save Changes';
+          submitBtn.disabled = false;
         }
       });
     }
-  }
 
   // Setup logout
   function setupLogout() {
@@ -543,14 +717,36 @@ document.addEventListener('DOMContentLoaded', function() {
       if (res.ok) {
         const staffList = await res.json();
         
-        document.getElementById('total-staff-count').textContent = staffList.length || 0;
+        // Get selected period filter
+        const periodFilter = document.getElementById('stats-period').value;
+        let filteredStaffList = staffList;
+        
+        // Apply period filter
+        if (periodFilter === 'today') {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          filteredStaffList = staffList.filter(staff => {
+            const staffDate = new Date(staff.createdAt);
+            return staffDate >= today;
+          });
+        } else if (periodFilter === 'week') {
+          const weekAgo = new Date();
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          filteredStaffList = staffList.filter(staff => {
+            const staffDate = new Date(staff.createdAt);
+            return staffDate >= weekAgo;
+          });
+        }
+        // 'month' filter shows all data (default)
+        
+        document.getElementById('total-staff-count').textContent = filteredStaffList.length || 0;
         document.getElementById('active-staff-count').textContent = 
-          staffList.filter(staff => staff.status === 'active').length || 0;
+          filteredStaffList.filter(staff => staff.status === 'active').length || 0;
         document.getElementById('pending-approvals-count').textContent = 
-          staffList.filter(staff => staff.status === 'pending').length || 0;
+          filteredStaffList.filter(staff => staff.status === 'pending').length || 0;
         
         // Calculate unique departments
-        const departments = [...new Set(staffList.map(staff => staff.department).filter(Boolean))];
+        const departments = [...new Set(filteredStaffList.map(staff => staff.department).filter(Boolean))];
         document.getElementById('total-departments').textContent = departments.length || 0;
       }
     } catch (error) {

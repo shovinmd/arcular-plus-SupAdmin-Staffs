@@ -62,11 +62,8 @@
             <p id="current-date-time">Loading current time...</p>
           </div>
           <div class="welcome-actions">
-            <button class="welcome-action-btn" onclick="openCreateStaffModal()">
-              <i class="fas fa-user-plus"></i> Add Staff
-            </button>
-            <button class="welcome-action-btn" onclick="viewSystemStatus()">
-              <i class="fas fa-chart-line"></i> System Status
+            <button class="welcome-action-btn" onclick="openPlatformSettingsModal()">
+              <i class="fas fa-cog"></i> Platform Settings
             </button>
           </div>
         </div>
@@ -214,11 +211,11 @@
             <i class="fas fa-chart-bar"></i>
             <span>Generate Report</span>
           </button>
-          <button class="quick-action-btn" onclick="viewSystemAnalytics()">
-            <i class="fas fa-analytics"></i>
-            <span>System Analytics</span>
+          <button class="quick-action-btn" onclick="generateReports()">
+            <i class="fas fa-file-pdf"></i>
+            <span>Generate Reports (DOC/PDF)</span>
           </button>
-          <button class="quick-action-btn" onclick="managePlatformSettings()">
+          <button class="quick-action-btn" onclick="openPlatformSettingsModal()">
             <i class="fas fa-cog"></i>
             <span>Platform Settings</span>
           </button>
@@ -286,6 +283,53 @@
           <div class="form-actions">
             <button type="button" id="cancel-staff-btn" class="secondary-btn">Cancel</button>
             <button type="submit" id="save-staff-btn" class="primary-btn">Save Staff</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Platform Settings Modal -->
+    <div id="platform-settings-modal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="close-platform-settings-modal">&times;</span>
+        <h3>Platform Settings</h3>
+        
+        <form id="platform-settings-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="admin-full-name">Full Name *</label>
+              <input type="text" id="admin-full-name" required>
+            </div>
+            <div class="form-group">
+              <label for="admin-phone">Phone Number</label>
+              <input type="tel" id="admin-phone">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="admin-department">Department</label>
+              <input type="text" id="admin-department">
+            </div>
+            <div class="form-group">
+              <label for="admin-designation">Designation</label>
+              <input type="text" id="admin-designation">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="admin-address">Address</label>
+            <textarea id="admin-address" rows="3"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="admin-bio">Bio</label>
+            <textarea id="admin-bio" rows="3" placeholder="Tell us about yourself..."></textarea>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" id="cancel-platform-settings-btn" class="secondary-btn">Cancel</button>
+            <button type="submit" id="save-platform-settings-btn" class="primary-btn">Save Changes</button>
           </div>
         </form>
       </div>

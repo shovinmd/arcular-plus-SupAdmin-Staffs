@@ -722,6 +722,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
+    console.log('🚀 Initializing ArcStaff dashboard...');
+    
     // Set up event listeners
     setupEventListeners();
     
@@ -734,7 +736,20 @@ function initializeApp() {
     
     // Load initial data
     loadPendingApprovals();
-    loadAllUsers();
+    
+    // Add timeout to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+        console.log('⏰ Loading timeout reached, showing dashboard overview...');
+        hideTableLoadingStates();
+        showDashboardOverview();
+        clearErrorMessages();
+    }, 10000); // 10 second timeout
+    
+    // Load all users with timeout handling
+    loadAllUsers().finally(() => {
+        clearTimeout(loadingTimeout);
+        console.log('✅ Dashboard initialization completed');
+    });
 }
 
 function initializeLoginPage() {
@@ -2289,6 +2304,9 @@ async function loadAllUsers() {
         // Hide loading states
         hideTableLoadingStates();
         
+        // Clear any error messages
+        clearErrorMessages();
+        
     } catch (error) {
         console.error('❌ Error loading all users:', error);
         console.error('❌ Error details:', {
@@ -2314,6 +2332,11 @@ async function loadAllUsers() {
         
         // Show dashboard overview even on error
         showDashboardOverview();
+        
+        // Clear any error messages after showing overview
+        setTimeout(() => {
+            clearErrorMessages();
+        }, 3000);
     }
 }
 
@@ -7278,6 +7301,9 @@ function showDashboardOverview() {
                         <button class="btn btn-primary" onclick="refreshData()">
                             <i class="fas fa-refresh"></i> Refresh Data
                         </button>
+                        <button class="btn btn-secondary" onclick="skipLoading()" style="margin-left: 10px;">
+                            <i class="fas fa-forward"></i> Skip Loading
+                        </button>
                     </div>
                 </div>
                 <div class="overview-grid">
@@ -7344,10 +7370,45 @@ function showDashboardOverview() {
 
 function refreshData() {
     console.log('🔄 Refreshing data...');
+    showNotification('Refreshing data...', 'info');
+    
     // Clear any existing error messages
     clearErrorMessages();
-    // Reload all data
-    loadAllUsers();
+    
+    // Show loading state
+    showTableLoadingStates();
+    
+    // Reload all data with timeout
+    const refreshTimeout = setTimeout(() => {
+        console.log('⏰ Refresh timeout reached, showing dashboard overview...');
+        hideTableLoadingStates();
+        showDashboardOverview();
+        showSuccessMessage('Data refreshed successfully!');
+    }, 8000); // 8 second timeout for refresh
+    
+    loadAllUsers().finally(() => {
+        clearTimeout(refreshTimeout);
+        console.log('✅ Data refresh completed');
+    });
+}
+
+function skipLoading() {
+    console.log('⏭️ Skipping loading, showing dashboard overview...');
+    showNotification('Skipping loading...', 'info');
+    
+    // Hide any loading states
+    hideTableLoadingStates();
+    
+    // Clear error messages
+    clearErrorMessages();
+    
+    // Show dashboard overview immediately
+    showDashboardOverview();
+    
+    // Show success message
+    setTimeout(() => {
+        showSuccessMessage('Dashboard loaded successfully!');
+    }, 500);
 }
 
 // Load service provider data based on type

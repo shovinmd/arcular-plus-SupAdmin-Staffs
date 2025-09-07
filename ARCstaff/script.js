@@ -535,116 +535,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // Reset redirect flag on page load
     redirectInProgress = false;
     console.log('🔄 Page loaded, redirect flag reset');
+    console.log('🔍 Current URL:', window.location.href);
+    console.log('🔍 Current pathname:', window.location.pathname);
+    console.log('🔍 Current hostname:', window.location.hostname);
     
     // Check if we're on the dashboard page
     if (window.location.pathname.includes('arcstaff-dashboard.html')) {
+        console.log('🏠 On ARC Staff Dashboard page');
         checkArcStaffSession();
+    } else if (window.location.pathname.includes('index.html') || window.location.pathname.endsWith('/') || window.location.pathname === '') {
+        // We're on the login page
+        console.log('🔐 On login page, initializing...');
+        initializeLoginPage();
+        
+        // Don't initialize dashboard functions on login page
+        return;
     } else {
+        console.log('📱 On other page, initializing app...');
         initializeApp();
     }
 
-    // --- ARC Staff Login Logic ---
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const staffType = document.getElementById('staffType').value;
-            const errorDiv = document.getElementById('login-error');
-            
-            if (errorDiv) errorDiv.textContent = '';
-            
-            // Validate staff type selection
-            if (!staffType) {
-                if (errorDiv) {
-                    errorDiv.textContent = 'Please select your staff type';
-                    errorDiv.style.display = 'block';
-                } else {
-                    alert('Please select your staff type');
-                }
-                return;
-            }
-            
-            try {
-                // Firebase authentication
-                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                const idToken = await user.getIdToken();
-                
-                // Verify staff access
-                try {
-                    const response = await fetch('https://arcular-plus-backend.onrender.com/staff/api/staff/verify', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${idToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            email: user.email,
-                            uid: user.uid,
-                            displayName: user.displayName || user.email.split('@')[0]
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        console.log('✅ Staff access verified:', result);
-                        
-                        // Store token and staff type
-                        localStorage.setItem('staff_idToken', idToken);
-                        localStorage.setItem('staffType', document.getElementById('staffType').value);
-                        
-                        // Redirect based on staff type
-                        const staffType = document.getElementById('staffType').value;
-                        console.log('🔀 Staff type selected:', staffType);
-                        console.log('✅ Token and staff type stored in localStorage');
-                        
-                        // Set redirect flag to prevent multiple redirects
-                        redirectInProgress = true;
-                        console.log('🚩 Redirect flag set to prevent conflicts');
-                        
-                        switch(staffType) {
-                            case 'arcstaff':
-                                console.log('🔄 Redirecting to ARC Staff Dashboard');
-                                window.location.href = 'arcstaff-dashboard.html';
-                                break;
-                            case 'backend_manager':
-                                console.log('🔄 Redirecting to Backend Manager Dashboard');
-                                window.location.href = '../BackendManager/index.html';
-                                break;
-                            case 'patient_supervisor':
-                                console.log('🔄 Redirecting to Patient Supervisor Dashboard');
-                                window.location.href = '../PatientSupervisor/index.html';
-                                break;
-                            default:
-                                console.error('❌ Invalid staff type selected');
-                                throw new Error('Please select a valid staff type');
-                        }
-                    } else {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Staff access verification failed');
-                    }
-                } catch (fetchError) {
-                    console.error('❌ Staff verification error:', fetchError);
-                    if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
-                        throw new Error('Network error: Unable to connect to server. Please check your internet connection and try again.');
-                    }
-                    throw fetchError;
-                }
-                
-            } catch (error) {
-                console.error('Login error:', error);
-                if (errorDiv) {
-                    errorDiv.textContent = error.message || 'Login failed';
-                    errorDiv.style.display = 'block';
-                } else {
-                    alert('Login failed: ' + error.message);
-                }
-            }
-        });
-    }
+    // Login form setup moved to initializeLoginPage function
 
     // --- Super Admin Dashboard Auth Check ---
     const superadminDashboard = document.getElementById('superadmin-dashboard');
@@ -717,12 +628,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         switch(staffType) {
                             case 'backend_manager':
-                                console.log('🔄 Redirecting Backend Manager to:', '../BackendManager/index.html');
-                                window.location.href = '../BackendManager/index.html';
+                                console.log('🔄 Redirecting Backend Manager to:', 'https://arcular-plus-backend-man.vercel.app/');
+                                window.location.href = 'https://arcular-plus-backend-man.vercel.app/';
                                 return;
                             case 'patient_supervisor':
-                                console.log('🔄 Redirecting Patient Supervisor to:', '../PatientSupervisor/index.html');
-                                window.location.href = '../PatientSupervisor/index.html';
+                                console.log('🔄 Redirecting Patient Supervisor to:', 'https://arcular-plus-backend-man-65aq.vercel.app/');
+                                window.location.href = 'https://arcular-plus-backend-man-65aq.vercel.app/';
                                 return;
                             default:
                                 console.log('⚠️ Unknown staff type:', staffType);
@@ -793,6 +704,279 @@ function initializeApp() {
     // Load initial data
     loadPendingApprovals();
     loadAllUsers();
+}
+
+function initializeLoginPage() {
+    console.log('🔐 Setting up login page functionality...');
+    
+    // Check if already logged in
+    const hasToken = localStorage.getItem('staff_idToken');
+    const staffType = localStorage.getItem('staffType');
+    
+    if (hasToken && staffType) {
+        console.log('✅ User already logged in, redirecting to dashboard');
+        
+        let dashboardUrl;
+        switch (staffType) {
+            case 'arcstaff':
+                dashboardUrl = 'arcstaff-dashboard.html';
+                break;
+            case 'backend_manager':
+                dashboardUrl = 'https://arcular-plus-backend-man.vercel.app/';
+                break;
+            case 'patient_supervisor':
+                dashboardUrl = 'https://arcular-plus-backend-man-65aq.vercel.app/';
+                break;
+            default:
+                dashboardUrl = 'arcstaff-dashboard.html';
+        }
+        
+        console.log('🎯 Redirecting to:', dashboardUrl);
+        // Redirect immediately without delay
+        window.location.href = dashboardUrl;
+        return;
+    }
+    
+            // Set up login form
+        const loginForm = document.getElementById('loginForm');
+        console.log('🔍 Looking for login form...');
+        console.log('🔍 Login form element:', loginForm);
+        
+        if (loginForm) {
+            console.log('✅ Login form found, adding event listener');
+            
+            // Create the main login handler function
+            async function handleMainLogin(email, password, staffType) {
+                console.log('🚀 Main login handler triggered!');
+                
+                // Hide any existing messages
+                hideLoginMessages();
+                
+                // Validate staff type selection
+                if (!staffType) {
+                    showLoginError('Please select your staff type');
+                    return;
+                }
+                
+                // Show loading state
+                const loginBtn = document.getElementById('loginBtn');
+                const btnText = loginBtn.querySelector('.btn-text');
+                const spinner = document.getElementById('loginSpinner');
+                
+                if (btnText && spinner) {
+                    btnText.style.display = 'none';
+                    spinner.style.display = 'block';
+                    loginBtn.disabled = true;
+                }
+                
+                try {
+                    console.log('🔐 Attempting Firebase authentication...');
+                    
+                    // Firebase authentication
+                    const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                    const user = userCredential.user;
+                    console.log('✅ Firebase auth successful:', user.email);
+                    
+                    const idToken = await user.getIdToken();
+                    console.log('✅ ID token obtained');
+                    
+                    // Verify staff access with backend
+                    try {
+                        console.log('🌐 Verifying staff access with backend...');
+                        const response = await fetch('https://arcular-plus-backend.onrender.com/staff/api/staff/verify', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${idToken}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                email: user.email,
+                                uid: user.uid,
+                                displayName: user.displayName || user.email.split('@')[0]
+                            })
+                        });
+                        
+                        console.log('📡 Backend response status:', response.status);
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            console.log('✅ Staff access verified:', result);
+                            
+                                                    // Store token and staff type
+                        localStorage.setItem('staff_idToken', idToken);
+                        localStorage.setItem('staffType', staffType);
+                        
+                        // Debug: Show what's stored
+                        console.log('💾 Stored in localStorage:');
+                        console.log('  - staff_idToken:', idToken ? 'Present' : 'Missing');
+                        console.log('  - staffType:', staffType);
+                        
+                        // Show success message
+                        showLoginSuccess('Login successful! Redirecting to dashboard...');
+                        
+                        // Redirect based on staff type
+                        console.log('🔀 Staff type selected:', staffType);
+                        console.log('✅ Token and staff type stored in localStorage');
+                        
+                        // Set redirect flag to prevent multiple redirects
+                        redirectInProgress = true;
+                        console.log('🚩 Redirect flag set to prevent conflicts');
+                        
+                        setTimeout(() => {
+                            console.log('🔄 Redirecting to dashboard for staff type:', staffType);
+                            
+                            switch(staffType) {
+                                case 'arcstaff':
+                                    console.log('🔄 Redirecting to ARC Staff Dashboard');
+                                    window.location.href = 'arcstaff-dashboard.html';
+                                    break;
+                                case 'backend_manager':
+                                    console.log('🔄 Redirecting to Backend Manager Dashboard');
+                                    window.location.href = 'https://arcular-plus-backend-man.vercel.app/';
+                                    break;
+                                case 'patient_supervisor':
+                                    console.log('🔄 Redirecting to Patient Supervisor Dashboard');
+                                    window.location.href = 'https://arcular-plus-backend-man-65aq.vercel.app/';
+                                    break;
+                                default:
+                                    console.error('❌ Invalid staff type selected');
+                                    throw new Error('Please select a valid staff type');
+                            }
+                        }, 2000);
+                            
+                        } else {
+                            const errorData = await response.json();
+                            console.error('❌ Backend error:', errorData);
+                            throw new Error(errorData.message || 'Staff access verification failed');
+                        }
+                    } catch (fetchError) {
+                        console.error('❌ Staff verification error:', fetchError);
+                        if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
+                            throw new Error('Network error: Unable to connect to server. Please check your internet connection and try again.');
+                        }
+                        throw fetchError;
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Login error:', error);
+                    showLoginError(error.message || 'Login failed. Please check your credentials.');
+                    
+                    // Reset form
+                    document.getElementById('password').value = '';
+                } finally {
+                    // Reset loading state
+                    if (btnText && spinner) {
+                        btnText.style.display = 'block';
+                        spinner.style.display = 'none';
+                        loginBtn.disabled = false;
+                    }
+                }
+            }
+            
+            // Expose the main login handler globally
+            window.handleMainLogin = handleMainLogin;
+            
+            // Add form submit event listener
+            loginForm.addEventListener('submit', async function(e) {
+                console.log('🚀 Login form submit event triggered!');
+                e.preventDefault();
+                console.log('✅ Form submission prevented');
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const staffType = document.getElementById('staffType').value;
+                
+                if (!email || !password) {
+                    showLoginError('Please enter both email and password');
+                    return;
+                }
+                
+                if (!staffType) {
+                    showLoginError('Please select your staff type');
+                    return;
+                }
+                
+                // Call the main login handler
+                handleMainLogin(email, password, staffType);
+            });
+            
+            console.log('✅ Login form event listener added');
+        } else {
+            console.warn('⚠️ Login form not found on login page');
+        }
+        
+        // Set up forgot password functionality
+        const forgotPasswordLink = document.querySelector('.forgot-password');
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                
+                if (!email) {
+                    showLoginError('Please enter your email address first.');
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    showLoginSuccess('Sending password reset email...');
+                    
+                    // Send password reset email via Firebase
+                    await firebase.auth().sendPasswordResetEmail(email);
+                    
+                    showLoginSuccess('Password reset email sent! Check your inbox.');
+                } catch (error) {
+                    console.error('Password reset error:', error);
+                    showLoginError('Failed to send password reset email: ' + error.message);
+                }
+            });
+        }
+        
+        console.log('✅ Login page functionality initialized');
+}
+
+// Login page helper functions
+function showLoginError(message) {
+    const errorDiv = document.getElementById('login-error');
+    const errorText = document.getElementById('login-error-text');
+    
+    if (errorDiv && errorText) {
+        errorText.textContent = message;
+        errorDiv.style.display = 'flex';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
+    } else {
+        console.error('Error elements not found:', message);
+        alert('Error: ' + message);
+    }
+}
+
+function showLoginSuccess(message) {
+    const successDiv = document.getElementById('successMessage');
+    const successText = successDiv.querySelector('span');
+    
+    if (successDiv && successText) {
+        successText.textContent = message;
+        successDiv.style.display = 'flex';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            successDiv.style.display = 'none';
+        }, 5000);
+    } else {
+        console.log('Success:', message);
+    }
+}
+
+function hideLoginMessages() {
+    const errorDiv = document.getElementById('login-error');
+    const successDiv = document.getElementById('successMessage');
+    
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (successDiv) successDiv.style.display = 'none';
 }
 
 // Loading state management
@@ -2273,12 +2457,12 @@ function checkArcStaffSession() {
         
         switch(staffType) {
           case 'backend_manager':
-            console.log('🔄 checkArcStaffSession: Redirecting Backend Manager to:', '../BackendManager/index.html');
-            window.location.href = '../BackendManager/index.html';
+            console.log('🔄 checkArcStaffSession: Redirecting Backend Manager to:', 'https://arcular-plus-backend-man.vercel.app/');
+            window.location.href = 'https://arcular-plus-backend-man.vercel.app/';
             return;
           case 'patient_supervisor':
-            console.log('🔄 checkArcStaffSession: Redirecting Patient Supervisor to:', '../PatientSupervisor/index.html');
-            window.location.href = '../PatientSupervisor/index.html';
+            console.log('🔄 checkArcStaffSession: Redirecting Patient Supervisor to:', 'https://arcular-plus-backend-man-65aq.vercel.app/');
+            window.location.href = 'https://arcular-plus-backend-man-65aq.vercel.app/';
             return;
         }
       } else if (redirectInProgress) {
@@ -5577,10 +5761,964 @@ function closeProviderDetailsModal() {
     window.currentProvider = null;
 }
 
+// ===== IMPROVED ARCSTAFF DASHBOARD FUNCTIONALITY =====
+
+// Global variables for improved functionality
+let currentApproval = null;
+let pendingApprovals = [];
+
+// Load Service Provider Data with improved functionality
+async function loadServiceProviderDataImproved(providerType) {
+  try {
+    console.log(`📋 Loading ${providerType} data with improved functionality...`);
+    
+    const idToken = localStorage.getItem('staff_idToken');
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/api/arc-staff/approved-${providerType}s`, {
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      const providers = result[providerType + 's'] || [];
+      
+      // Filter pending approvals for this provider type
+      const pendingForType = pendingApprovals.filter(approval => approval.userType === providerType);
+      
+      // Render the provider list with improved UI
+      renderServiceProviderListImproved(providerType, providers, pendingForType);
+      
+      // Update active nav item
+      updateActiveNavItem(providerType);
+    } else {
+      console.error(`❌ Failed to load ${providerType} data:`, response.status);
+      showErrorMessage(`Failed to load ${providerType} data. Please try again.`);
+    }
+  } catch (error) {
+    console.error(`❌ Error loading ${providerType} data:`, error);
+    showErrorMessage(`Failed to load ${providerType} data. Please try again.`);
+  }
+}
+
+// Render Service Provider List with improved UI
+function renderServiceProviderListImproved(providerType, approvedProviders, pendingProviders) {
+  const container = document.getElementById('serviceProviderContent');
+  if (!container) return;
+  
+  const typeIcon = getTypeIcon(providerType);
+  const typeColor = getTypeColor(providerType);
+  const typeName = providerType.charAt(0).toUpperCase() + providerType.slice(1);
+  
+  let html = `
+    <div class="provider-section">
+      <div class="section-header">
+        <div class="section-title">
+          <i class="${typeIcon}"></i>
+          <h2>${typeName}s Management</h2>
+        </div>
+        <div class="section-stats">
+          <span class="stat-item approved">
+            <i class="fas fa-check-circle"></i>
+            ${approvedProviders.length} Approved
+          </span>
+          <span class="stat-item pending">
+            <i class="fas fa-clock"></i>
+            ${pendingProviders.length} Pending
+          </span>
+        </div>
+      </div>
+  `;
+  
+  // Pending Approvals Section
+  if (pendingProviders.length > 0) {
+    html += `
+      <div class="pending-section">
+        <h3><i class="fas fa-clock"></i> Pending Approvals</h3>
+        <div class="provider-grid">
+    `;
+    
+    pendingProviders.forEach(provider => {
+      html += createProviderCardImproved(provider, 'pending');
+    });
+    
+    html += `
+        </div>
+      </div>
+    `;
+  }
+  
+  // Approved Providers Section
+  if (approvedProviders.length > 0) {
+    html += `
+      <div class="approved-section">
+        <h3><i class="fas fa-check-circle"></i> Approved ${typeName}s</h3>
+        <div class="provider-grid">
+    `;
+    
+    approvedProviders.forEach(provider => {
+      html += createProviderCardImproved(provider, 'approved');
+    });
+    
+    html += `
+        </div>
+      </div>
+    `;
+  }
+  
+  // No data message
+  if (pendingProviders.length === 0 && approvedProviders.length === 0) {
+    html += `
+      <div class="no-data-message">
+        <i class="fas fa-info-circle"></i>
+        <h3>No ${typeName}s Found</h3>
+        <p>No ${providerType} registrations found in the system.</p>
+      </div>
+    `;
+  }
+  
+  html += `</div>`;
+  
+  container.innerHTML = html;
+  
+  // Add event listeners to provider cards
+  addProviderCardListenersImproved();
+}
+
+// Create Provider Card with improved design
+function createProviderCardImproved(provider, status) {
+  const typeIcon = getTypeIcon(provider.userType || provider.type);
+  const typeColor = getTypeColor(provider.userType || provider.type);
+  const name = provider.fullName || provider.hospitalName || provider.labName || provider.pharmacyName || 'N/A';
+  const email = provider.email || 'N/A';
+  const phone = provider.mobileNumber || provider.contact || 'N/A';
+  const submittedDate = new Date(provider.createdAt || provider.submittedAt || Date.now()).toLocaleDateString();
+  
+  let statusBadge = '';
+  let actionButtons = '';
+  
+  if (status === 'pending') {
+    statusBadge = '<span class="status-badge pending">Pending Review</span>';
+    actionButtons = `
+      <div class="card-actions">
+        <button class="btn btn-primary btn-sm" onclick="viewProviderDetailsImproved('${provider.uid}', '${provider.userType || provider.type}', 'pending')">
+          <i class="fas fa-eye"></i> Review
+        </button>
+      </div>
+    `;
+  } else {
+    statusBadge = '<span class="status-badge approved">Approved</span>';
+    actionButtons = `
+      <div class="card-actions">
+        <button class="btn btn-info btn-sm" onclick="viewProviderDetailsImproved('${provider.uid}', '${provider.userType || provider.type}', 'approved')">
+          <i class="fas fa-eye"></i> View
+        </button>
+      </div>
+    `;
+  }
+  
+  return `
+    <div class="provider-card ${status}" data-uid="${provider.uid}" data-type="${provider.userType || provider.type}" data-status="${status}">
+      <div class="card-header">
+        <div class="provider-type">
+          <i class="${typeIcon}"></i>
+          <span class="type-label">${(provider.userType || provider.type).charAt(0).toUpperCase() + (provider.userType || provider.type).slice(1)}</span>
+        </div>
+        ${statusBadge}
+      </div>
+      
+      <div class="card-content">
+        <h4 class="provider-name">${name}</h4>
+        <div class="provider-details">
+          <div class="detail-item">
+            <i class="fas fa-envelope"></i>
+            <span>${email}</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-phone"></i>
+            <span>${phone}</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-calendar"></i>
+            <span>Submitted: ${submittedDate}</span>
+          </div>
+        </div>
+      </div>
+      
+      ${actionButtons}
+    </div>
+  `;
+}
+
+// View Provider Details with improved functionality
+async function viewProviderDetailsImproved(uid, type, status) {
+  try {
+    console.log(`👁️ Viewing ${type} details for UID: ${uid}`);
+    
+    const idToken = localStorage.getItem('staff_idToken');
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/api/${type}s/uid/${uid}`, {
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      const provider = result.data;
+      
+      // Set current approval for actions
+      currentApproval = {
+        id: uid,
+        type: type,
+        status: status,
+        data: provider
+      };
+      
+      // Show provider details modal with improved UI
+      showProviderDetailsModalImproved(provider, status);
+    } else {
+      console.error(`❌ Failed to load ${type} details:`, response.status);
+      showErrorMessage(`Failed to load ${type} details. Please try again.`);
+    }
+  } catch (error) {
+    console.error(`❌ Error loading ${type} details:`, error);
+    showErrorMessage(`Failed to load ${type} details. Please try again.`);
+  }
+}
+
+// Show Provider Details Modal with improved UI
+function showProviderDetailsModalImproved(provider, status) {
+  const modal = document.getElementById('providerDetailsModal');
+  const title = document.getElementById('providerModalTitle');
+  const content = document.getElementById('providerDetailsContent');
+  
+  if (!modal || !title || !content) return;
+  
+  // Update modal title
+  const typeName = provider.type?.charAt(0).toUpperCase() + provider.type?.slice(1) || 'Service Provider';
+  title.textContent = `${typeName} Details`;
+  
+  // Generate content with improved UI
+  content.innerHTML = generateProviderDetailsHTMLImproved(provider, status);
+  
+  // Show/hide action buttons based on status
+  const approveBtn = document.getElementById('approveProviderBtn');
+  const rejectBtn = document.getElementById('rejectProviderBtn');
+  const restoreBtn = document.getElementById('restoreProviderBtn');
+  
+  if (status === 'pending') {
+    if (approveBtn) approveBtn.style.display = 'inline-block';
+    if (rejectBtn) rejectBtn.style.display = 'inline-block';
+    if (restoreBtn) restoreBtn.style.display = 'none';
+  } else if (status === 'rejected') {
+    if (approveBtn) approveBtn.style.display = 'none';
+    if (rejectBtn) rejectBtn.style.display = 'none';
+    if (restoreBtn) restoreBtn.style.display = 'inline-block';
+  } else {
+    if (approveBtn) approveBtn.style.display = 'none';
+    if (rejectBtn) rejectBtn.style.display = 'none';
+    if (restoreBtn) restoreBtn.style.display = 'none';
+  }
+  
+  // Show modal
+  modal.style.display = 'block';
+}
+
+// Generate Provider Details HTML with improved UI
+function generateProviderDetailsHTMLImproved(provider, status) {
+  const typeIcon = getTypeIcon(provider.type);
+  const typeColor = getTypeColor(provider.type);
+  
+  let html = `
+    <div class="provider-details-container">
+      <div class="details-header">
+        <div class="provider-info">
+          <div class="provider-avatar">
+            <i class="${typeIcon}"></i>
+          </div>
+          <div class="provider-basic-info">
+            <h3>${provider.fullName || provider.hospitalName || provider.labName || provider.pharmacyName || 'N/A'}</h3>
+            <p class="provider-type">${provider.type?.charAt(0).toUpperCase() + provider.type?.slice(1) || 'Service Provider'}</p>
+            <p class="provider-email">${provider.email || 'N/A'}</p>
+          </div>
+        </div>
+        <div class="status-info">
+          <span class="status-badge ${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+        </div>
+      </div>
+      
+      <div class="details-content">
+        <div class="details-section">
+          <h4><i class="fas fa-info-circle"></i> Basic Information</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Full Name:</label>
+              <span>${provider.fullName || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              <label>Email:</label>
+              <span>${provider.email || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              <label>Phone:</label>
+              <span>${provider.mobileNumber || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              <label>Address:</label>
+              <span>${provider.address || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              <label>City:</label>
+              <span>${provider.city || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              <label>State:</label>
+              <span>${provider.state || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              <label>Pincode:</label>
+              <span>${provider.pincode || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              <label>Registration Date:</label>
+              <span>${new Date(provider.createdAt || provider.registrationDate || Date.now()).toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+  `;
+  
+  // Add type-specific information
+  if (provider.type === 'hospital') {
+    html += generateHospitalDetailsImproved(provider);
+  } else if (provider.type === 'doctor') {
+    html += generateDoctorDetailsImproved(provider);
+  } else if (provider.type === 'nurse') {
+    html += generateNurseDetailsImproved(provider);
+  } else if (provider.type === 'lab') {
+    html += generateLabDetailsImproved(provider);
+  } else if (provider.type === 'pharmacy') {
+    html += generatePharmacyDetailsImproved(provider);
+  }
+  
+  // Add documents section
+  html += generateDocumentsSectionImproved(provider);
+  
+  // Add approval/rejection info if applicable
+  if (provider.approvalStatus === 'approved' && provider.approvedAt) {
+    html += `
+      <div class="details-section">
+        <h4><i class="fas fa-check-circle"></i> Approval Information</h4>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Approved At:</label>
+            <span>${new Date(provider.approvedAt).toLocaleDateString()}</span>
+          </div>
+          <div class="info-item">
+            <label>Approved By:</label>
+            <span>${provider.approvedBy || 'N/A'}</span>
+          </div>
+          <div class="info-item">
+            <label>Approval Notes:</label>
+            <span>${provider.approvalNotes || 'N/A'}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (provider.approvalStatus === 'rejected' && provider.rejectedAt) {
+    html += `
+      <div class="details-section">
+        <h4><i class="fas fa-times-circle"></i> Rejection Information</h4>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Rejected At:</label>
+            <span>${new Date(provider.rejectedAt).toLocaleDateString()}</span>
+          </div>
+          <div class="info-item">
+            <label>Rejected By:</label>
+            <span>${provider.rejectedBy || 'N/A'}</span>
+          </div>
+          <div class="info-item">
+            <label>Rejection Reason:</label>
+            <span>${provider.rejectionReason || 'N/A'}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  html += `
+      </div>
+    </div>
+  `;
+  
+  return html;
+}
+
+// Generate type-specific details with improved UI
+function generateHospitalDetailsImproved(provider) {
+  return `
+    <div class="details-section">
+      <h4><i class="fas fa-hospital"></i> Hospital Information</h4>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Hospital Name:</label>
+          <span>${provider.hospitalName || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Registration Number:</label>
+          <span>${provider.registrationNumber || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Hospital Type:</label>
+          <span>${provider.hospitalType || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Number of Beds:</label>
+          <span>${provider.numberOfBeds || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Departments:</label>
+          <span>${provider.departments ? provider.departments.join(', ') : 'N/A'}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function generateDoctorDetailsImproved(provider) {
+  return `
+    <div class="details-section">
+      <h4><i class="fas fa-user-md"></i> Doctor Information</h4>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Medical Registration Number:</label>
+          <span>${provider.medicalRegistrationNumber || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>License Number:</label>
+          <span>${provider.licenseNumber || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Specialization:</label>
+          <span>${provider.specialization || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Experience Years:</label>
+          <span>${provider.experienceYears || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Consultation Fee:</label>
+          <span>${provider.consultationFee ? `₹${provider.consultationFee}` : 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Qualifications:</label>
+          <span>${provider.qualifications ? provider.qualifications.join(', ') : provider.qualification || 'N/A'}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function generateNurseDetailsImproved(provider) {
+  return `
+    <div class="details-section">
+      <h4><i class="fas fa-user-nurse"></i> Nurse Information</h4>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>License Number:</label>
+          <span>${provider.licenseNumber || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Registration Number:</label>
+          <span>${provider.registrationNumber || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Qualification:</label>
+          <span>${provider.qualification || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Experience Years:</label>
+          <span>${provider.experienceYears || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Hospital Affiliation:</label>
+          <span>${provider.hospitalAffiliation || 'N/A'}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function generateLabDetailsImproved(provider) {
+  return `
+    <div class="details-section">
+      <h4><i class="fas fa-flask"></i> Lab Information</h4>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Lab Name:</label>
+          <span>${provider.labName || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>License Number:</label>
+          <span>${provider.licenseNumber || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Owner Name:</label>
+          <span>${provider.ownerName || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Services Provided:</label>
+          <span>${provider.servicesProvided ? provider.servicesProvided.join(', ') : 'N/A'}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function generatePharmacyDetailsImproved(provider) {
+  return `
+    <div class="details-section">
+      <h4><i class="fas fa-pills"></i> Pharmacy Information</h4>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Pharmacy Name:</label>
+          <span>${provider.pharmacyName || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>License Number:</label>
+          <span>${provider.licenseNumber || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Owner Name:</label>
+          <span>${provider.ownerName || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Pharmacist Name:</label>
+          <span>${provider.pharmacistName || 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Services Provided:</label>
+          <span>${provider.servicesProvided ? provider.servicesProvided.join(', ') : 'N/A'}</span>
+        </div>
+        <div class="info-item">
+          <label>Home Delivery:</label>
+          <span>${provider.homeDelivery ? 'Yes' : 'No'}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Generate Documents Section with improved UI
+function generateDocumentsSectionImproved(provider) {
+  const documents = [];
+  
+  // Add common documents
+  if (provider.licenseDocumentUrl) {
+    documents.push({
+      name: 'License Document',
+      url: provider.licenseDocumentUrl,
+      type: 'license'
+    });
+  }
+  
+  if (provider.profileImageUrl) {
+    documents.push({
+      name: 'Profile Image',
+      url: provider.profileImageUrl,
+      type: 'profile'
+    });
+  }
+  
+  // Add type-specific documents
+  if (provider.type === 'hospital') {
+    if (provider.registrationCertificateUrl) {
+      documents.push({
+        name: 'Registration Certificate',
+        url: provider.registrationCertificateUrl,
+        type: 'registration'
+      });
+    }
+    if (provider.buildingPermitUrl) {
+      documents.push({
+        name: 'Building Permit',
+        url: provider.buildingPermitUrl,
+        type: 'permit'
+      });
+    }
+  }
+  
+  if (documents.length === 0) {
+    return `
+      <div class="details-section">
+        <h4><i class="fas fa-file-alt"></i> Documents</h4>
+        <p class="no-documents">No documents uploaded</p>
+      </div>
+    `;
+  }
+  
+  let html = `
+    <div class="details-section">
+      <h4><i class="fas fa-file-alt"></i> Documents</h4>
+      <div class="documents-grid">
+  `;
+  
+  documents.forEach(doc => {
+    html += `
+      <div class="document-item">
+        <div class="document-icon">
+          <i class="fas fa-file-${doc.type === 'profile' ? 'image' : 'pdf'}"></i>
+        </div>
+        <div class="document-info">
+          <h5>${doc.name}</h5>
+          <button class="btn btn-sm btn-outline" onclick="viewDocumentImproved('${doc.url}', '${doc.name}')">
+            <i class="fas fa-eye"></i> View
+          </button>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += `
+      </div>
+    </div>
+  `;
+  
+  return html;
+}
+
+// View Document with improved functionality
+function viewDocumentImproved(url, name) {
+  // Open document in new tab
+  window.open(url, '_blank');
+}
+
+// Approve Service Provider with improved functionality
+async function approveServiceProviderImproved(type, id, notes = '') {
+  try {
+    console.log(`✅ Approving ${type} with ID: ${id}`);
+    
+    const idToken = localStorage.getItem('staff_idToken');
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/api/arc-staff/approve/${id}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userType: type,
+        notes: notes
+      })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ Approval successful:', result.message);
+      
+      showSuccessMessage(`${type.charAt(0).toUpperCase() + type.slice(1)} approved successfully!`);
+      
+      // Close modal and refresh data
+      closeModal();
+      await loadDashboardDataImproved();
+      
+    } else {
+      const error = await response.json();
+      console.error('❌ Approval failed:', error.message);
+      showErrorMessage(`Failed to approve ${type}: ${error.message}`);
+    }
+  } catch (error) {
+    console.error('❌ Approval error:', error);
+    showErrorMessage(`Failed to approve ${type}. Please try again.`);
+  }
+}
+
+// Reject Service Provider with improved functionality
+async function rejectServiceProviderImproved(type, id, reason, category, nextSteps) {
+  try {
+    console.log(`❌ Rejecting ${type} with ID: ${id}`);
+    
+    const idToken = localStorage.getItem('staff_idToken');
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/api/arc-staff/reject/${id}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userType: type,
+        reason: reason,
+        category: category,
+        nextSteps: nextSteps
+      })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ Rejection successful:', result.message);
+      
+      showSuccessMessage(`${type.charAt(0).toUpperCase() + type.slice(1)} rejected successfully!`);
+      
+      // Close modal and refresh data
+      closeModal();
+      await loadDashboardDataImproved();
+      
+    } else {
+      const error = await response.json();
+      console.error('❌ Rejection failed:', error.message);
+      showErrorMessage(`Failed to reject ${type}: ${error.message}`);
+    }
+  } catch (error) {
+    console.error('❌ Rejection error:', error);
+    showErrorMessage(`Failed to reject ${type}. Please try again.`);
+  }
+}
+
+// Load Dashboard Data with improved functionality
+async function loadDashboardDataImproved() {
+  try {
+    console.log('📊 Loading dashboard data with improved functionality...');
+    
+    // Load stats and counts in parallel
+    await Promise.all([
+      loadDashboardStatsImproved(),
+      loadDashboardCountsImproved(),
+      loadPendingApprovalsImproved()
+    ]);
+    
+    console.log('✅ Dashboard data loaded successfully');
+  } catch (error) {
+    console.error('❌ Failed to load dashboard data:', error);
+    showErrorMessage('Failed to load dashboard data. Please try again.');
+  }
+}
+
+// Load Dashboard Stats with improved functionality
+async function loadDashboardStatsImproved() {
+  try {
+    const period = document.getElementById('stats-period')?.value || 'month';
+    const idToken = localStorage.getItem('staff_idToken');
+    
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/api/arc-staff/stats?period=${period}`, {
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      const stats = result.data;
+      
+      // Update stats in UI
+      updateStatsDisplayImproved(stats);
+    } else {
+      console.error('❌ Failed to load stats:', response.status);
+    }
+  } catch (error) {
+    console.error('❌ Error loading stats:', error);
+  }
+}
+
+// Update Stats Display with improved functionality
+function updateStatsDisplayImproved(stats) {
+  const elements = {
+    'total-providers-count': stats.totalProviders || 0,
+    'approved-providers-count': stats.approvedProviders || 0,
+    'pending-approvals-count': stats.pendingApprovals || 0,
+    'total-departments': stats.totalDepartments || 5
+  };
+  
+  Object.entries(elements).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = value;
+    }
+  });
+}
+
+// Load Dashboard Counts with improved functionality
+async function loadDashboardCountsImproved() {
+  try {
+    const idToken = localStorage.getItem('staff_idToken');
+    
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/api/arc-staff/dashboard-counts`, {
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      const counts = result.data;
+      
+      // Update sidebar counts
+      updateSidebarCountsImproved(counts);
+    } else {
+      console.error('❌ Failed to load counts:', response.status);
+    }
+  } catch (error) {
+    console.error('❌ Error loading counts:', error);
+  }
+}
+
+// Update Sidebar Counts with improved functionality
+function updateSidebarCountsImproved(counts) {
+  const countMappings = {
+    'hospitalApprovedCount': counts.hospitals?.approved || 0,
+    'hospitalPendingCount': counts.hospitals?.pending || 0,
+    'doctorApprovedCount': counts.doctors?.approved || 0,
+    'doctorPendingCount': counts.doctors?.pending || 0,
+    'nurseApprovedCount': counts.nurses?.approved || 0,
+    'nursePendingCount': counts.nurses?.pending || 0,
+    'labApprovedCount': counts.labs?.approved || 0,
+    'labPendingCount': counts.labs?.pending || 0,
+    'pharmacyApprovedCount': counts.pharmacies?.approved || 0,
+    'pharmacyPendingCount': counts.pharmacies?.pending || 0
+  };
+  
+  Object.entries(countMappings).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = value;
+    }
+  });
+}
+
+// Load Pending Approvals with improved functionality
+async function loadPendingApprovalsImproved() {
+  try {
+    const idToken = localStorage.getItem('staff_idToken');
+    
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/api/arc-staff/pending-approvals`, {
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      pendingApprovals = result.pendingUsers || [];
+      
+      console.log('📋 Loaded pending approvals:', pendingApprovals.length);
+      
+      // Update pending count in stats
+      const pendingCountElement = document.getElementById('pending-approvals-count');
+      if (pendingCountElement) {
+        pendingCountElement.textContent = pendingApprovals.length;
+      }
+    } else {
+      console.error('❌ Failed to load pending approvals:', response.status);
+      pendingApprovals = [];
+    }
+  } catch (error) {
+    console.error('❌ Error loading pending approvals:', error);
+    pendingApprovals = [];
+  }
+}
+
+// Add Provider Card Listeners with improved functionality
+function addProviderCardListenersImproved() {
+  // Add click listeners to provider cards
+  document.querySelectorAll('.provider-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.btn')) {
+        const uid = card.dataset.uid;
+        const type = card.dataset.type;
+        const status = card.dataset.status;
+        viewProviderDetailsImproved(uid, type, status);
+      }
+    });
+  });
+}
+
+// Utility Functions for improved functionality
+function getTypeIcon(type) {
+  const icons = {
+    hospital: 'fas fa-hospital',
+    doctor: 'fas fa-user-md',
+    nurse: 'fas fa-user-nurse',
+    lab: 'fas fa-flask',
+    pharmacy: 'fas fa-pills'
+  };
+  return icons[type] || 'fas fa-user';
+}
+
+function getTypeColor(type) {
+  const colors = {
+    hospital: 'hospital',
+    doctor: 'doctor',
+    nurse: 'nurse',
+    lab: 'lab',
+    pharmacy: 'pharmacy'
+  };
+  return colors[type] || 'default';
+}
+
+function updateActiveNavItem(providerType) {
+  // Remove active class from all nav items
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  
+  // Add active class to selected nav item
+  const activeItem = document.querySelector(`[data-provider="${providerType}"]`);
+  if (activeItem) {
+    activeItem.classList.add('active');
+  }
+}
+
+// Show Success Message with improved functionality
+function showSuccessMessage(message) {
+  showMessage(message, 'success');
+}
+
+// Show Error Message with improved functionality
+function showErrorMessage(message) {
+  showMessage(message, 'error');
+}
+
+// Show Message with improved functionality
+function showMessage(message, type) {
+  const container = document.getElementById('messageContainer');
+  if (!container) return;
+  
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `message ${type}`;
+  messageDiv.innerHTML = `
+    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+    <span>${message}</span>
+  `;
+  
+  container.appendChild(messageDiv);
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+    if (messageDiv.parentNode) {
+      messageDiv.parentNode.removeChild(messageDiv);
+    }
+  }, 5000);
+}
+
+// Override existing functions to use improved functionality
+window.loadServiceProviderData = loadServiceProviderDataImproved;
+window.viewProviderDetails = viewProviderDetailsImproved;
+window.approveServiceProvider = approveServiceProviderImproved;
+window.rejectServiceProvider = rejectServiceProviderImproved;
+window.loadDashboardData = loadDashboardDataImproved;
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 DOM loaded, initializing new dashboard...');
-    
-    // Initialize the new dashboard functionality
+    console.log('🚀 DOM loaded, initializing improved dashboard...');
+
+    // Initialize the improved dashboard functionality
     initializeNewDashboard();
+    
+    // Also initialize improved functionality
+    setTimeout(() => {
+      loadDashboardDataImproved();
+    }, 1000);
 });

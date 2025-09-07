@@ -41,10 +41,15 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase if not already initialized
-if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-} else if (typeof firebase === 'undefined') {
-    console.warn('Firebase SDK not loaded');
+if (typeof firebase !== 'undefined') {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+        console.log('✅ Firebase initialized successfully');
+    } else {
+        console.log('✅ Firebase already initialized');
+    }
+} else {
+    console.error('❌ Firebase SDK not loaded');
 }
 
 // Stats Functions
@@ -617,35 +622,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         staffNameElement.textContent = staffProfile.data.fullName || user.email;
                     }
                     
-                    // Check staff type and redirect if needed
-                    const staffType = localStorage.getItem('staffType');
-                    console.log('🔍 Checking staff type for redirection:', staffType);
-                    
-                    // Only redirect if we're on the ARC Staff dashboard and user is not ARC Staff
-                    if (window.location.pathname.includes('arcstaff-dashboard.html') && staffType && staffType !== 'arcstaff' && !redirectInProgress) {
-                        console.log('🔄 Staff type mismatch, redirecting to appropriate dashboard');
-                        redirectInProgress = true; // Set flag to prevent multiple redirects
-                        
-                        switch(staffType) {
-                            case 'backend_manager':
-                                console.log('🔄 Redirecting Backend Manager to:', 'https://arcular-plus-backend-man.vercel.app/');
-                                window.location.href = 'https://arcular-plus-backend-man.vercel.app/';
-                                return;
-                            case 'patient_supervisor':
-                                console.log('🔄 Redirecting Patient Supervisor to:', 'https://arcular-plus-backend-man-65aq.vercel.app/');
-                                window.location.href = 'https://arcular-plus-backend-man-65aq.vercel.app/';
-                                return;
-                            default:
-                                console.log('⚠️ Unknown staff type:', staffType);
-                                break;
-                        }
-                    } else {
-                        if (redirectInProgress) {
-                            console.log('🚩 Redirect already in progress, skipping additional redirects');
-                        } else {
-                            console.log('✅ Staff type is ARC Staff or not on ARC Staff dashboard, staying put');
-                        }
+                    // Update header with staff name
+                    const userNameElement = document.getElementById('userName');
+                    if (userNameElement) {
+                        userNameElement.textContent = staffProfile.data.fullName || user.email;
                     }
+                    
+                    // Update staff status in settings
+                    updateStaffStatus(staffProfile.data);
+                    
+                    // All users are now ARC Staff only
+                    console.log('✅ User is ARC Staff, staying on dashboard');
                     
                     // Initialize dashboard
                     await initializeArcStaffDashboard();
@@ -713,23 +700,11 @@ function initializeLoginPage() {
     const hasToken = localStorage.getItem('staff_idToken');
     const staffType = localStorage.getItem('staffType');
     
-    if (hasToken && staffType) {
+    if (hasToken) {
         console.log('✅ User already logged in, redirecting to dashboard');
         
-        let dashboardUrl;
-        switch (staffType) {
-            case 'arcstaff':
-                dashboardUrl = 'arcstaff-dashboard.html';
-                break;
-            case 'backend_manager':
-                dashboardUrl = 'https://arcular-plus-backend-man.vercel.app/';
-                break;
-            case 'patient_supervisor':
-                dashboardUrl = 'https://arcular-plus-backend-man-65aq.vercel.app/';
-                break;
-            default:
-                dashboardUrl = 'arcstaff-dashboard.html';
-        }
+        // All users go to ARC Staff dashboard
+        let dashboardUrl = 'arcstaff-dashboard.html';
         
         console.log('🎯 Redirecting to:', dashboardUrl);
         // Redirect immediately without delay
@@ -746,17 +721,14 @@ function initializeLoginPage() {
             console.log('✅ Login form found, adding event listener');
             
             // Create the main login handler function
-            async function handleMainLogin(email, password, staffType) {
+            async function handleMainLogin(email, password) {
                 console.log('🚀 Main login handler triggered!');
                 
                 // Hide any existing messages
                 hideLoginMessages();
                 
-                // Validate staff type selection
-                if (!staffType) {
-                    showLoginError('Please select your staff type');
-                    return;
-                }
+                // All users are ARC Staff
+                const actualStaffType = 'arcstaff';
                 
                 // Show loading state
                 const loginBtn = document.getElementById('loginBtn');
@@ -804,18 +776,18 @@ function initializeLoginPage() {
                             
                                                     // Store token and staff type
                         localStorage.setItem('staff_idToken', idToken);
-                        localStorage.setItem('staffType', staffType);
+                        localStorage.setItem('staffType', 'arcstaff');
                         
                         // Debug: Show what's stored
                         console.log('💾 Stored in localStorage:');
                         console.log('  - staff_idToken:', idToken ? 'Present' : 'Missing');
-                        console.log('  - staffType:', staffType);
+                        console.log('  - staffType: arcstaff');
                         
                         // Show success message
                         showLoginSuccess('Login successful! Redirecting to dashboard...');
                         
                         // Redirect based on staff type
-                        console.log('🔀 Staff type selected:', staffType);
+                        console.log('🔀 Staff type: ARC Staff');
                         console.log('✅ Token and staff type stored in localStorage');
                         
                         // Set redirect flag to prevent multiple redirects
@@ -823,25 +795,8 @@ function initializeLoginPage() {
                         console.log('🚩 Redirect flag set to prevent conflicts');
                         
                         setTimeout(() => {
-                            console.log('🔄 Redirecting to dashboard for staff type:', staffType);
-                            
-                            switch(staffType) {
-                                case 'arcstaff':
-                                    console.log('🔄 Redirecting to ARC Staff Dashboard');
-                                    window.location.href = 'arcstaff-dashboard.html';
-                                    break;
-                                case 'backend_manager':
-                                    console.log('🔄 Redirecting to Backend Manager Dashboard');
-                                    window.location.href = 'https://arcular-plus-backend-man.vercel.app/';
-                                    break;
-                                case 'patient_supervisor':
-                                    console.log('🔄 Redirecting to Patient Supervisor Dashboard');
-                                    window.location.href = 'https://arcular-plus-backend-man-65aq.vercel.app/';
-                                    break;
-                                default:
-                                    console.error('❌ Invalid staff type selected');
-                                    throw new Error('Please select a valid staff type');
-                            }
+                            console.log('🔄 Redirecting to ARC Staff Dashboard');
+                            window.location.href = 'arcstaff-dashboard.html';
                         }, 2000);
                             
                         } else {
@@ -884,20 +839,14 @@ function initializeLoginPage() {
                 
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
-                const staffType = document.getElementById('staffType').value;
                 
                 if (!email || !password) {
                     showLoginError('Please enter both email and password');
                     return;
                 }
                 
-                if (!staffType) {
-                    showLoginError('Please select your staff type');
-                    return;
-                }
-                
-                // Call the main login handler
-                handleMainLogin(email, password, staffType);
+                // Call the main login handler (always ARC Staff)
+                handleMainLogin(email, password);
             });
             
             console.log('✅ Login form event listener added');
@@ -1639,190 +1588,411 @@ async function rejectUser(userId) {
 
 function loadHospitals() {
     console.log('🏥 Loading hospitals...');
-    const tbody = document.getElementById('hospitalsTable');
-    console.log('🏥 Found hospitals table:', tbody);
+    const contentArea = document.getElementById('serviceProviderContent');
+    console.log('🏥 Found content area:', contentArea);
     
-    if (!tbody) {
-        console.error('❌ Hospitals table not found!');
+    if (!contentArea) {
+        console.error('❌ Service provider content area not found!');
         return;
     }
     
-    const hospitals = allUsers.hospitals;
+    const hospitals = allUsers.hospitals || [];
     console.log('🏥 Hospitals data:', hospitals);
     
-    if (hospitals.length === 0) {
-        console.log('🏥 No hospitals found, showing empty state');
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-state">
-                    <i class="fas fa-hospital"></i>
-                    <h3>No Hospitals Found</h3>
-                    <p>No hospitals have been approved yet</p>
-                </td>
-            </tr>
-        `;
-        return;
-    }
+    // Create a full-screen hospital management view
+    contentArea.innerHTML = `
+        <div class="provider-management-screen">
+            <div class="screen-header">
+                <div class="header-left">
+                    <button class="back-btn" onclick="showDashboardOverview()">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </button>
+                    <div class="screen-title">
+                        <h1><i class="fas fa-hospital"></i> Hospital Management</h1>
+                        <p>Manage hospital registrations and approvals</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="screen-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">${hospitals.length}</span>
+                            <span class="stat-label">Total</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${hospitals.filter(h => h.isApproved).length}</span>
+                            <span class="stat-label">Approved</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${hospitals.filter(h => !h.isApproved).length}</span>
+                            <span class="stat-label">Pending</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="screen-content">
+                ${hospitals.length === 0 ? `
+                    <div class="empty-state-screen">
+                        <div class="empty-icon">
+                            <i class="fas fa-hospital fa-4x"></i>
+                        </div>
+                        <h2>No Hospitals Found</h2>
+                        <p>No hospital registrations have been submitted yet.</p>
+                        <button class="btn btn-primary" onclick="refreshData()">
+                            <i class="fas fa-refresh"></i> Refresh Data
+                        </button>
+                    </div>
+                ` : `
+                    <div class="provider-grid-screen">
+                        ${hospitals.map(hospital => `
+                            <div class="provider-card-screen" data-status="${hospital.isApproved ? 'approved' : 'pending'}">
+                                <div class="card-header">
+                                    <div class="provider-avatar-large">
+                                        <i class="fas fa-hospital"></i>
+                                    </div>
+                                    <div class="provider-info-main">
+                                        <h3>${hospital.name || hospital.hospitalName || 'Unknown Hospital'}</h3>
+                                        <p class="provider-email">${hospital.email}</p>
+                                        <span class="status-badge-large ${hospital.isApproved ? 'approved' : 'pending'}">
+                                            ${hospital.isApproved ? 'Approved' : 'Pending Approval'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <label>Registration Number:</label>
+                                            <span>${hospital.registrationNumber || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Address:</label>
+                                            <span>${hospital.address || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Contact:</label>
+                                            <span>${hospital.mobileNumber || hospital.contact || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Registered:</label>
+                                            <span>${new Date(hospital.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-primary" onclick="viewProviderDetails('${hospital._id}', 'hospital')">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </button>
+                                    ${!hospital.isApproved ? `
+                                        <button class="btn btn-success" onclick="approveServiceProvider('${hospital._id}', 'hospital')">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button class="btn btn-danger" onclick="rejectServiceProvider('${hospital._id}', 'hospital')">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+            </div>
+        </div>
+    `;
     
-    console.log('🏥 Rendering', hospitals.length, 'hospitals');
-    tbody.innerHTML = hospitals.map(hospital => `
-        <tr>
-            <td>${hospital.name}</td>
-            <td>${hospital.registrationNumber}</td>
-            <td>${hospital.contact}</td>
-            <td><span class="status-badge approved">Approved</span></td>
-            <td>
-                <button class="action-btn view-btn" onclick="viewUserDetails('hospital', '${hospital.id}')">
-                    <i class="fas fa-eye"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
-    
-    console.log('🏥 Hospitals loaded successfully');
+    console.log('🏥 Hospitals screen loaded successfully');
 }
 
 function loadDoctors() {
     console.log('👨‍⚕️ Loading doctors...');
-    const tbody = document.getElementById('doctorsTable');
-    console.log('👨‍⚕️ Found doctors table:', tbody);
+    const contentArea = document.getElementById('serviceProviderContent');
+    console.log('👨‍⚕️ Found content area:', contentArea);
     
-    if (!tbody) {
-        console.error('❌ Doctors table not found!');
+    if (!contentArea) {
+        console.error('❌ Service provider content area not found!');
         return;
     }
     
-    const doctors = allUsers.doctors;
+    const doctors = allUsers.doctors || [];
     console.log('👨‍⚕️ Doctors data:', doctors);
     
-    if (doctors.length === 0) {
-        console.log('👨‍⚕️ No doctors found, showing empty state');
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="empty-state">
-                    <i class="fas fa-user-md"></i>
-                    <h3>No Doctors Found</h3>
-                    <p>No doctors have been approved yet</p>
-                </td>
-            </tr>
-        `;
-        return;
-    }
+    // Create a full-screen doctor management view
+    contentArea.innerHTML = `
+        <div class="provider-management-screen">
+            <div class="screen-header">
+                <div class="header-left">
+                    <button class="back-btn" onclick="showDashboardOverview()">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </button>
+                    <div class="screen-title">
+                        <h1><i class="fas fa-user-md"></i> Doctor Management</h1>
+                        <p>Manage doctor registrations and approvals</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="screen-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">${doctors.length}</span>
+                            <span class="stat-label">Total</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${doctors.filter(d => d.isApproved).length}</span>
+                            <span class="stat-label">Approved</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${doctors.filter(d => !d.isApproved).length}</span>
+                            <span class="stat-label">Pending</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="screen-content">
+                ${doctors.length === 0 ? `
+                    <div class="empty-state-screen">
+                        <div class="empty-icon">
+                            <i class="fas fa-user-md fa-4x"></i>
+                        </div>
+                        <h2>No Doctors Found</h2>
+                        <p>No doctor registrations have been submitted yet.</p>
+                        <button class="btn btn-primary" onclick="refreshData()">
+                            <i class="fas fa-refresh"></i> Refresh Data
+                        </button>
+                    </div>
+                ` : `
+                    <div class="provider-grid-screen">
+                        ${doctors.map(doctor => `
+                            <div class="provider-card-screen" data-status="${doctor.isApproved ? 'approved' : 'pending'}">
+                                <div class="card-header">
+                                    <div class="provider-avatar-large">
+                                        <i class="fas fa-user-md"></i>
+                                    </div>
+                                    <div class="provider-info-main">
+                                        <h3>${doctor.name || doctor.fullName || 'Unknown Doctor'}</h3>
+                                        <p class="provider-email">${doctor.email}</p>
+                                        <span class="status-badge-large ${doctor.isApproved ? 'approved' : 'pending'}">
+                                            ${doctor.isApproved ? 'Approved' : 'Pending Approval'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <label>License Number:</label>
+                                            <span>${doctor.licenseNumber || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Specialization:</label>
+                                            <span>${doctor.specialization || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Contact:</label>
+                                            <span>${doctor.mobileNumber || doctor.contact || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Registered:</label>
+                                            <span>${new Date(doctor.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-primary" onclick="viewProviderDetails('${doctor._id}', 'doctor')">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </button>
+                                    ${!doctor.isApproved ? `
+                                        <button class="btn btn-success" onclick="approveServiceProvider('${doctor._id}', 'doctor')">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button class="btn btn-danger" onclick="rejectServiceProvider('${doctor._id}', 'doctor')">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+            </div>
+        </div>
+    `;
     
-    console.log('👨‍⚕️ Rendering', doctors.length, 'doctors');
-    tbody.innerHTML = doctors.map(doctor => `
-        <tr>
-            <td>${doctor.name}</td>
-            <td>${doctor.licenseNumber}</td>
-            <td>${doctor.specialization}</td>
-            <td>${doctor.contact}</td>
-            <td><span class="status-badge approved">Approved</span></td>
-            <td>
-                <button class="action-btn view-btn" onclick="viewUserDetails('doctor', '${doctor.id}')">
-                    <i class="fas fa-eye"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
-    
-    console.log('👨‍⚕️ Doctors loaded successfully');
+    console.log('👨‍⚕️ Doctors screen loaded successfully');
 }
 
 function loadNurses() {
-    const tbody = document.getElementById('nursesTable');
+    const contentArea = document.getElementById('serviceProviderContent');
     const nurses = allUsers.nurses;
     
+    if (!contentArea) {
+        console.error('❌ Service provider content area not found!');
+        return;
+    }
+    
     if (nurses.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="empty-state">
-                    <i class="fas fa-user-nurse"></i>
-                    <h3>No Nurses Found</h3>
-                    <p>No nurses have been approved yet</p>
-                </td>
-            </tr>
+        contentArea.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-user-nurse fa-3x text-muted mb-3"></i>
+                <h3>No Nurses Found</h3>
+                <p class="text-muted">No nurse registrations have been submitted yet.</p>
+            </div>
         `;
         return;
     }
     
-    tbody.innerHTML = nurses.map(nurse => `
-        <tr>
-            <td>${nurse.name}</td>
-            <td>${nurse.licenseNumber}</td>
-            <td>${nurse.department}</td>
-            <td>${nurse.contact}</td>
-            <td><span class="status-badge approved">Approved</span></td>
-            <td>
-                <button class="action-btn view-btn" onclick="viewUserDetails('nurse', '${nurse.id}')">
-                    <i class="fas fa-eye"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    contentArea.innerHTML = `
+        <div class="provider-list">
+            <div class="provider-header">
+                <h2><i class="fas fa-user-nurse"></i> Nurses (${nurses.length})</h2>
+            </div>
+            <div class="provider-grid">
+                ${nurses.map(nurse => `
+                    <div class="provider-card" data-status="${nurse.isApproved ? 'approved' : 'pending'}">
+                        <div class="provider-header">
+                            <div class="provider-avatar">
+                                <i class="fas fa-user-nurse"></i>
+                            </div>
+                            <div class="provider-info">
+                                <h4>${nurse.name}</h4>
+                                <p class="provider-email">${nurse.email}</p>
+                            </div>
+                            <div class="provider-status">
+                                <span class="status-badge ${nurse.isApproved ? 'approved' : 'pending'}">
+                                    ${nurse.isApproved ? 'Approved' : 'Pending'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="provider-details">
+                            <p><strong>License:</strong> ${nurse.licenseNumber || 'N/A'}</p>
+                            <p><strong>Department:</strong> ${nurse.department || 'N/A'}</p>
+                            <p><strong>Registered:</strong> ${new Date(nurse.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <div class="provider-actions">
+                            <button class="btn btn-primary" onclick="viewProviderDetails('${nurse._id}', 'nurse')">
+                                <i class="fas fa-eye"></i> View Details
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
 }
 
 function loadLabs() {
-    const tbody = document.getElementById('labsTable');
+    const contentArea = document.getElementById('serviceProviderContent');
     const labs = allUsers.labs;
     
+    if (!contentArea) {
+        console.error('❌ Service provider content area not found!');
+        return;
+    }
+    
     if (labs.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-state">
-                    <i class="fas fa-flask"></i>
-                    <h3>No Labs Found</h3>
-                    <p>No labs have been approved yet</p>
-                </td>
-            </tr>
+        contentArea.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-flask fa-3x text-muted mb-3"></i>
+                <h3>No Labs Found</h3>
+                <p class="text-muted">No lab registrations have been submitted yet.</p>
+            </div>
         `;
         return;
     }
     
-    tbody.innerHTML = labs.map(lab => `
-        <tr>
-            <td>${lab.name}</td>
-            <td>${lab.licenseNumber}</td>
-            <td>${lab.contact}</td>
-            <td><span class="status-badge approved">Approved</span></td>
-            <td>
-                <button class="action-btn view-btn" onclick="viewUserDetails('lab', '${lab.id}')">
-                    <i class="fas fa-eye"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    contentArea.innerHTML = `
+        <div class="provider-list">
+            <div class="provider-header">
+                <h2><i class="fas fa-flask"></i> Labs (${labs.length})</h2>
+            </div>
+            <div class="provider-grid">
+                ${labs.map(lab => `
+                    <div class="provider-card" data-status="${lab.isApproved ? 'approved' : 'pending'}">
+                        <div class="provider-header">
+                            <div class="provider-avatar">
+                                <i class="fas fa-flask"></i>
+                            </div>
+                            <div class="provider-info">
+                                <h4>${lab.name}</h4>
+                                <p class="provider-email">${lab.email}</p>
+                            </div>
+                            <div class="provider-status">
+                                <span class="status-badge ${lab.isApproved ? 'approved' : 'pending'}">
+                                    ${lab.isApproved ? 'Approved' : 'Pending'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="provider-details">
+                            <p><strong>License:</strong> ${lab.licenseNumber || 'N/A'}</p>
+                            <p><strong>Contact:</strong> ${lab.contact || 'N/A'}</p>
+                            <p><strong>Registered:</strong> ${new Date(lab.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <div class="provider-actions">
+                            <button class="btn btn-primary" onclick="viewProviderDetails('${lab._id}', 'lab')">
+                                <i class="fas fa-eye"></i> View Details
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
 }
 
 function loadPharmacies() {
-    const tbody = document.getElementById('pharmaciesTable');
+    const contentArea = document.getElementById('serviceProviderContent');
     const pharmacies = allUsers.pharmacies;
     
+    if (!contentArea) {
+        console.error('❌ Service provider content area not found!');
+        return;
+    }
+    
     if (pharmacies.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-state">
-                    <i class="fas fa-pills"></i>
-                    <h3>No Pharmacies Found</h3>
-                    <p>No pharmacies have been approved yet</p>
-                </td>
-            </tr>
+        contentArea.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-pills fa-3x text-muted mb-3"></i>
+                <h3>No Pharmacies Found</h3>
+                <p class="text-muted">No pharmacy registrations have been submitted yet.</p>
+            </div>
         `;
         return;
     }
     
-    tbody.innerHTML = pharmacies.map(pharmacy => `
-        <tr>
-            <td>${pharmacy.name}</td>
-            <td>${pharmacy.licenseNumber}</td>
-            <td>${pharmacy.contact}</td>
-            <td><span class="status-badge approved">Approved</span></td>
-            <td>
-                <button class="action-btn view-btn" onclick="viewUserDetails('pharmacy', '${pharmacy.id}')">
-                    <i class="fas fa-eye"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    contentArea.innerHTML = `
+        <div class="provider-list">
+            <div class="provider-header">
+                <h2><i class="fas fa-pills"></i> Pharmacies (${pharmacies.length})</h2>
+            </div>
+            <div class="provider-grid">
+                ${pharmacies.map(pharmacy => `
+                    <div class="provider-card" data-status="${pharmacy.isApproved ? 'approved' : 'pending'}">
+                        <div class="provider-header">
+                            <div class="provider-avatar">
+                                <i class="fas fa-pills"></i>
+                            </div>
+                            <div class="provider-info">
+                                <h4>${pharmacy.name}</h4>
+                                <p class="provider-email">${pharmacy.email}</p>
+                            </div>
+                            <div class="provider-status">
+                                <span class="status-badge ${pharmacy.isApproved ? 'approved' : 'pending'}">
+                                    ${pharmacy.isApproved ? 'Approved' : 'Pending'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="provider-details">
+                            <p><strong>License:</strong> ${pharmacy.licenseNumber || 'N/A'}</p>
+                            <p><strong>Contact:</strong> ${pharmacy.contact || 'N/A'}</p>
+                            <p><strong>Registered:</strong> ${new Date(pharmacy.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <div class="provider-actions">
+                            <button class="btn btn-primary" onclick="viewProviderDetails('${pharmacy._id}', 'pharmacy')">
+                                <i class="fas fa-eye"></i> View Details
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
 }
 
 async function loadAllUsers() {
@@ -2439,7 +2609,7 @@ function checkArcStaffSession() {
     return;
   }
   
-  console.log('✅ Token found, staff type:', staffType, 'verifying with Firebase');
+  console.log('✅ Token found, verifying with Firebase');
   // Verify token with Firebase
   firebase.auth().onAuthStateChanged(function(user) {
     if (!user) {
@@ -2450,29 +2620,38 @@ function checkArcStaffSession() {
     } else {
       console.log('✅ Firebase user verified, session valid');
       
-      // Only redirect if user is not ARC Staff (let main onAuthStateChanged handle other redirects)
-      if (staffType && staffType !== 'arcstaff' && !redirectInProgress) {
-        console.log('🔄 User is not ARC Staff, redirecting to appropriate dashboard');
-        redirectInProgress = true; // Set flag to prevent multiple redirects
-        
-        switch(staffType) {
-          case 'backend_manager':
-            console.log('🔄 checkArcStaffSession: Redirecting Backend Manager to:', 'https://arcular-plus-backend-man.vercel.app/');
-            window.location.href = 'https://arcular-plus-backend-man.vercel.app/';
-            return;
-          case 'patient_supervisor':
-            console.log('🔄 checkArcStaffSession: Redirecting Patient Supervisor to:', 'https://arcular-plus-backend-man-65aq.vercel.app/');
-            window.location.href = 'https://arcular-plus-backend-man-65aq.vercel.app/';
-            return;
-        }
-      } else if (redirectInProgress) {
-        console.log('🚩 checkArcStaffSession: Redirect already in progress, skipping');
-      }
+      // All users are ARC Staff, no redirection needed
+      console.log('✅ User is ARC Staff, staying on dashboard');
       
       // Initialize dashboard for ARC Staff
       initializeArcStaffDashboard();
     }
   });
+}
+
+// Update staff status in settings modal
+function updateStaffStatus(staffData) {
+    const statusElement = document.getElementById('staffStatus');
+    const lastUpdatedElement = document.getElementById('lastUpdated');
+    const adminCommentsElement = document.getElementById('adminComments');
+    
+    if (statusElement) {
+        if (staffData.isApproved) {
+            statusElement.textContent = 'Approved';
+            statusElement.className = 'status-badge approved';
+        } else {
+            statusElement.textContent = 'Pending Admin Approval';
+            statusElement.className = 'status-badge pending';
+        }
+    }
+    
+    if (lastUpdatedElement && staffData.updatedAt) {
+        lastUpdatedElement.textContent = new Date(staffData.updatedAt).toLocaleDateString();
+    }
+    
+    if (adminCommentsElement && staffData.adminComments) {
+        adminCommentsElement.innerHTML = `<p>${staffData.adminComments}</p>`;
+    }
 }
 
 // Initialize ARC Staff Dashboard
@@ -5640,12 +5819,20 @@ async function loadStaffProfile() {
                 document.getElementById('staffBio').value = profile.bio || '';
                 
                 console.log('📋 Staff profile loaded:', profile);
+                
+                // Update status information
+                updateStaffStatus(profile);
             }
         }
     } catch (error) {
         console.error('❌ Error loading staff profile:', error);
         showErrorMessage('Failed to load profile data');
     }
+}
+
+// Load staff data into form (alias for loadStaffProfile)
+function loadStaffDataIntoForm() {
+    loadStaffProfile();
 }
 
 // Save staff settings
@@ -5657,8 +5844,6 @@ async function saveStaffSettings() {
             department: document.getElementById('staffDepartment').value,
             address: document.getElementById('staffAddress').value,
             bio: document.getElementById('staffBio').value,
-            emailNotifications: document.getElementById('emailNotifications').checked,
-            dashboardNotifications: document.getElementById('dashboardNotifications').checked,
             requiresApproval: true,
             submittedAt: new Date().toISOString()
         };
@@ -5765,7 +5950,6 @@ function closeProviderDetailsModal() {
 
 // Global variables for improved functionality
 let currentApproval = null;
-let pendingApprovals = [];
 
 // Load Service Provider Data with improved functionality
 async function loadServiceProviderDataImproved(providerType) {
@@ -6710,15 +6894,114 @@ window.approveServiceProvider = approveServiceProviderImproved;
 window.rejectServiceProvider = rejectServiceProviderImproved;
 window.loadDashboardData = loadDashboardDataImproved;
 
+// Navigation Functions
+function showDashboardOverview() {
+    console.log('🏠 Showing dashboard overview...');
+    const contentArea = document.getElementById('serviceProviderContent');
+    if (contentArea) {
+        contentArea.innerHTML = `
+            <div class="dashboard-overview">
+                <div class="overview-header">
+                    <h2><i class="fas fa-tachometer-alt"></i> Dashboard Overview</h2>
+                    <p>Select a service provider type from the sidebar to manage applications</p>
+                </div>
+                <div class="overview-grid">
+                    <div class="overview-card" onclick="loadHospitals()">
+                        <div class="card-icon">
+                            <i class="fas fa-hospital"></i>
+                        </div>
+                        <h3>Hospitals</h3>
+                        <p>Manage hospital registrations</p>
+                        <div class="card-stats">
+                            <span class="stat">Total: ${allUsers.hospitals?.length || 0}</span>
+                            <span class="stat">Pending: ${allUsers.hospitals?.filter(h => !h.isApproved).length || 0}</span>
+                        </div>
+                    </div>
+                    <div class="overview-card" onclick="loadDoctors()">
+                        <div class="card-icon">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <h3>Doctors</h3>
+                        <p>Manage doctor registrations</p>
+                        <div class="card-stats">
+                            <span class="stat">Total: ${allUsers.doctors?.length || 0}</span>
+                            <span class="stat">Pending: ${allUsers.doctors?.filter(d => !d.isApproved).length || 0}</span>
+                        </div>
+                    </div>
+                    <div class="overview-card" onclick="loadNurses()">
+                        <div class="card-icon">
+                            <i class="fas fa-user-nurse"></i>
+                        </div>
+                        <h3>Nurses</h3>
+                        <p>Manage nurse registrations</p>
+                        <div class="card-stats">
+                            <span class="stat">Total: ${allUsers.nurses?.length || 0}</span>
+                            <span class="stat">Pending: ${allUsers.nurses?.filter(n => !n.isApproved).length || 0}</span>
+                        </div>
+                    </div>
+                    <div class="overview-card" onclick="loadLabs()">
+                        <div class="card-icon">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                        <h3>Labs</h3>
+                        <p>Manage lab registrations</p>
+                        <div class="card-stats">
+                            <span class="stat">Total: ${allUsers.labs?.length || 0}</span>
+                            <span class="stat">Pending: ${allUsers.labs?.filter(l => !l.isApproved).length || 0}</span>
+                        </div>
+                    </div>
+                    <div class="overview-card" onclick="loadPharmacies()">
+                        <div class="card-icon">
+                            <i class="fas fa-pills"></i>
+                        </div>
+                        <h3>Pharmacies</h3>
+                        <p>Manage pharmacy registrations</p>
+                        <div class="card-stats">
+                            <span class="stat">Total: ${allUsers.pharmacies?.length || 0}</span>
+                            <span class="stat">Pending: ${allUsers.pharmacies?.filter(p => !p.isApproved).length || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function refreshData() {
+    console.log('🔄 Refreshing data...');
+    loadAllUsers();
+}
+
+// Quick Actions Functions
+function exportStaffData() {
+    console.log('📊 Exporting staff data...');
+    showNotification('Exporting staff data...', 'info');
+    // TODO: Implement actual export functionality
+}
+
+function generateStaffReport() {
+    console.log('📈 Generating staff report...');
+    showNotification('Generating staff report...', 'info');
+    // TODO: Implement actual report generation
+}
+
+function generateReports() {
+    console.log('📋 Generating Excel reports...');
+    showNotification('Generating Excel reports...', 'info');
+    // TODO: Implement actual Excel report generation
+}
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM loaded, initializing improved dashboard...');
 
     // Initialize the improved dashboard functionality
     initializeNewDashboard();
-    
+
     // Also initialize improved functionality
     setTimeout(() => {
       loadDashboardDataImproved();
+      // Show dashboard overview by default
+      showDashboardOverview();
     }, 1000);
 });

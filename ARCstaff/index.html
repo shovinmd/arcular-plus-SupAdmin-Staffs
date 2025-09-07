@@ -475,7 +475,6 @@
                 <div class="login-footer">
                     <p>© 2025 Arcular+ Healthcare Platform. All rights reserved.</p>
                     <p>For technical support, contact: support@arcularplus.com</p>
-                    <button onclick="clearTokens()" style="margin-top: 10px; padding: 5px 10px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Clear Tokens (Debug)</button>
                 </div>
             </div>
         </div>
@@ -487,18 +486,6 @@
     <script>
         // Firebase is initialized in script.js
 
-        // Function to update staff type display
-        function updateStaffTypeDisplay() {
-            const staffType = document.getElementById('staffType').value;
-            const displayDiv = document.getElementById('selectedStaffType');
-            
-            if (staffType) {
-                displayDiv.textContent = `Selected: ${staffType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`;
-                displayDiv.style.display = 'block';
-            } else {
-                displayDiv.style.display = 'none';
-            }
-        }
 
         // Debug: Check if script.js loaded
         document.addEventListener('DOMContentLoaded', function() {
@@ -526,27 +513,21 @@
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const staffType = document.getElementById('staffType').value;
             
-            console.log('📝 Form data:', { email, staffType });
+            console.log('📝 Form data:', { email });
             
             if (!email || !password) {
                 alert('Please enter both email and password');
                 return;
             }
             
-            if (!staffType) {
-                alert('Please select your staff type');
-                return;
-            }
-            
             // Try to use the main login handler if available
             if (typeof window.handleMainLogin === 'function') {
                 console.log('✅ Using main login handler');
-                window.handleMainLogin(email, password, staffType);
+                window.handleMainLogin(email, password, 'arcstaff');
             } else {
                 console.log('⚠️ Main login handler not available, using backup');
-                handleBackupLogin(email, password, staffType);
+                handleBackupLogin(email, password, 'arcstaff');
             }
         }
 
@@ -561,30 +542,13 @@
                 const idToken = await user.getIdToken();
                 console.log('✅ ID token obtained');
                 
-                // Store token and staff type
+                // Store token and staff type (always arcstaff)
                 localStorage.setItem('staff_idToken', idToken);
-                localStorage.setItem('staffType', staffType);
+                localStorage.setItem('staffType', 'arcstaff');
                 
-                // Redirect based on staff type
-                console.log('🔄 Redirecting to dashboard for staff type:', staffType);
-                
-                let dashboardUrl;
-                switch(staffType) {
-                    case 'arcstaff':
-                        dashboardUrl = 'arcstaff-dashboard.html';
-                        break;
-                    case 'backend_manager':
-                        dashboardUrl = 'https://arcular-plus-backend-man.vercel.app/';
-                        break;
-                    case 'patient_supervisor':
-                        dashboardUrl = 'https://arcular-plus-backend-man-65aq.vercel.app/';
-                        break;
-                    default:
-                        dashboardUrl = 'arcstaff-dashboard.html';
-                }
-                
-                console.log('🎯 Redirecting to:', dashboardUrl);
-                window.location.href = dashboardUrl;
+                // Redirect to ARC Staff dashboard
+                console.log('🔄 Redirecting to ARC Staff dashboard');
+                window.location.href = 'arcstaff-dashboard.html';
                 
             } catch (error) {
                 console.error('❌ Login error:', error);
@@ -603,19 +567,13 @@
                     
                     const email = document.getElementById('email').value;
                     const password = document.getElementById('password').value;
-                    const staffType = document.getElementById('staffType').value;
                     
                     if (!email || !password) {
                         alert('Please enter both email and password');
                         return;
                     }
                     
-                    if (!staffType) {
-                        alert('Please select your staff type');
-                        return;
-                    }
-                    
-                    handleBackupLogin(email, password, staffType);
+                    handleBackupLogin(email, password, 'arcstaff');
                 });
                 console.log('✅ Backup login handler set up');
             } else {
@@ -629,18 +587,6 @@
             document.getElementById('email').value = 'staff1@gmail.com';
         });
 
-        // Function to manually clear tokens (for debugging)
-        function clearTokens() {
-            localStorage.removeItem('staff_idToken');
-            localStorage.removeItem('staffType');
-            sessionStorage.removeItem('adminLoggedIn');
-            sessionStorage.removeItem('adminEmail');
-            console.log('🧹 All tokens cleared');
-            alert('All tokens cleared. Please refresh the page.');
-        }
-
-        // Expose clearTokens globally for debugging
-        window.clearTokens = clearTokens;
     </script>
 </body>
 </html> 

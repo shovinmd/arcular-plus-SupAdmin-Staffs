@@ -7781,31 +7781,206 @@ function generateMonthlyReport() {
 
 // Exports Tab Functions
 function exportStaffData() {
-    console.log('📊 Exporting staff data...');
+    console.log('📊 Exporting staff data to Excel...');
     showNotification('Exporting staff data...', 'info');
     
-    setTimeout(() => {
+    try {
+        // Get current staff profile
+        const staffProfile = {
+            name: document.getElementById('staffName')?.value || 'N/A',
+            email: currentUser?.email || 'N/A',
+            phone: document.getElementById('staffPhone')?.value || 'N/A',
+            department: document.getElementById('staffDepartment')?.value || 'N/A',
+            address: document.getElementById('staffAddress')?.value || 'N/A',
+            bio: document.getElementById('staffBio')?.value || 'N/A',
+            status: 'Active',
+            lastLogin: new Date().toLocaleString()
+        };
+        
+        // Create Excel workbook
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet([staffProfile]);
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Staff Data');
+        
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const filename = `Staff_Data_${timestamp}.xlsx`;
+        
+        // Save file
+        XLSX.writeFile(wb, filename);
+        
         showSuccessMessage('Staff data exported successfully!');
-        // Here you would typically trigger a download
-    }, 2000);
+    } catch (error) {
+        console.error('❌ Export error:', error);
+        showErrorMessage('Failed to export staff data. Please try again.');
+    }
 }
 
 function exportProviderData() {
-    console.log('📊 Exporting provider data...');
+    console.log('📊 Exporting provider data to Excel...');
     showNotification('Exporting provider data...', 'info');
     
-    setTimeout(() => {
-        showSuccessMessage('Provider data exported successfully!');
-    }, 2000);
+    try {
+        // Combine all provider data
+        const allProviders = [];
+        
+        // Add hospitals
+        if (allUsers.hospitals) {
+            allUsers.hospitals.forEach(hospital => {
+                allProviders.push({
+                    Type: 'Hospital',
+                    Name: hospital.hospitalName || hospital.name || 'N/A',
+                    Email: hospital.email || 'N/A',
+                    Phone: hospital.mobileNumber || hospital.contact || 'N/A',
+                    Address: hospital.address || 'N/A',
+                    RegistrationNumber: hospital.registrationNumber || 'N/A',
+                    Status: hospital.isApproved && hospital.approvalStatus === 'approved' ? 'Approved' : 'Pending',
+                    CreatedDate: hospital.createdAt ? new Date(hospital.createdAt).toLocaleDateString() : 'N/A'
+                });
+            });
+        }
+        
+        // Add doctors
+        if (allUsers.doctors) {
+            allUsers.doctors.forEach(doctor => {
+                allProviders.push({
+                    Type: 'Doctor',
+                    Name: doctor.fullName || doctor.name || 'N/A',
+                    Email: doctor.email || 'N/A',
+                    Phone: doctor.mobileNumber || doctor.contact || 'N/A',
+                    Specialization: doctor.specialization || 'N/A',
+                    Experience: doctor.experienceYears || 'N/A',
+                    Status: doctor.isApproved && doctor.approvalStatus === 'approved' ? 'Approved' : 'Pending',
+                    CreatedDate: doctor.createdAt ? new Date(doctor.createdAt).toLocaleDateString() : 'N/A'
+                });
+            });
+        }
+        
+        // Add nurses
+        if (allUsers.nurses) {
+            allUsers.nurses.forEach(nurse => {
+                allProviders.push({
+                    Type: 'Nurse',
+                    Name: nurse.fullName || nurse.name || 'N/A',
+                    Email: nurse.email || 'N/A',
+                    Phone: nurse.mobileNumber || nurse.contact || 'N/A',
+                    Department: nurse.department || 'N/A',
+                    Experience: nurse.experienceYears || 'N/A',
+                    Status: nurse.isApproved && nurse.approvalStatus === 'approved' ? 'Approved' : 'Pending',
+                    CreatedDate: nurse.createdAt ? new Date(nurse.createdAt).toLocaleDateString() : 'N/A'
+                });
+            });
+        }
+        
+        // Add labs
+        if (allUsers.labs) {
+            allUsers.labs.forEach(lab => {
+                allProviders.push({
+                    Type: 'Lab',
+                    Name: lab.labName || lab.name || 'N/A',
+                    Email: lab.email || 'N/A',
+                    Phone: lab.mobileNumber || lab.contact || 'N/A',
+                    Services: Array.isArray(lab.services) ? lab.services.join(', ') : (lab.services || 'N/A'),
+                    Status: lab.isApproved && lab.approvalStatus === 'approved' ? 'Approved' : 'Pending',
+                    CreatedDate: lab.createdAt ? new Date(lab.createdAt).toLocaleDateString() : 'N/A'
+                });
+            });
+        }
+        
+        // Add pharmacies
+        if (allUsers.pharmacies) {
+            allUsers.pharmacies.forEach(pharmacy => {
+                allProviders.push({
+                    Type: 'Pharmacy',
+                    Name: pharmacy.pharmacyName || pharmacy.name || 'N/A',
+                    Email: pharmacy.email || 'N/A',
+                    Phone: pharmacy.mobileNumber || pharmacy.contact || 'N/A',
+                    LicenseNumber: pharmacy.licenseNumber || 'N/A',
+                    Services: Array.isArray(pharmacy.services) ? pharmacy.services.join(', ') : (pharmacy.services || 'N/A'),
+                    Status: pharmacy.isApproved && pharmacy.approvalStatus === 'approved' ? 'Approved' : 'Pending',
+                    CreatedDate: pharmacy.createdAt ? new Date(pharmacy.createdAt).toLocaleDateString() : 'N/A'
+                });
+            });
+        }
+        
+        if (allProviders.length === 0) {
+            showErrorMessage('No provider data available to export.');
+            return;
+        }
+        
+        // Create Excel workbook
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(allProviders);
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Provider Data');
+        
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const filename = `Provider_Data_${timestamp}.xlsx`;
+        
+        // Save file
+        XLSX.writeFile(wb, filename);
+        
+        showSuccessMessage(`Provider data exported successfully! (${allProviders.length} records)`);
+    } catch (error) {
+        console.error('❌ Export error:', error);
+        showErrorMessage('Failed to export provider data. Please try again.');
+    }
 }
 
 function exportApprovalData() {
-    console.log('📊 Exporting approval data...');
+    console.log('📊 Exporting approval data to Excel...');
     showNotification('Exporting approval data...', 'info');
     
-    setTimeout(() => {
+    try {
+        // Create approval summary data
+        const approvalData = [
+            {
+                Metric: 'Total Providers',
+                Count: dashboardStats.totalProviders || 0,
+                Percentage: '100%'
+            },
+            {
+                Metric: 'Approved Providers',
+                Count: dashboardStats.approvedProviders || 0,
+                Percentage: dashboardStats.totalProviders > 0 ? 
+                    Math.round((dashboardStats.approvedProviders / dashboardStats.totalProviders) * 100) + '%' : '0%'
+            },
+            {
+                Metric: 'Pending Approvals',
+                Count: dashboardStats.pendingApprovals || 0,
+                Percentage: dashboardStats.totalProviders > 0 ? 
+                    Math.round((dashboardStats.pendingApprovals / dashboardStats.totalProviders) * 100) + '%' : '0%'
+            },
+            {
+                Metric: 'Total Departments',
+                Count: dashboardStats.totalDepartments || 0,
+                Percentage: 'N/A'
+            }
+        ];
+        
+        // Create Excel workbook
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(approvalData);
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Approval Summary');
+        
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const filename = `Approval_Data_${timestamp}.xlsx`;
+        
+        // Save file
+        XLSX.writeFile(wb, filename);
+        
         showSuccessMessage('Approval data exported successfully!');
-    }, 2000);
+    } catch (error) {
+        console.error('❌ Export error:', error);
+        showErrorMessage('Failed to export approval data. Please try again.');
+    }
 }
 
 function exportAuditLog() {

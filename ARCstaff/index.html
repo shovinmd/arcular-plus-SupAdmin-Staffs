@@ -484,8 +484,31 @@
     <script src="script.js"></script>
     
     <script>
-        // Firebase is initialized in script.js
+        // Firebase configuration for Arcular+ project
+        const firebaseConfig = {
+            apiKey: "AIzaSyBzK4SQ44cv6k8EiNF9B2agNASArWQrstk",
+            authDomain: "arcularplus-7e66c.firebaseapp.com",
+            projectId: "arcularplus-7e66c",
+            storageBucket: "arcularplus-7e66c.firebasestorage.app",
+            messagingSenderId: "239874151024",
+            appId: "1:239874151024:android:7e0d9de0400c6bb9fb5ab5"
+        };
 
+        // Initialize Firebase immediately
+        try {
+            if (typeof firebase !== 'undefined') {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                    console.log('✅ Firebase initialized successfully on login page');
+                } else {
+                    console.log('✅ Firebase already initialized on login page');
+                }
+            } else {
+                console.error('❌ Firebase SDK not loaded on login page');
+            }
+        } catch (error) {
+            console.error('❌ Firebase initialization error:', error);
+        }
 
         // Debug: Check if script.js loaded
         document.addEventListener('DOMContentLoaded', function() {

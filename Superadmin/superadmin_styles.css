@@ -739,6 +739,16 @@ body {
     margin-bottom: 8px;
 }
 
+.change-field {
+    margin-bottom: 6px;
+    padding: 4px 0;
+}
+
+.change-field strong {
+    color: #333;
+    font-weight: 600;
+}
+
 .change-submitted {
     color: #94a3b8;
     font-size: 12px;

@@ -873,6 +873,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Set default values
       document.getElementById('admin-name').textContent = user.displayName || user.email;
       document.getElementById('welcome-admin-name').textContent = user.displayName || user.email.split('@')[0];
+      
+      // Setup profile changes refresh
+      setupProfileChangesRefresh();
       document.getElementById('admin-email').textContent = user.email;
       
              // Load admin profile from backend
@@ -1359,12 +1362,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Setup refresh button for pending profile changes
+  function setupProfileChangesRefresh() {
+    const refreshBtn = document.getElementById('refresh-changes');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        try {
+          const token = await firebase.auth().currentUser.getIdToken();
+          await loadPendingProfileChanges(token);
+          showSuccessMessage('Profile changes refreshed');
+        } catch (error) {
+          console.error('Error refreshing profile changes:', error);
+          showErrorMessage('Failed to refresh profile changes');
+        }
+      });
+    }
+  }
+
   // Load pending profile changes from staff
 async function loadPendingProfileChanges(token) {
   try {
     console.log('Loading pending profile changes...');
     
-    const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile-changes`, {
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/api/admin/profile-changes`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1375,9 +1395,12 @@ async function loadPendingProfileChanges(token) {
     if (response.ok) {
       const data = await response.json();
       console.log('Pending profile changes loaded:', data);
+      console.log('Number of pending changes:', data.pendingChanges ? data.pendingChanges.length : 0);
       renderPendingProfileChanges(data.pendingChanges || []);
     } else {
-      console.log('Profile changes endpoint not available (404), showing empty list');
+      console.log('Profile changes endpoint error:', response.status, response.statusText);
+      const errorText = await response.text();
+      console.log('Error response:', errorText);
       renderPendingProfileChanges([]);
     }
   } catch (error) {
@@ -1403,12 +1426,23 @@ async function loadPendingProfileChanges(token) {
     changesContainer.innerHTML = changes.map(change => `
       <div class="change-item" data-change-id="${change._id}">
         <div class="change-info">
-          <div class="change-staff-name">${change.staffName}</div>
+          <div class="change-staff-name">${change.fullName || 'Unknown Staff'}</div>
           <div class="change-details">
-            <strong>Field:</strong> ${change.fieldName}<br>
-            <strong>Old Value:</strong> ${change.oldValue || 'N/A'}<br>
-            <strong>New Value:</strong> ${change.newValue || 'N/A'}<br>
-            <strong>Reason:</strong> ${change.reason || 'No reason provided'}
+            <div class="change-field">
+              <strong>Full Name:</strong> ${change.fullName || 'N/A'}
+            </div>
+            <div class="change-field">
+              <strong>Phone Number:</strong> ${change.mobileNumber || 'N/A'}
+            </div>
+            <div class="change-field">
+              <strong>Department:</strong> ${change.department || 'N/A'}
+            </div>
+            <div class="change-field">
+              <strong>Address:</strong> ${change.address || 'N/A'}
+            </div>
+            <div class="change-field">
+              <strong>Bio:</strong> ${change.bio || 'N/A'}
+            </div>
           </div>
           <div class="change-submitted">
             Submitted: ${new Date(change.submittedAt).toLocaleDateString()}
@@ -1416,10 +1450,10 @@ async function loadPendingProfileChanges(token) {
         </div>
         <div class="change-actions">
           <button class="change-approve-btn" onclick="handleApproveProfileChange('${change._id}')">
-            Approve
+            <i class="fas fa-check"></i> Approve
           </button>
           <button class="change-reject-btn" onclick="handleRejectProfileChange('${change._id}')">
-            Reject
+            <i class="fas fa-times"></i> Reject
           </button>
         </div>
       </div>
@@ -1435,7 +1469,7 @@ async function loadPendingProfileChanges(token) {
         return;
       }
 
-      const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile-changes/${changeId}/approve`, {
+      const response = await fetch(`https://arcular-plus-backend.onrender.com/api/admin/profile-changes/${changeId}/approve`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1474,7 +1508,7 @@ async function loadPendingProfileChanges(token) {
         return;
       }
 
-      const response = await fetch(`https://arcular-plus-backend.onrender.com/admin/api/admin/profile-changes/${changeId}/reject`, {
+      const response = await fetch(`https://arcular-plus-backend.onrender.com/api/admin/profile-changes/${changeId}/reject`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -948,8 +948,8 @@
                                     <small>${url.length > 50 ? url.substring(0, 50) + '...' : url}</small>
                                 </div>
                             </div>
-                            <button class="btn btn-primary" onclick="downloadDocument('${url}', '${doc.label}')" title="Download ${doc.label}">
-                                <i class="fas fa-download"></i> Download
+                            <button class="btn btn-primary" onclick="viewDocument('${url}')" title="View ${doc.label}">
+                                <i class="fas fa-eye"></i> View
                             </button>
                         </div>
                     `;
@@ -972,37 +972,54 @@
             return cards;
         }
         
-        // Download document
-        function downloadDocument(url, filename) {
-            if (url && url.trim() !== '') {
-                try {
-                    console.log('📥 Downloading document:', url);
-                    
-                    // Create a temporary anchor element to trigger download
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename || 'document';
-                    link.target = '_blank';
-                    
-                    // Add to DOM, click, and remove
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    
-                    showSuccessMessage(`Downloading ${filename || 'document'}...`);
-                } catch (error) {
-                    console.error('❌ Error downloading document:', error);
-                    showErrorMessage('Failed to download document. Please try again.');
-                }
-            } else {
-                showErrorMessage('Document URL is not available');
-            }
-        }
-        
-        // View document (fallback)
+        // View document
         function viewDocument(url) {
             if (url && url.trim() !== '') {
-                window.open(url, '_blank');
+                try {
+                    // Check if URL is valid
+                    const urlObj = new URL(url);
+                    
+                    // Try to open in new tab
+                    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+                    
+                    if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+                        // Popup blocked, show message and provide alternative
+                        showErrorMessage('Popup blocked! Please allow popups for this site or copy the URL manually.');
+                        
+                        // Show URL in a modal for manual copying
+                        const urlModal = document.createElement('div');
+                        urlModal.className = 'modal';
+                        urlModal.style.display = 'block';
+                        urlModal.innerHTML = `
+                            <div class="modal-content" style="max-width: 600px;">
+                                <div class="modal-header">
+                                    <h3>Document URL</h3>
+                                    <span class="close" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Copy this URL and paste it in a new tab:</p>
+                                    <div style="background: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all; font-family: monospace;">
+                                        ${url}
+                                    </div>
+                                    <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${url}').then(() => alert('URL copied to clipboard!'))" style="margin-top: 10px;">
+                                        <i class="fas fa-copy"></i> Copy URL
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(urlModal);
+                        
+                        // Auto-remove modal after 10 seconds
+                        setTimeout(() => {
+                            if (urlModal.parentElement) {
+                                urlModal.remove();
+                            }
+                        }, 10000);
+                    }
+                } catch (error) {
+                    console.error('Error opening document:', error);
+                    showErrorMessage('Invalid document URL. Please check the file link.');
+                }
             } else {
                 showErrorMessage('Document URL is not available');
             }

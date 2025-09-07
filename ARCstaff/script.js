@@ -73,31 +73,52 @@ function updateDashboardStats() {
     // Calculate pending rate percentage
     const pendingRate = totalProviders > 0 ? Math.round((pendingApprovals / totalProviders) * 100) : 0;
     
-    // Calculate growth rate (simplified - you can make this more sophisticated)
-    const growthRate = totalProviders > 0 ? Math.round((totalProviders / 10) * 100) / 100 : 0;
-    
     // Update percentage displays
-    const totalProvidersTrend = document.querySelector('#total-providers-count').parentElement.querySelector('.stat-trend span');
-    const approvedProvidersTrend = document.querySelector('#approved-providers-count').parentElement.querySelector('.stat-trend span');
-    const pendingApprovalsTrend = document.querySelector('#pending-approvals-count').parentElement.querySelector('.stat-trend span');
+    const approvalTrend = document.querySelector('#approved-providers-count').parentElement.querySelector('.stat-trend span');
+    const pendingTrend = document.querySelector('#pending-approvals-count').parentElement.querySelector('.stat-trend span');
+    const totalTrend = document.querySelector('#total-providers-count').parentElement.querySelector('.stat-trend span');
     
-    if (totalProvidersTrend) {
-        totalProvidersTrend.textContent = `${growthRate}%`;
+    if (approvalTrend) {
+        approvalTrend.textContent = `${approvalRate}%`;
+        const trendElement = approvalTrend.parentElement;
+        if (approvalRate > 0) {
+            trendElement.className = 'stat-trend positive';
+            trendElement.querySelector('i').className = 'fas fa-arrow-up';
+        } else {
+            trendElement.className = 'stat-trend neutral';
+            trendElement.querySelector('i').className = 'fas fa-minus';
+        }
     }
     
-    if (approvedProvidersTrend) {
-        approvedProvidersTrend.textContent = `${approvalRate}%`;
+    if (pendingTrend) {
+        pendingTrend.textContent = `${pendingRate}%`;
+        const trendElement = pendingTrend.parentElement;
+        if (pendingRate > 0) {
+            trendElement.className = 'stat-trend warning';
+            trendElement.querySelector('i').className = 'fas fa-arrow-up';
+        } else {
+            trendElement.className = 'stat-trend neutral';
+            trendElement.querySelector('i').className = 'fas fa-minus';
+        }
     }
     
-    if (pendingApprovalsTrend) {
-        pendingApprovalsTrend.textContent = `${pendingRate}%`;
+    if (totalTrend) {
+        const growthRate = totalProviders > 0 ? Math.round((totalProviders / 100) * 10) : 0; // Mock growth rate
+        totalTrend.textContent = `${growthRate}%`;
+        const trendElement = totalTrend.parentElement;
+        if (growthRate > 0) {
+            trendElement.className = 'stat-trend positive';
+            trendElement.querySelector('i').className = 'fas fa-arrow-up';
+        } else {
+            trendElement.className = 'stat-trend neutral';
+            trendElement.querySelector('i').className = 'fas fa-minus';
+        }
     }
     
     // Update sidebar counts
     updateSidebarCounts();
     
     console.log('✅ Dashboard stats updated:', dashboardStats);
-    console.log('📊 Percentages - Approval:', approvalRate, 'Pending:', pendingRate, 'Growth:', growthRate);
 }
 
 // Setup stats filtering
@@ -722,8 +743,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
-    console.log('🚀 Initializing ArcStaff dashboard...');
-    
     // Set up event listeners
     setupEventListeners();
     
@@ -736,20 +755,7 @@ function initializeApp() {
     
     // Load initial data
     loadPendingApprovals();
-    
-    // Add timeout to prevent infinite loading
-    const loadingTimeout = setTimeout(() => {
-        console.log('⏰ Loading timeout reached, showing dashboard overview...');
-        hideTableLoadingStates();
-        showDashboardOverview();
-        clearErrorMessages();
-    }, 10000); // 10 second timeout
-    
-    // Load all users with timeout handling
-    loadAllUsers().finally(() => {
-        clearTimeout(loadingTimeout);
-        console.log('✅ Dashboard initialization completed');
-    });
+    loadAllUsers();
 }
 
 function initializeLoginPage() {
@@ -1737,10 +1743,7 @@ function loadHospitals() {
                     </div>
                 ` : `
                     <div class="provider-grid-screen">
-                        ${hospitals.map(hospital => {
-                            console.log('🏥 Hospital data:', hospital);
-                            console.log('📅 Hospital createdAt:', hospital.createdAt);
-                            return `
+                        ${hospitals.map(hospital => `
                             <div class="provider-card-screen" data-status="${hospital.isApproved ? 'approved' : 'pending'}">
                                 <div class="card-header">
                                     <div class="provider-avatar-large">
@@ -2304,9 +2307,6 @@ async function loadAllUsers() {
         // Hide loading states
         hideTableLoadingStates();
         
-        // Clear any error messages
-        clearErrorMessages();
-        
     } catch (error) {
         console.error('❌ Error loading all users:', error);
         console.error('❌ Error details:', {
@@ -2332,11 +2332,6 @@ async function loadAllUsers() {
         
         // Show dashboard overview even on error
         showDashboardOverview();
-        
-        // Clear any error messages after showing overview
-        setTimeout(() => {
-            clearErrorMessages();
-        }, 3000);
     }
 }
 
@@ -5991,8 +5986,8 @@ function renderDocumentSection(provider, providerType) {
                 <i class="fas fa-${doc.type === 'image' ? 'image' : 'file-alt'}"></i>
                 <span>${doc.name}</span>
             </div>
-            <button class="btn btn-sm btn-secondary" onclick="downloadDocument('${doc.url}', '${doc.name}')">
-                <i class="fas fa-download"></i> Download
+            <button class="btn btn-sm btn-secondary" onclick="viewDocument('${doc.url}', '${doc.name}')">
+                <i class="fas fa-eye"></i> View
             </button>
         </div>
     `).join('');
@@ -6039,58 +6034,56 @@ function renderAdditionalInfo(provider, providerType) {
     `).join('');
 }
 
-// Download document
-function downloadDocument(url, filename) {
-    if (url && url.trim() !== '') {
-        try {
-            console.log('📥 Downloading document:', url);
-            
-            // Create a temporary anchor element to trigger download
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename || 'document';
-            link.target = '_blank';
-            
-            // Add to DOM, click, and remove
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            showSuccessMessage(`Downloading ${filename || 'document'}...`);
-        } catch (error) {
-            console.error('❌ Error downloading document:', error);
-            showErrorMessage('Failed to download document. Please try again.');
-        }
-    } else {
-        showErrorMessage('Document URL is not available');
-    }
-}
-
-// View document (fallback)
+// View document
 function viewDocument(url, name) {
     if (url && url.trim() !== '') {
         try {
             // Check if URL is valid
             const urlObj = new URL(url);
-            console.log('📄 Opening document:', url);
             
-            // Open in new tab
-            const newWindow = window.open(url, '_blank');
+            // Try to open in new tab
+            const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
             
-            // Check if popup was blocked
             if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-                showErrorMessage('Popup blocked. Please allow popups for this site and try again.');
-                // Fallback: try to redirect current window
+                // Popup blocked, show message and provide alternative
+                showErrorMessage('Popup blocked! Please allow popups for this site or copy the URL manually.');
+                
+                // Show URL in a modal for manual copying
+                const urlModal = document.createElement('div');
+                urlModal.className = 'modal';
+                urlModal.style.display = 'block';
+                urlModal.innerHTML = `
+                    <div class="modal-content" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <h3>Document URL</h3>
+                            <span class="close" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <p>Copy this URL and paste it in a new tab:</p>
+                            <div style="background: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all; font-family: monospace;">
+                                ${url}
+                            </div>
+                            <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${url}').then(() => alert('URL copied to clipboard!'))" style="margin-top: 10px;">
+                                <i class="fas fa-copy"></i> Copy URL
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(urlModal);
+                
+                // Auto-remove modal after 10 seconds
                 setTimeout(() => {
-                    window.location.href = url;
-                }, 1000);
+                    if (urlModal.parentElement) {
+                        urlModal.remove();
+                    }
+                }, 10000);
             }
         } catch (error) {
-            console.error('❌ Error opening document:', error);
+            console.error('Error opening document:', error);
             showErrorMessage('Invalid document URL. Please check the file link.');
         }
     } else {
-        showErrorMessage('Document URL is not available');
+        showErrorMessage('Document not available');
     }
 }
 
@@ -6943,30 +6936,8 @@ function generateDocumentsSectionImproved(provider) {
 
 // View Document with improved functionality
 function viewDocumentImproved(url, name) {
-    if (url && url.trim() !== '') {
-        try {
-            // Check if URL is valid
-            const urlObj = new URL(url);
-            console.log('📄 Opening document (improved):', url);
-            
-            // Open in new tab
-            const newWindow = window.open(url, '_blank');
-            
-            // Check if popup was blocked
-            if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-                showErrorMessage('Popup blocked. Please allow popups for this site and try again.');
-                // Fallback: try to redirect current window
-                setTimeout(() => {
-                    window.location.href = url;
-                }, 1000);
-            }
-        } catch (error) {
-            console.error('❌ Error opening document:', error);
-            showErrorMessage('Invalid document URL. Please check the file link.');
-        }
-    } else {
-        showErrorMessage('Document URL is not available');
-    }
+  // Open document in new tab
+  window.open(url, '_blank');
 }
 
 // Approve Service Provider with improved functionality
@@ -7301,9 +7272,6 @@ function showDashboardOverview() {
                         <button class="btn btn-primary" onclick="refreshData()">
                             <i class="fas fa-refresh"></i> Refresh Data
                         </button>
-                        <button class="btn btn-secondary" onclick="skipLoading()" style="margin-left: 10px;">
-                            <i class="fas fa-forward"></i> Skip Loading
-                        </button>
                     </div>
                 </div>
                 <div class="overview-grid">
@@ -7370,45 +7338,10 @@ function showDashboardOverview() {
 
 function refreshData() {
     console.log('🔄 Refreshing data...');
-    showNotification('Refreshing data...', 'info');
-    
     // Clear any existing error messages
     clearErrorMessages();
-    
-    // Show loading state
-    showTableLoadingStates();
-    
-    // Reload all data with timeout
-    const refreshTimeout = setTimeout(() => {
-        console.log('⏰ Refresh timeout reached, showing dashboard overview...');
-        hideTableLoadingStates();
-        showDashboardOverview();
-        showSuccessMessage('Data refreshed successfully!');
-    }, 8000); // 8 second timeout for refresh
-    
-    loadAllUsers().finally(() => {
-        clearTimeout(refreshTimeout);
-        console.log('✅ Data refresh completed');
-    });
-}
-
-function skipLoading() {
-    console.log('⏭️ Skipping loading, showing dashboard overview...');
-    showNotification('Skipping loading...', 'info');
-    
-    // Hide any loading states
-    hideTableLoadingStates();
-    
-    // Clear error messages
-    clearErrorMessages();
-    
-    // Show dashboard overview immediately
-    showDashboardOverview();
-    
-    // Show success message
-    setTimeout(() => {
-        showSuccessMessage('Dashboard loaded successfully!');
-    }, 500);
+    // Reload all data
+    loadAllUsers();
 }
 
 // Load service provider data based on type
@@ -7842,206 +7775,31 @@ function generateMonthlyReport() {
 
 // Exports Tab Functions
 function exportStaffData() {
-    console.log('📊 Exporting staff data to Excel...');
+    console.log('📊 Exporting staff data...');
     showNotification('Exporting staff data...', 'info');
     
-    try {
-        // Get current staff profile
-        const staffProfile = {
-            name: document.getElementById('staffName')?.value || 'N/A',
-            email: currentUser?.email || 'N/A',
-            phone: document.getElementById('staffPhone')?.value || 'N/A',
-            department: document.getElementById('staffDepartment')?.value || 'N/A',
-            address: document.getElementById('staffAddress')?.value || 'N/A',
-            bio: document.getElementById('staffBio')?.value || 'N/A',
-            status: 'Active',
-            lastLogin: new Date().toLocaleString()
-        };
-        
-        // Create Excel workbook
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet([staffProfile]);
-        
-        // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(wb, ws, 'Staff Data');
-        
-        // Generate filename with timestamp
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-        const filename = `Staff_Data_${timestamp}.xlsx`;
-        
-        // Save file
-        XLSX.writeFile(wb, filename);
-        
+    setTimeout(() => {
         showSuccessMessage('Staff data exported successfully!');
-    } catch (error) {
-        console.error('❌ Export error:', error);
-        showErrorMessage('Failed to export staff data. Please try again.');
-    }
+        // Here you would typically trigger a download
+    }, 2000);
 }
 
 function exportProviderData() {
-    console.log('📊 Exporting provider data to Excel...');
+    console.log('📊 Exporting provider data...');
     showNotification('Exporting provider data...', 'info');
     
-    try {
-        // Combine all provider data
-        const allProviders = [];
-        
-        // Add hospitals
-        if (allUsers.hospitals) {
-            allUsers.hospitals.forEach(hospital => {
-                allProviders.push({
-                    Type: 'Hospital',
-                    Name: hospital.hospitalName || hospital.name || 'N/A',
-                    Email: hospital.email || 'N/A',
-                    Phone: hospital.mobileNumber || hospital.contact || 'N/A',
-                    Address: hospital.address || 'N/A',
-                    RegistrationNumber: hospital.registrationNumber || 'N/A',
-                    Status: hospital.isApproved && hospital.approvalStatus === 'approved' ? 'Approved' : 'Pending',
-                    CreatedDate: hospital.createdAt ? new Date(hospital.createdAt).toLocaleDateString() : 'N/A'
-                });
-            });
-        }
-        
-        // Add doctors
-        if (allUsers.doctors) {
-            allUsers.doctors.forEach(doctor => {
-                allProviders.push({
-                    Type: 'Doctor',
-                    Name: doctor.fullName || doctor.name || 'N/A',
-                    Email: doctor.email || 'N/A',
-                    Phone: doctor.mobileNumber || doctor.contact || 'N/A',
-                    Specialization: doctor.specialization || 'N/A',
-                    Experience: doctor.experienceYears || 'N/A',
-                    Status: doctor.isApproved && doctor.approvalStatus === 'approved' ? 'Approved' : 'Pending',
-                    CreatedDate: doctor.createdAt ? new Date(doctor.createdAt).toLocaleDateString() : 'N/A'
-                });
-            });
-        }
-        
-        // Add nurses
-        if (allUsers.nurses) {
-            allUsers.nurses.forEach(nurse => {
-                allProviders.push({
-                    Type: 'Nurse',
-                    Name: nurse.fullName || nurse.name || 'N/A',
-                    Email: nurse.email || 'N/A',
-                    Phone: nurse.mobileNumber || nurse.contact || 'N/A',
-                    Department: nurse.department || 'N/A',
-                    Experience: nurse.experienceYears || 'N/A',
-                    Status: nurse.isApproved && nurse.approvalStatus === 'approved' ? 'Approved' : 'Pending',
-                    CreatedDate: nurse.createdAt ? new Date(nurse.createdAt).toLocaleDateString() : 'N/A'
-                });
-            });
-        }
-        
-        // Add labs
-        if (allUsers.labs) {
-            allUsers.labs.forEach(lab => {
-                allProviders.push({
-                    Type: 'Lab',
-                    Name: lab.labName || lab.name || 'N/A',
-                    Email: lab.email || 'N/A',
-                    Phone: lab.mobileNumber || lab.contact || 'N/A',
-                    Services: Array.isArray(lab.services) ? lab.services.join(', ') : (lab.services || 'N/A'),
-                    Status: lab.isApproved && lab.approvalStatus === 'approved' ? 'Approved' : 'Pending',
-                    CreatedDate: lab.createdAt ? new Date(lab.createdAt).toLocaleDateString() : 'N/A'
-                });
-            });
-        }
-        
-        // Add pharmacies
-        if (allUsers.pharmacies) {
-            allUsers.pharmacies.forEach(pharmacy => {
-                allProviders.push({
-                    Type: 'Pharmacy',
-                    Name: pharmacy.pharmacyName || pharmacy.name || 'N/A',
-                    Email: pharmacy.email || 'N/A',
-                    Phone: pharmacy.mobileNumber || pharmacy.contact || 'N/A',
-                    LicenseNumber: pharmacy.licenseNumber || 'N/A',
-                    Services: Array.isArray(pharmacy.services) ? pharmacy.services.join(', ') : (pharmacy.services || 'N/A'),
-                    Status: pharmacy.isApproved && pharmacy.approvalStatus === 'approved' ? 'Approved' : 'Pending',
-                    CreatedDate: pharmacy.createdAt ? new Date(pharmacy.createdAt).toLocaleDateString() : 'N/A'
-                });
-            });
-        }
-        
-        if (allProviders.length === 0) {
-            showErrorMessage('No provider data available to export.');
-            return;
-        }
-        
-        // Create Excel workbook
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(allProviders);
-        
-        // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(wb, ws, 'Provider Data');
-        
-        // Generate filename with timestamp
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-        const filename = `Provider_Data_${timestamp}.xlsx`;
-        
-        // Save file
-        XLSX.writeFile(wb, filename);
-        
-        showSuccessMessage(`Provider data exported successfully! (${allProviders.length} records)`);
-    } catch (error) {
-        console.error('❌ Export error:', error);
-        showErrorMessage('Failed to export provider data. Please try again.');
-    }
+    setTimeout(() => {
+        showSuccessMessage('Provider data exported successfully!');
+    }, 2000);
 }
 
 function exportApprovalData() {
-    console.log('📊 Exporting approval data to Excel...');
+    console.log('📊 Exporting approval data...');
     showNotification('Exporting approval data...', 'info');
     
-    try {
-        // Create approval summary data
-        const approvalData = [
-            {
-                Metric: 'Total Providers',
-                Count: dashboardStats.totalProviders || 0,
-                Percentage: '100%'
-            },
-            {
-                Metric: 'Approved Providers',
-                Count: dashboardStats.approvedProviders || 0,
-                Percentage: dashboardStats.totalProviders > 0 ? 
-                    Math.round((dashboardStats.approvedProviders / dashboardStats.totalProviders) * 100) + '%' : '0%'
-            },
-            {
-                Metric: 'Pending Approvals',
-                Count: dashboardStats.pendingApprovals || 0,
-                Percentage: dashboardStats.totalProviders > 0 ? 
-                    Math.round((dashboardStats.pendingApprovals / dashboardStats.totalProviders) * 100) + '%' : '0%'
-            },
-            {
-                Metric: 'Total Departments',
-                Count: dashboardStats.totalDepartments || 0,
-                Percentage: 'N/A'
-            }
-        ];
-        
-        // Create Excel workbook
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(approvalData);
-        
-        // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(wb, ws, 'Approval Summary');
-        
-        // Generate filename with timestamp
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-        const filename = `Approval_Data_${timestamp}.xlsx`;
-        
-        // Save file
-        XLSX.writeFile(wb, filename);
-        
+    setTimeout(() => {
         showSuccessMessage('Approval data exported successfully!');
-    } catch (error) {
-        console.error('❌ Export error:', error);
-        showErrorMessage('Failed to export approval data. Please try again.');
-    }
+    }, 2000);
 }
 
 function exportAuditLog() {

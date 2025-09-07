@@ -323,6 +323,45 @@
             font-size: 12px;
         }
         
+        /* Priority document styling */
+        .priority-document {
+            border: 2px solid #3b82f6;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        
+        .priority-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #3b82f6;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        
+        .document-icon {
+            position: relative;
+        }
+        
+        .url-copy-hint {
+            color: #3b82f6;
+            font-style: italic;
+            font-size: 10px;
+        }
+        
+        .priority-document .document-name {
+            font-weight: 600;
+            color: #1e40af;
+        }
+        
+        .priority-document .document-status {
+            background: #3b82f6;
+            color: white;
+        }
+        
         .no-documents-icon {
             font-size: 3rem;
             margin-bottom: 16px;
@@ -925,12 +964,16 @@
         function generateDocumentCards(provider, type) {
             let cards = '';
             
-            // Common document fields
-            const documentFields = [
-                { key: 'licenseDocumentUrl', label: 'License Document', icon: 'fas fa-id-card' },
+            // Priority document fields (License Document first)
+            const priorityDocumentFields = [
+                { key: 'licenseDocumentUrl', label: 'License Document', icon: 'fas fa-id-card', priority: true },
+                { key: 'registrationCertificateUrl', label: 'Registration Certificate', icon: 'fas fa-certificate', priority: true },
+                { key: 'medicalRegistrationUrl', label: 'Medical Registration', icon: 'fas fa-user-md', priority: true }
+            ];
+            
+            // Other document fields
+            const otherDocumentFields = [
                 { key: 'profileImageUrl', label: 'Profile Image', icon: 'fas fa-user-circle' },
-                { key: 'registrationCertificateUrl', label: 'Registration Certificate', icon: 'fas fa-certificate' },
-                { key: 'medicalRegistrationUrl', label: 'Medical Registration', icon: 'fas fa-user-md' },
                 { key: 'qualificationCertificateUrl', label: 'Qualification Certificate', icon: 'fas fa-graduation-cap' },
                 { key: 'experienceCertificateUrl', label: 'Experience Certificate', icon: 'fas fa-briefcase' },
                 { key: 'identityProofUrl', label: 'Identity Proof', icon: 'fas fa-id-badge' },
@@ -944,20 +987,30 @@
                 { key: 'otherDocumentsUrl', label: 'Other Documents', icon: 'fas fa-file-alt' }
             ];
             
+            // Combine all document fields with priority first
+            const documentFields = [...priorityDocumentFields, ...otherDocumentFields];
+            
             // Generate cards for each document field
             documentFields.forEach(doc => {
                 const url = provider[doc.key];
                 if (url && url.trim() !== '') {
+                    // Special handling for license document - show full URL
+                    const isLicenseDoc = doc.key === 'licenseDocumentUrl';
+                    const displayUrl = isLicenseDoc ? url : (url.length > 50 ? url.substring(0, 50) + '...' : url);
+                    const cardClass = doc.priority ? 'document-card priority-document' : 'document-card';
+                    
                     cards += `
-                        <div class="document-card">
+                        <div class="${cardClass}">
                             <div class="document-icon">
                                 <i class="${doc.icon}"></i>
+                                ${doc.priority ? '<span class="priority-badge">Priority</span>' : ''}
                             </div>
                             <div class="document-info">
                                 <div class="document-name">${doc.label}</div>
                                 <div class="document-status uploaded">Available</div>
                                 <div class="document-url">
-                                    <small>${url.length > 50 ? url.substring(0, 50) + '...' : url}</small>
+                                    <small>${displayUrl}</small>
+                                    ${isLicenseDoc ? '<br><small class="url-copy-hint">Click to copy full URL</small>' : ''}
                                 </div>
                             </div>
                             <div class="document-actions">
@@ -967,6 +1020,9 @@
                                 <button class="btn btn-secondary btn-sm" onclick="downloadDocument('${url}', '${doc.label}')" title="Download ${doc.label}">
                                     <i class="fas fa-download"></i> Download
                                 </button>
+                                ${isLicenseDoc ? `<button class="btn btn-outline btn-sm" onclick="copyToClipboard('${url}')" title="Copy License Document URL">
+                                    <i class="fas fa-copy"></i> Copy URL
+                                </button>` : ''}
                             </div>
                         </div>
                     `;
@@ -1065,6 +1121,31 @@
                 }
             } else {
                 showErrorMessage('Document URL is not available');
+            }
+        }
+        
+        // Copy URL to clipboard
+        function copyToClipboard(url) {
+            if (url && url.trim() !== '') {
+                try {
+                    navigator.clipboard.writeText(url).then(() => {
+                        showSuccessMessage('License document URL copied to clipboard!');
+                    }).catch(() => {
+                        // Fallback for older browsers
+                        const textArea = document.createElement('textarea');
+                        textArea.value = url;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        showSuccessMessage('License document URL copied to clipboard!');
+                    });
+                } catch (error) {
+                    console.error('Error copying URL:', error);
+                    showErrorMessage('Failed to copy URL to clipboard');
+                }
+            } else {
+                showErrorMessage('URL is not available');
             }
         }
         

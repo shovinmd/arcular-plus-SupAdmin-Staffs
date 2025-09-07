@@ -1718,8 +1718,10 @@ function loadHospitals() {
         return;
     }
     
-    const hospitals = allUsers.hospitals || [];
-    console.log('🏥 Hospitals data:', hospitals);
+    const allHospitals = allUsers.hospitals || [];
+    // Filter to show only pending hospitals (not approved)
+    const hospitals = allHospitals.filter(h => !h.isApproved || h.approvalStatus !== 'approved');
+    console.log('🏥 All hospitals:', allHospitals.length, 'Pending hospitals:', hospitals.length);
     
     // Create a full-screen hospital management view
     contentArea.innerHTML = `
@@ -1737,15 +1739,15 @@ function loadHospitals() {
                 <div class="header-right">
                     <div class="screen-stats">
                         <div class="stat-item">
-                            <span class="stat-number">${hospitals.length}</span>
+                            <span class="stat-number">${allHospitals.length}</span>
                             <span class="stat-label">Total</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${hospitals.filter(h => !h.isApproved || h.approvalStatus === 'pending').length}</span>
+                            <span class="stat-number">${hospitals.length}</span>
                             <span class="stat-label">Pending</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${hospitals.filter(h => h.isApproved && h.approvalStatus === 'approved').length}</span>
+                            <span class="stat-number">${allHospitals.filter(h => h.isApproved && h.approvalStatus === 'approved').length}</span>
                             <span class="stat-label">Approved</span>
                         </div>
                     </div>
@@ -1837,8 +1839,10 @@ function loadDoctors() {
         return;
     }
     
-    const doctors = allUsers.doctors || [];
-    console.log('👨‍⚕️ Doctors data:', doctors);
+    const allDoctors = allUsers.doctors || [];
+    // Filter to show only pending doctors (not approved)
+    const doctors = allDoctors.filter(d => !d.isApproved || d.approvalStatus !== 'approved');
+    console.log('👨‍⚕️ All doctors:', allDoctors.length, 'Pending doctors:', doctors.length);
     
     // Create a full-screen doctor management view
     contentArea.innerHTML = `
@@ -1856,16 +1860,16 @@ function loadDoctors() {
                 <div class="header-right">
                     <div class="screen-stats">
                         <div class="stat-item">
-                            <span class="stat-number">${doctors.length}</span>
+                            <span class="stat-number">${allDoctors.length}</span>
                             <span class="stat-label">Total</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${doctors.filter(d => d.isApproved).length}</span>
-                            <span class="stat-label">Approved</span>
+                            <span class="stat-number">${doctors.length}</span>
+                            <span class="stat-label">Pending</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${doctors.filter(d => !d.isApproved).length}</span>
-                            <span class="stat-label">Pending</span>
+                            <span class="stat-number">${allDoctors.filter(d => d.isApproved && d.approvalStatus === 'approved').length}</span>
+                            <span class="stat-label">Approved</span>
                         </div>
                     </div>
                     <button class="refresh-btn" onclick="loadDoctors()" title="Refresh Doctors">
@@ -1956,8 +1960,10 @@ function loadNurses() {
         return;
     }
 
-    const nurses = allUsers.nurses || [];
-    console.log('👩‍⚕️ Nurses data:', nurses);
+    const allNurses = allUsers.nurses || [];
+    // Filter to show only pending nurses (not approved)
+    const nurses = allNurses.filter(n => !n.isApproved || n.approvalStatus !== 'approved');
+    console.log('👩‍⚕️ All nurses:', allNurses.length, 'Pending nurses:', nurses.length);
 
     // Create a full-screen nurse management view
     contentArea.innerHTML = `
@@ -2075,8 +2081,10 @@ function loadLabs() {
         return;
     }
 
-    const labs = allUsers.labs || [];
-    console.log('🧪 Labs data:', labs);
+    const allLabs = allUsers.labs || [];
+    // Filter to show only pending labs (not approved)
+    const labs = allLabs.filter(l => !l.isApproved || l.approvalStatus !== 'approved');
+    console.log('🧪 All labs:', allLabs.length, 'Pending labs:', labs.length);
 
     // Create a full-screen lab management view
     contentArea.innerHTML = `
@@ -2194,8 +2202,10 @@ function loadPharmacies() {
         return;
     }
 
-    const pharmacies = allUsers.pharmacies || [];
-    console.log('💊 Pharmacies data:', pharmacies);
+    const allPharmacies = allUsers.pharmacies || [];
+    // Filter to show only pending pharmacies (not approved)
+    const pharmacies = allPharmacies.filter(p => !p.isApproved || p.approvalStatus !== 'approved');
+    console.log('💊 All pharmacies:', allPharmacies.length, 'Pending pharmacies:', pharmacies.length);
 
     // Create a full-screen pharmacy management view
     contentArea.innerHTML = `
@@ -7648,7 +7658,7 @@ async function loadApprovedProviders() {
         `;
         
         const token = await getAuthToken();
-        const response = await fetch(`${API_BASE_URL}/arc-staff/approved-service-providers`, {
+        const response = await fetch(`${API_BASE_URL}/arc-staff/approved-providers-only`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -7804,31 +7814,172 @@ function generateMonthlyReport() {
 
 // Exports Tab Functions
 function exportStaffData() {
-    console.log('📊 Exporting staff data...');
-    showNotification('Exporting staff data...', 'info');
-    
-    setTimeout(() => {
-        showSuccessMessage('Staff data exported successfully!');
-        // Here you would typically trigger a download
-    }, 2000);
+    try {
+        console.log('📊 Exporting staff data to Excel...');
+        showNotification('Exporting staff data to Excel...', 'info');
+        
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Get staff profile data
+        const staffData = {
+            'Staff Name': document.getElementById('userName')?.textContent || 'N/A',
+            'Email': document.getElementById('userEmail')?.textContent || 'N/A',
+            'Department': 'ARC Staff',
+            'Role': 'Staff Member',
+            'Export Date': new Date().toLocaleDateString(),
+            'Export Time': new Date().toLocaleTimeString()
+        };
+        
+        // Create worksheet
+        const wsData = [staffData];
+        const ws = XLSX.utils.json_to_sheet(wsData);
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Staff Data');
+        
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const filename = `Staff_Data_Export_${timestamp}.xlsx`;
+        
+        // Save file
+        XLSX.writeFile(wb, filename);
+        
+        showSuccessMessage(`Staff data exported successfully as ${filename}!`);
+        
+    } catch (error) {
+        console.error('❌ Export error:', error);
+        showErrorMessage('Failed to export staff data: ' + error.message);
+    }
 }
 
 function exportProviderData() {
-    console.log('📊 Exporting provider data...');
-    showNotification('Exporting provider data...', 'info');
-    
-    setTimeout(() => {
-        showSuccessMessage('Provider data exported successfully!');
-    }, 2000);
+    try {
+        console.log('📊 Exporting provider data to Excel...');
+        showNotification('Exporting provider data to Excel...', 'info');
+        
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Export all provider types
+        const providerTypes = ['hospitals', 'doctors', 'nurses', 'labs', 'pharmacies'];
+        
+        providerTypes.forEach(type => {
+            const data = allUsers[type] || [];
+            if (data.length > 0) {
+                // Convert data to worksheet format
+                const wsData = data.map(provider => {
+                    const row = {};
+                    
+                    // Common fields
+                    row['UID'] = provider.uid || '';
+                    row['Email'] = provider.email || '';
+                    row['Mobile Number'] = provider.mobileNumber || '';
+                    row['Created Date'] = provider.createdAt ? new Date(provider.createdAt).toLocaleDateString() : '';
+                    row['Approval Status'] = provider.approvalStatus || 'pending';
+                    row['Is Approved'] = provider.isApproved ? 'Yes' : 'No';
+                    
+                    // Type-specific fields
+                    if (type === 'hospitals') {
+                        row['Hospital Name'] = provider.hospitalName || '';
+                        row['Registration Number'] = provider.registrationNumber || '';
+                        row['Address'] = provider.address || '';
+                    } else if (type === 'doctors') {
+                        row['Full Name'] = provider.fullName || '';
+                        row['License Number'] = provider.licenseNumber || '';
+                        row['Specialization'] = provider.specialization || '';
+                        row['Experience Years'] = provider.experienceYears || '';
+                    } else if (type === 'nurses') {
+                        row['Full Name'] = provider.fullName || '';
+                        row['License Number'] = provider.licenseNumber || '';
+                        row['Department'] = provider.department || '';
+                        row['Experience Years'] = provider.experienceYears || '';
+                    } else if (type === 'labs') {
+                        row['Lab Name'] = provider.labName || '';
+                        row['License Number'] = provider.licenseNumber || '';
+                        row['Services'] = provider.services || '';
+                    } else if (type === 'pharmacies') {
+                        row['Pharmacy Name'] = provider.pharmacyName || '';
+                        row['License Number'] = provider.licenseNumber || '';
+                        row['Services'] = provider.services || '';
+                    }
+                    
+                    return row;
+                });
+                
+                // Create worksheet
+                const ws = XLSX.utils.json_to_sheet(wsData);
+                
+                // Add worksheet to workbook
+                XLSX.utils.book_append_sheet(wb, ws, type.charAt(0).toUpperCase() + type.slice(1));
+            }
+        });
+        
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const filename = `Provider_Data_Export_${timestamp}.xlsx`;
+        
+        // Save file
+        XLSX.writeFile(wb, filename);
+        
+        showSuccessMessage(`Provider data exported successfully as ${filename}!`);
+        
+    } catch (error) {
+        console.error('❌ Export error:', error);
+        showErrorMessage('Failed to export provider data: ' + error.message);
+    }
 }
 
 function exportApprovalData() {
-    console.log('📊 Exporting approval data...');
-    showNotification('Exporting approval data...', 'info');
-    
-    setTimeout(() => {
-        showSuccessMessage('Approval data exported successfully!');
-    }, 2000);
+    try {
+        console.log('📊 Exporting approval data to Excel...');
+        showNotification('Exporting approval data to Excel...', 'info');
+        
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Collect approval data from all providers
+        const approvalData = [];
+        const providerTypes = ['hospitals', 'doctors', 'nurses', 'labs', 'pharmacies'];
+        
+        providerTypes.forEach(type => {
+            const data = allUsers[type] || [];
+            data.forEach(provider => {
+                approvalData.push({
+                    'Provider Type': type.charAt(0).toUpperCase() + type.slice(1),
+                    'Provider Name': provider.hospitalName || provider.fullName || provider.labName || provider.pharmacyName || 'N/A',
+                    'Email': provider.email || '',
+                    'Mobile': provider.mobileNumber || '',
+                    'Approval Status': provider.approvalStatus || 'pending',
+                    'Is Approved': provider.isApproved ? 'Yes' : 'No',
+                    'Created Date': provider.createdAt ? new Date(provider.createdAt).toLocaleDateString() : '',
+                    'License Number': provider.licenseNumber || provider.registrationNumber || '',
+                    'Specialization/Department': provider.specialization || provider.department || provider.services || ''
+                });
+            });
+        });
+        
+        if (approvalData.length > 0) {
+            // Create worksheet
+            const ws = XLSX.utils.json_to_sheet(approvalData);
+            
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Approval Data');
+        }
+        
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const filename = `Approval_Data_Export_${timestamp}.xlsx`;
+        
+        // Save file
+        XLSX.writeFile(wb, filename);
+        
+        showSuccessMessage(`Approval data exported successfully as ${filename}!`);
+        
+    } catch (error) {
+        console.error('❌ Export error:', error);
+        showErrorMessage('Failed to export approval data: ' + error.message);
+    }
 }
 
 function exportAuditLog() {

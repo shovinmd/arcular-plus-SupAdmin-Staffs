@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Provider Details - ARC Staff Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="arcstaff.css">
+    <style>
+        .details-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+        
+        .details-title {
+            font-size: 2rem;
+            color: #1e293b;
+            margin: 0;
+        }
+        
+        .back-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #5a67d8;
+        }
+        
+        .provider-info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .provider-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .provider-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+        }
+        
+        .provider-basic-info h2 {
+            margin: 0 0 10px 0;
+            color: #1e293b;
+            font-size: 1.8rem;
+        }
+        
+        .provider-email {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-badge.rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        
+        .info-value {
+            color: #1f2937;
+            font-size: 16px;
+        }
+        
+        .documents-section {
+            margin-top: 30px;
+        }
+        
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .document-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .document-icon {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .document-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        
+        .document-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        
+        .document-status.uploaded {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .document-status.missing {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5e9;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .comments-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .comments-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+        
+        .comment-item {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .comment-author {
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        
+        .comment-date {
+            color: #9ca3af;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .comment-text {
+            color: #1f2937;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+        
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        
+        .loading-spinner {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #ef4444;
+        }
+        
+        .error-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="details-container">
+        <div class="details-header">
+            <h1 class="details-title" id="providerTypeTitle">Service Provider Details</h1>
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </button>
+        </div>
+        
+        <div id="providerDetailsContent">
+            <div class="loading-state">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <p>Loading provider details...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div id="approvalModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="approvalModalTitle">Approve Service Provider</h3>
+                <span class="close" onclick="closeApprovalModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="approvalContent">
+                    <!-- Approval content will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmApprovalBtn" class="btn btn-success">
+                    <i class="fas fa-check"></i> Confirm Approval
+                </button>
+                <button class="btn btn-secondary" onclick="closeApprovalModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejection Modal -->
+    <div id="rejectionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="rejectionModalTitle">Reject Service Provider</h3>
+                <span class="close" onclick="closeRejectionModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="rejectionReason">Rejection Reason *</label>
+                    <textarea id="rejectionReason" rows="4" placeholder="Please provide a detailed reason for rejection..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="rejectionComments">Additional Comments</label>
+                    <textarea id="rejectionComments" rows="3" placeholder="Any additional comments or suggestions for the applicant..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmRejectionBtn" class="btn btn-danger">
+                    <i class="fas fa-times"></i> Confirm Rejection
+                </button>
+                <button class="btn btn-secondary" onclick="closeRejectionModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Service Provider Details Page Script
+        let currentProvider = null;
+        let currentProviderType = null;
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get provider details from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const providerId = urlParams.get('id');
+            const providerType = urlParams.get('type');
+            
+            if (providerId && providerType) {
+                currentProviderType = providerType;
+                loadProviderDetails(providerId, providerType);
+            } else {
+                showError('Invalid provider parameters');
+            }
+            
+            // Setup modal event listeners
+            setupModalEventListeners();
+        });
+        
+        // Load provider details
+        async function loadProviderDetails(providerId, providerType) {
+            try {
+                document.getElementById('providerTypeTitle').textContent = `${providerType.charAt(0).toUpperCase() + providerType.slice(1)} Details`;
+                
+                const token = await getAuthToken();
+                const response = await fetch(`${API_BASE_URL}/arc-staff/service-provider/${providerType}/${providerId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    currentProvider = result.data;
+                    renderProviderDetails(currentProvider, providerType);
+                } else {
+                    throw new Error('Failed to load provider details');
+                }
+            } catch (error) {
+                console.error('Error loading provider details:', error);
+                showError('Failed to load provider details');
+            }
+        }
+        
+        // Render provider details
+        function renderProviderDetails(provider, type) {
+            const content = document.getElementById('providerDetailsContent');
+            
+            const typeIcon = getTypeIcon(type);
+            const statusClass = provider.isApproved && provider.approvalStatus === 'approved' ? 'approved' : 'pending';
+            const statusText = provider.isApproved && provider.approvalStatus === 'approved' ? 'Approved' : 'Pending Approval';
+            
+            content.innerHTML = `
+                <div class="provider-info-card">
+                    <div class="provider-header">
+                        <div class="provider-avatar">
+                            <i class="${typeIcon}"></i>
+                        </div>
+                        <div class="provider-basic-info">
+                            <h2>${provider.name || provider.fullName || provider.hospitalName || provider.labName || provider.pharmacyName || 'Unknown'}</h2>
+                            <div class="provider-email">${provider.email}</div>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Registration Number</span>
+                            <span class="info-value">${provider.registrationNumber || provider.licenseNumber || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Contact Number</span>
+                            <span class="info-value">${provider.mobileNumber || provider.contact || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Address</span>
+                            <span class="info-value">${provider.address || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Registration Date</span>
+                            <span class="info-value">${new Date(provider.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        ${type === 'doctor' ? `
+                        <div class="info-item">
+                            <span class="info-label">Specialization</span>
+                            <span class="info-value">${provider.specialization || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Experience</span>
+                            <span class="info-value">${provider.experienceYears || 'N/A'} years</span>
+                        </div>
+                        ` : ''}
+                        ${type === 'nurse' ? `
+                        <div class="info-item">
+                            <span class="info-label">Department</span>
+                            <span class="info-value">${provider.department || 'N/A'}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="documents-section">
+                        <h3>Documents</h3>
+                        <div class="documents-grid">
+                            <div class="document-card">
+                                <div class="document-icon">
+                                    <i class="fas fa-id-card"></i>
+                                </div>
+                                <div class="document-name">License Document</div>
+                                <div class="document-status ${provider.licenseDocumentUrl ? 'uploaded' : 'missing'}">
+                                    ${provider.licenseDocumentUrl ? 'Uploaded' : 'Missing'}
+                                </div>
+                                ${provider.licenseDocumentUrl ? `
+                                    <button class="btn btn-primary" onclick="viewDocument('${provider.licenseDocumentUrl}')" style="margin-top: 10px;">
+                                        <i class="fas fa-eye"></i> View Document
+                                    </button>
+                                ` : ''}
+                            </div>
+                            
+                            ${type === 'hospital' ? `
+                            <div class="document-card">
+                                <div class="document-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="document-name">Registration Certificate</div>
+                                <div class="document-status ${provider.registrationCertificateUrl ? 'uploaded' : 'missing'}">
+                                    ${provider.registrationCertificateUrl ? 'Uploaded' : 'Missing'}
+                                </div>
+                                ${provider.registrationCertificateUrl ? `
+                                    <button class="btn btn-primary" onclick="viewDocument('${provider.registrationCertificateUrl}')" style="margin-top: 10px;">
+                                        <i class="fas fa-eye"></i> View Document
+                                    </button>
+                                ` : ''}
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    ${!(provider.isApproved && provider.approvalStatus === 'approved') ? `
+                    <div class="action-buttons">
+                        <button class="btn btn-success" onclick="openApprovalModal()">
+                            <i class="fas fa-check"></i> Approve Application
+                        </button>
+                        <button class="btn btn-danger" onclick="openRejectionModal()">
+                            <i class="fas fa-times"></i> Reject Application
+                        </button>
+                        <button class="btn btn-secondary" onclick="requestAdditionalDocuments()">
+                            <i class="fas fa-file-plus"></i> Request Additional Documents
+                        </button>
+                    </div>
+                    ` : ''}
+                    
+                    ${provider.comments && provider.comments.length > 0 ? `
+                    <div class="comments-section">
+                        <h3 class="comments-title">Comments</h3>
+                        ${provider.comments.map(comment => `
+                            <div class="comment-item">
+                                <div class="comment-author">
+                                    ${comment.author || 'Staff'}
+                                    <span class="comment-date">${new Date(comment.date).toLocaleDateString()}</span>
+                                </div>
+                                <div class="comment-text">${comment.text}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        // Get type icon
+        function getTypeIcon(type) {
+            const icons = {
+                'hospital': 'fas fa-hospital',
+                'doctor': 'fas fa-user-md',
+                'nurse': 'fas fa-user-nurse',
+                'lab': 'fas fa-flask',
+                'pharmacy': 'fas fa-pills'
+            };
+            return icons[type] || 'fas fa-user';
+        }
+        
+        // Show error
+        function showError(message) {
+            const content = document.getElementById('providerDetailsContent');
+            content.innerHTML = `
+                <div class="error-state">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="goBack()">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Go back to dashboard
+        function goBack() {
+            window.location.href = 'arcstaff-dashboard.html';
+        }
+        
+        // View document
+        function viewDocument(url) {
+            window.open(url, '_blank');
+        }
+        
+        // Open approval modal
+        function openApprovalModal() {
+            document.getElementById('approvalModalTitle').textContent = `Approve ${currentProviderType.charAt(0).toUpperCase() + currentProviderType.slice(1)}`;
+            document.getElementById('approvalContent').innerHTML = `
+                <p>Are you sure you want to approve this ${currentProviderType} application?</p>
+                <p><strong>Applicant:</strong> ${currentProvider.name || currentProvider.fullName}</p>
+                <p><strong>Email:</strong> ${currentProvider.email}</p>
+            `;
+            document.getElementById('approvalModal').style.display = 'block';
+        }
+        
+        // Close approval modal
+        function closeApprovalModal() {
+            document.getElementById('approvalModal').style.display = 'none';
+        }
+        
+        // Open rejection modal
+        function openRejectionModal() {
+            document.getElementById('rejectionModalTitle').textContent = `Reject ${currentProviderType.charAt(0).toUpperCase() + currentProviderType.slice(1)}`;
+            document.getElementById('rejectionReason').value = '';
+            document.getElementById('rejectionComments').value = '';
+            document.getElementById('rejectionModal').style.display = 'block';
+        }
+        
+        // Close rejection modal
+        function closeRejectionModal() {
+            document.getElementById('rejectionModal').style.display = 'none';
+        }
+        
+        // Setup modal event listeners
+        function setupModalEventListeners() {
+            // Approval confirmation
+            document.getElementById('confirmApprovalBtn').addEventListener('click', async () => {
+                try {
+                    await approveProvider();
+                    closeApprovalModal();
+                } catch (error) {
+                    console.error('Error approving provider:', error);
+                    showErrorMessage('Failed to approve provider');
+                }
+            });
+            
+            // Rejection confirmation
+            document.getElementById('confirmRejectionBtn').addEventListener('click', async () => {
+                const reason = document.getElementById('rejectionReason').value.trim();
+                const comments = document.getElementById('rejectionComments').value.trim();
+                
+                if (!reason) {
+                    showErrorMessage('Please provide a rejection reason');
+                    return;
+                }
+                
+                try {
+                    await rejectProvider(reason, comments);
+                    closeRejectionModal();
+                } catch (error) {
+                    console.error('Error rejecting provider:', error);
+                    showErrorMessage('Failed to reject provider');
+                }
+            });
+        }
+        
+        // Approve provider
+        async function approveProvider() {
+            const token = await getAuthToken();
+            const response = await fetch(`${API_BASE_URL}/arc-staff/approve/${currentProvider.uid}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userType: currentProviderType,
+                    notes: 'Approved by ARC Staff'
+                })
+            });
+            
+            if (response.ok) {
+                showSuccessMessage('✅ Provider approved successfully! Email notification sent. You can now login to the platform.');
+                // Refresh the page to show updated status
+                setTimeout(() => {
+                    loadProviderDetails(currentProvider.uid, currentProviderType);
+                }, 1000);
+            } else {
+                throw new Error('Failed to approve provider');
+            }
+        }
+        
+        // Reject provider
+        async function rejectProvider(reason, comments) {
+            const token = await getAuthToken();
+            const response = await fetch(`${API_BASE_URL}/arc-staff/reject/${currentProvider.uid}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userType: currentProviderType,
+                    reason: reason
+                })
+            });
+            
+            if (response.ok) {
+                showSuccessMessage('❌ Provider rejected successfully! Email notification sent with feedback. Please register again after 24-48 hours with the requested changes.');
+                // Redirect back to dashboard since the provider data is deleted
+                setTimeout(() => {
+                    window.location.href = 'arcstaff-dashboard.html';
+                }, 2000);
+            } else {
+                throw new Error('Failed to reject provider');
+            }
+        }
+        
+        // Request additional documents
+        async function requestAdditionalDocuments() {
+            const documents = prompt('Please specify which additional documents are required:');
+            if (documents) {
+                try {
+                    const token = await getAuthToken();
+                    const response = await fetch(`${API_BASE_URL}/arc-staff/request-documents/${currentProvider.uid}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            requestedDocuments: documents,
+                            requestedBy: 'staff'
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        showSuccessMessage('Document request sent successfully! Email notification sent to applicant.');
+                    } else {
+                        throw new Error('Failed to send document request');
+                    }
+                } catch (error) {
+                    console.error('Error requesting documents:', error);
+                    showErrorMessage('Failed to send document request');
+                }
+            }
+        }
+        
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            const approvalModal = document.getElementById('approvalModal');
+            const rejectionModal = document.getElementById('rejectionModal');
+            
+            if (event.target === approvalModal) {
+                closeApprovalModal();
+            }
+            if (event.target === rejectionModal) {
+                closeRejectionModal();
+            }
+        });
+    </script>
+</body>
+</html>

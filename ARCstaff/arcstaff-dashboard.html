@@ -124,62 +124,40 @@
 
         <!-- Main Dashboard Layout -->
         <div class="dashboard-layout">
-            <!-- Left Sidebar - Service Providers -->
-            <aside class="sidebar">
-                <div class="sidebar-header">
-                    <h3>Service Providers</h3>
-                </div>
-                
-                <nav class="service-provider-nav">
-                    <div class="nav-item" data-provider="hospital">
-                        <i class="fas fa-hospital"></i>
-                        <span>Hospitals</span>
-                        <div class="status-badges">
-                            <span class="badge approved" id="hospitalApprovedCount">0</span>
-                            <span class="badge pending" id="hospitalPendingCount">0</span>
-                        </div>
-                    </div>
-                    
-                    <div class="nav-item" data-provider="doctor">
-                        <i class="fas fa-user-md"></i>
-                        <span>Doctors</span>
-                        <div class="status-badges">
-                            <span class="badge approved" id="doctorApprovedCount">0</span>
-                            <span class="badge pending" id="doctorPendingCount">0</span>
-                        </div>
-                    </div>
-                    
-                    <div class="nav-item" data-provider="nurse">
-                        <i class="fas fa-user-nurse"></i>
-                        <span>Nurses</span>
-                        <div class="status-badges">
-                            <span class="badge approved" id="nurseApprovedCount">0</span>
-                            <span class="badge pending" id="nursePendingCount">0</span>
-                        </div>
-                    </div>
-                    
-                    <div class="nav-item" data-provider="lab">
-                        <i class="fas fa-flask"></i>
-                        <span>Labs</span>
-                        <div class="status-badges">
-                            <span class="badge approved" id="labApprovedCount">0</span>
-                            <span class="badge pending" id="labPendingCount">0</span>
-                        </div>
-                    </div>
-                    
-                    <div class="nav-item" data-provider="pharmacy">
-                        <i class="fas fa-pills"></i>
-                        <span>Pharmacies</span>
-                        <div class="status-badges">
-                            <span class="badge approved" id="pharmacyApprovedCount">0</span>
-                            <span class="badge pending" id="pharmacyPendingCount">0</span>
-                        </div>
-                    </div>
-                </nav>
-            </aside>
-
             <!-- Main Content Area -->
-            <main class="main-content">
+            <main class="main-content-full">
+                <!-- Search Section -->
+                <div class="search-section">
+                    <div class="search-container">
+                        <div class="search-input-group">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" id="providerSearchInput" placeholder="Search service providers by name, email, or type..." class="search-input">
+                            <button id="searchBtn" class="search-btn">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                        <div class="search-filters">
+                            <select id="providerTypeFilter" class="filter-select">
+                                <option value="">All Types</option>
+                                <option value="hospital">Hospitals</option>
+                                <option value="doctor">Doctors</option>
+                                <option value="nurse">Nurses</option>
+                                <option value="lab">Labs</option>
+                                <option value="pharmacy">Pharmacies</option>
+                            </select>
+                            <select id="statusFilter" class="filter-select">
+                                <option value="">All Status</option>
+                                <option value="approved">Approved</option>
+                                <option value="pending">Pending</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <button id="clearFiltersBtn" class="clear-filters-btn">
+                                <i class="fas fa-times"></i> Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Service Provider Lists -->
                 <div id="serviceProviderContent" class="service-provider-content">
                     <!-- Content will be dynamically loaded here -->
@@ -192,19 +170,102 @@
             <div class="section-header">
                 <h3>Quick Actions</h3>
             </div>
-            <div class="quick-actions-grid">
-                <button class="quick-action-btn" onclick="exportStaffData()">
-                    <i class="fas fa-download"></i>
-                    <span>Export Staff Data</span>
-                </button>
-                <button class="quick-action-btn" onclick="generateStaffReport()">
+            
+            <!-- Quick Actions Tabs -->
+            <div class="quick-actions-tabs">
+                <button class="tab-btn active" data-tab="reports">
                     <i class="fas fa-chart-bar"></i>
-                    <span>Generate Report</span>
+                    <span>Reports</span>
                 </button>
-                <button class="quick-action-btn" onclick="generateReports()">
-                    <i class="fas fa-file-excel"></i>
-                    <span>Generate Reports (XLS)</span>
+                <button class="tab-btn" data-tab="exports">
+                    <i class="fas fa-download"></i>
+                    <span>Exports</span>
                 </button>
+                <button class="tab-btn" data-tab="tools">
+                    <i class="fas fa-tools"></i>
+                    <span>Tools</span>
+                </button>
+            </div>
+            
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Reports Tab -->
+                <div id="reports-tab" class="tab-panel active">
+                    <div class="quick-actions-grid">
+                        <button class="quick-action-btn" onclick="generateStaffReport()">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Staff Performance Report</span>
+                            <small>Generate staff performance analytics</small>
+                        </button>
+                        <button class="quick-action-btn" onclick="generateProviderReport()">
+                            <i class="fas fa-users"></i>
+                            <span>Provider Statistics</span>
+                            <small>View provider registration trends</small>
+                        </button>
+                        <button class="quick-action-btn" onclick="generateApprovalReport()">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Approval Summary</span>
+                            <small>Track approval rates and timelines</small>
+                        </button>
+                        <button class="quick-action-btn" onclick="generateMonthlyReport()">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Monthly Summary</span>
+                            <small>Monthly platform activity report</small>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Exports Tab -->
+                <div id="exports-tab" class="tab-panel">
+                    <div class="quick-actions-grid">
+                        <button class="quick-action-btn" onclick="exportStaffData()">
+                            <i class="fas fa-download"></i>
+                            <span>Export Staff Data</span>
+                            <small>Download staff information (CSV)</small>
+                        </button>
+                        <button class="quick-action-btn" onclick="exportProviderData()">
+                            <i class="fas fa-file-excel"></i>
+                            <span>Export Provider Data</span>
+                            <small>Download all provider data (XLS)</small>
+                        </button>
+                        <button class="quick-action-btn" onclick="exportApprovalData()">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Export Approval Data</span>
+                            <small>Download approval history (CSV)</small>
+                        </button>
+                        <button class="quick-action-btn" onclick="exportAuditLog()">
+                            <i class="fas fa-history"></i>
+                            <span>Export Audit Log</span>
+                            <small>Download system activity log</small>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tools Tab -->
+                <div id="tools-tab" class="tab-panel">
+                    <div class="quick-actions-grid">
+                        <button class="quick-action-btn" onclick="bulkApproveProviders()">
+                            <i class="fas fa-check-double"></i>
+                            <span>Bulk Approve</span>
+                            <small>Approve multiple providers at once</small>
+                        </button>
+                        <button class="quick-action-btn" onclick="sendBulkNotifications()">
+                            <i class="fas fa-bell"></i>
+                            <span>Send Notifications</span>
+                            <small>Send notifications to providers</small>
+                        </button>
+                        <button class="quick-action-btn" onclick="systemMaintenance()">
+                            <i class="fas fa-cog"></i>
+                            <span>System Maintenance</span>
+                            <small>Run system maintenance tasks</small>
+                        </button>
+                        <button class="quick-action-btn" onclick="backupData()">
+                            <i class="fas fa-database"></i>
+                            <span>Backup Data</span>
+                            <small>Create system backup</small>
+                        </button>
+                    </div>
+                </div>
             </div>
         </section>
     </div>

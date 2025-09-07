@@ -311,6 +311,18 @@
             color: #64748b;
         }
         
+        .document-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .document-actions .btn {
+            flex: 1;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
         .no-documents-icon {
             font-size: 3rem;
             margin-bottom: 16px;
@@ -948,9 +960,14 @@
                                     <small>${url.length > 50 ? url.substring(0, 50) + '...' : url}</small>
                                 </div>
                             </div>
-                            <button class="btn btn-primary" onclick="viewDocument('${url}')" title="View ${doc.label}">
-                                <i class="fas fa-eye"></i> View
-                            </button>
+                            <div class="document-actions">
+                                <button class="btn btn-primary btn-sm" onclick="viewDocument('${url}')" title="View ${doc.label}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="downloadDocument('${url}', '${doc.label}')" title="Download ${doc.label}">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </div>
                         </div>
                     `;
                 }
@@ -1019,6 +1036,32 @@
                 } catch (error) {
                     console.error('Error opening document:', error);
                     showErrorMessage('Invalid document URL. Please check the file link.');
+                }
+            } else {
+                showErrorMessage('Document URL is not available');
+            }
+        }
+        
+        // Download document
+        function downloadDocument(url, filename) {
+            if (url && url.trim() !== '') {
+                try {
+                    // Create a temporary anchor element for download
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename || 'document';
+                    link.target = '_blank';
+                    
+                    // Add to DOM, click, and remove
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    showSuccessMessage(`Downloading ${filename || 'document'}...`);
+                    
+                } catch (error) {
+                    console.error('Error downloading document:', error);
+                    showErrorMessage('Failed to download document. Please try viewing it instead.');
                 }
             } else {
                 showErrorMessage('Document URL is not available');

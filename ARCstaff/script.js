@@ -1149,6 +1149,32 @@ function setupEventListeners() {
         clearFiltersBtn.addEventListener('click', clearFilters);
     }
     
+    // Approved providers search functionality
+    const approvedSearchInput = document.getElementById('approvedSearchInput');
+    const searchApprovedBtn = document.getElementById('searchApprovedBtn');
+    const approvedProviderTypeFilter = document.getElementById('approvedProviderTypeFilter');
+    const clearApprovedFiltersBtn = document.getElementById('clearApprovedFiltersBtn');
+    
+    if (searchApprovedBtn) {
+        searchApprovedBtn.addEventListener('click', searchApprovedProviders);
+    }
+    
+    if (approvedSearchInput) {
+        approvedSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchApprovedProviders();
+            }
+        });
+    }
+    
+    if (approvedProviderTypeFilter) {
+        approvedProviderTypeFilter.addEventListener('change', searchApprovedProviders);
+    }
+    
+    if (clearApprovedFiltersBtn) {
+        clearApprovedFiltersBtn.addEventListener('click', clearApprovedFilters);
+    }
+    
     // Quick Actions Tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -7597,11 +7623,14 @@ function switchProviderTab(tabName) {
     // Add active class to selected tab
     document.querySelector(`[onclick="switchProviderTab('${tabName}')"]`).classList.add('active');
     
-    // Load content based on tab
-    if (tabName === 'pending') {
-        showDashboardOverview();
-    } else if (tabName === 'approved') {
+    // Show/hide filters
+    const approvedFilters = document.getElementById('approvedFilters');
+    if (tabName === 'approved') {
+        approvedFilters.style.display = 'block';
         loadApprovedProviders();
+    } else {
+        approvedFilters.style.display = 'none';
+        showDashboardOverview();
     }
 }
 
@@ -7853,6 +7882,331 @@ function generateReports() {
     console.log('📋 Generating Excel reports...');
     showNotification('Generating Excel reports...', 'info');
     // TODO: Implement actual Excel report generation
+}
+
+// Search approved providers
+async function searchApprovedProviders() {
+    try {
+        const searchTerm = document.getElementById('approvedSearchInput').value.trim();
+        const providerType = document.getElementById('approvedProviderTypeFilter').value;
+        
+        console.log('🔍 Searching approved providers:', { searchTerm, providerType });
+        
+        const token = await getAuthToken();
+        const params = new URLSearchParams();
+        
+        if (searchTerm) params.append('searchTerm', searchTerm);
+        if (providerType) params.append('providerType', providerType);
+        
+        const response = await fetch(`${API_BASE_URL}/arc-staff/search-approved-providers?${params}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('✅ Search results:', result.data);
+            displaySearchResults(result.data, searchTerm, providerType);
+        } else {
+            throw new Error(result.message || 'Search failed');
+        }
+        
+    } catch (error) {
+        console.error('❌ Search error:', error);
+        showErrorMessage('Failed to search approved providers: ' + error.message);
+    }
+}
+
+// Display search results
+function displaySearchResults(data, searchTerm, providerType) {
+    const contentArea = document.getElementById('serviceProviderContent');
+    if (!contentArea) return;
+    
+    let html = `
+        <div class="search-results-screen">
+            <div class="screen-header">
+                <h2>Search Results</h2>
+                <div class="search-info">
+                    <span>Search: "${searchTerm || 'All'}" | Type: "${providerType || 'All Types'}"</span>
+                    <button class="btn btn-secondary" onclick="switchProviderTab('approved')">
+                        <i class="fas fa-arrow-left"></i> Back to Approved
+                    </button>
+                </div>
+            </div>
+    `;
+    
+    const totalResults = (data.hospitals?.length || 0) + 
+                       (data.doctors?.length || 0) + 
+                       (data.nurses?.length || 0) + 
+                       (data.labs?.length || 0) + 
+                       (data.pharmacies?.length || 0);
+    
+    if (totalResults === 0) {
+        html += `
+            <div class="empty-state-screen">
+                <div class="empty-state-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>No Results Found</h3>
+                <p>No approved providers match your search criteria.</p>
+                <button class="btn btn-primary" onclick="switchProviderTab('approved')">
+                    <i class="fas fa-arrow-left"></i> Back to All Approved
+                </button>
+            </div>
+        `;
+    } else {
+        html += '<div class="provider-grid-screen">';
+        
+        // Display each provider type with results
+        if (data.hospitals?.length > 0) {
+            html += `
+                <div class="provider-type-section">
+                    <h3 class="provider-type-title">
+                        <i class="fas fa-hospital"></i> Hospitals (${data.hospitals.length})
+                    </h3>
+                    <div class="provider-cards-grid">
+                        ${data.hospitals.map(hospital => `
+                            <div class="provider-card-screen">
+                                <div class="provider-card-header">
+                                    <h4>${hospital.hospitalName || 'N/A'}</h4>
+                                    <span class="status-badge approved">Approved</span>
+                                </div>
+                                <div class="provider-card-body">
+                                    <p><i class="fas fa-envelope"></i> ${hospital.email || 'N/A'}</p>
+                                    <p><i class="fas fa-phone"></i> ${hospital.mobileNumber || 'N/A'}</p>
+                                    <p><i class="fas fa-map-marker-alt"></i> ${hospital.address || 'N/A'}</p>
+                                    <p><i class="fas fa-calendar"></i> ${hospital.createdAt ? new Date(hospital.createdAt).toLocaleDateString() : 'N/A'}</p>
+                                </div>
+                                <div class="provider-card-footer">
+                                    <button class="btn btn-primary" onclick="viewProviderDetails('${hospital.uid || hospital._id}', 'hospital')">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (data.doctors?.length > 0) {
+            html += `
+                <div class="provider-type-section">
+                    <h3 class="provider-type-title">
+                        <i class="fas fa-user-md"></i> Doctors (${data.doctors.length})
+                    </h3>
+                    <div class="provider-cards-grid">
+                        ${data.doctors.map(doctor => `
+                            <div class="provider-card-screen">
+                                <div class="provider-card-header">
+                                    <h4>${doctor.fullName || 'N/A'}</h4>
+                                    <span class="status-badge approved">Approved</span>
+                                </div>
+                                <div class="provider-card-body">
+                                    <p><i class="fas fa-envelope"></i> ${doctor.email || 'N/A'}</p>
+                                    <p><i class="fas fa-phone"></i> ${doctor.mobileNumber || 'N/A'}</p>
+                                    <p><i class="fas fa-stethoscope"></i> ${doctor.specialization || 'N/A'}</p>
+                                    <p><i class="fas fa-calendar"></i> ${doctor.createdAt ? new Date(doctor.createdAt).toLocaleDateString() : 'N/A'}</p>
+                                </div>
+                                <div class="provider-card-footer">
+                                    <button class="btn btn-primary" onclick="viewProviderDetails('${doctor.uid || doctor._id}', 'doctor')">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (data.nurses?.length > 0) {
+            html += `
+                <div class="provider-type-section">
+                    <h3 class="provider-type-title">
+                        <i class="fas fa-user-nurse"></i> Nurses (${data.nurses.length})
+                    </h3>
+                    <div class="provider-cards-grid">
+                        ${data.nurses.map(nurse => `
+                            <div class="provider-card-screen">
+                                <div class="provider-card-header">
+                                    <h4>${nurse.fullName || 'N/A'}</h4>
+                                    <span class="status-badge approved">Approved</span>
+                                </div>
+                                <div class="provider-card-body">
+                                    <p><i class="fas fa-envelope"></i> ${nurse.email || 'N/A'}</p>
+                                    <p><i class="fas fa-phone"></i> ${nurse.mobileNumber || 'N/A'}</p>
+                                    <p><i class="fas fa-building"></i> ${nurse.department || 'N/A'}</p>
+                                    <p><i class="fas fa-calendar"></i> ${nurse.createdAt ? new Date(nurse.createdAt).toLocaleDateString() : 'N/A'}</p>
+                                </div>
+                                <div class="provider-card-footer">
+                                    <button class="btn btn-primary" onclick="viewProviderDetails('${nurse.uid || nurse._id}', 'nurse')">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (data.labs?.length > 0) {
+            html += `
+                <div class="provider-type-section">
+                    <h3 class="provider-type-title">
+                        <i class="fas fa-flask"></i> Labs (${data.labs.length})
+                    </h3>
+                    <div class="provider-cards-grid">
+                        ${data.labs.map(lab => `
+                            <div class="provider-card-screen">
+                                <div class="provider-card-header">
+                                    <h4>${lab.labName || 'N/A'}</h4>
+                                    <span class="status-badge approved">Approved</span>
+                                </div>
+                                <div class="provider-card-body">
+                                    <p><i class="fas fa-envelope"></i> ${lab.email || 'N/A'}</p>
+                                    <p><i class="fas fa-phone"></i> ${lab.mobileNumber || 'N/A'}</p>
+                                    <p><i class="fas fa-cogs"></i> ${lab.services || 'N/A'}</p>
+                                    <p><i class="fas fa-calendar"></i> ${lab.createdAt ? new Date(lab.createdAt).toLocaleDateString() : 'N/A'}</p>
+                                </div>
+                                <div class="provider-card-footer">
+                                    <button class="btn btn-primary" onclick="viewProviderDetails('${lab.uid || lab._id}', 'lab')">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (data.pharmacies?.length > 0) {
+            html += `
+                <div class="provider-type-section">
+                    <h3 class="provider-type-title">
+                        <i class="fas fa-pills"></i> Pharmacies (${data.pharmacies.length})
+                    </h3>
+                    <div class="provider-cards-grid">
+                        ${data.pharmacies.map(pharmacy => `
+                            <div class="provider-card-screen">
+                                <div class="provider-card-header">
+                                    <h4>${pharmacy.pharmacyName || 'N/A'}</h4>
+                                    <span class="status-badge approved">Approved</span>
+                                </div>
+                                <div class="provider-card-body">
+                                    <p><i class="fas fa-envelope"></i> ${pharmacy.email || 'N/A'}</p>
+                                    <p><i class="fas fa-phone"></i> ${pharmacy.mobileNumber || 'N/A'}</p>
+                                    <p><i class="fas fa-cogs"></i> ${pharmacy.services || 'N/A'}</p>
+                                    <p><i class="fas fa-calendar"></i> ${pharmacy.createdAt ? new Date(pharmacy.createdAt).toLocaleDateString() : 'N/A'}</p>
+                                </div>
+                                <div class="provider-card-footer">
+                                    <button class="btn btn-primary" onclick="viewProviderDetails('${pharmacy.uid || pharmacy._id}', 'pharmacy')">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    contentArea.innerHTML = html;
+}
+
+// Clear approved filters
+function clearApprovedFilters() {
+    document.getElementById('approvedSearchInput').value = '';
+    document.getElementById('approvedProviderTypeFilter').value = '';
+    loadApprovedProviders();
+}
+
+// Refresh dashboard data
+async function refreshDashboard() {
+    try {
+        console.log('🔄 Refreshing dashboard...');
+        
+        // Show loading state
+        const refreshBtn = document.getElementById('headerRefreshBtn');
+        if (refreshBtn) {
+            const icon = refreshBtn.querySelector('i');
+            icon.className = 'fas fa-spinner fa-spin';
+            refreshBtn.disabled = true;
+        }
+        
+        // Refresh all data
+        await loadAllUsers();
+        
+        // Reset button state
+        if (refreshBtn) {
+            const icon = refreshBtn.querySelector('i');
+            icon.className = 'fas fa-sync-alt';
+            refreshBtn.disabled = false;
+        }
+        
+        showSuccessMessage('Dashboard refreshed successfully!');
+        
+    } catch (error) {
+        console.error('❌ Refresh error:', error);
+        showErrorMessage('Failed to refresh dashboard: ' + error.message);
+        
+        // Reset button state on error
+        const refreshBtn = document.getElementById('headerRefreshBtn');
+        if (refreshBtn) {
+            const icon = refreshBtn.querySelector('i');
+            icon.className = 'fas fa-sync-alt';
+            refreshBtn.disabled = false;
+        }
+    }
+}
+
+// Logout function
+async function logout() {
+    try {
+        console.log('🚪 Logging out...');
+        
+        // Show confirmation dialog
+        const confirmed = confirm('Are you sure you want to logout?');
+        if (!confirmed) {
+            return;
+        }
+        
+        // Clear localStorage
+        localStorage.removeItem('arcStaffToken');
+        localStorage.removeItem('arcStaffUser');
+        localStorage.removeItem('firebaseToken');
+        
+        // Sign out from Firebase
+        if (firebase.auth().currentUser) {
+            await firebase.auth().signOut();
+        }
+        
+        // Redirect to login page
+        window.location.href = 'index.html';
+        
+    } catch (error) {
+        console.error('❌ Logout error:', error);
+        showErrorMessage('Logout failed: ' + error.message);
+        
+        // Force redirect even if there's an error
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
+    }
 }
 
 // Initialize when DOM is loaded

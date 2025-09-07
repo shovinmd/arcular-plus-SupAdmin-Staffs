@@ -46,12 +46,15 @@
                         <span id="userName" class="user-name">Staff Member</span>
                         <span id="userEmail" class="user-email">staff@arcular.com</span>
                     </div>
+                    <button id="headerRefreshBtn" class="btn btn-sm btn-outline" onclick="refreshDashboard()" title="Refresh Dashboard">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
                 </div>
                 <div class="header-actions">
                     <button id="settingsBtn" class="settings-btn" title="Staff Settings">
                         <i class="fas fa-cog"></i>
                     </button>
-                    <button id="logoutBtn" class="logout-btn">
+                    <button id="logoutBtn" class="logout-btn" onclick="logout()">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
                 </div>
@@ -169,6 +172,35 @@
                             <i class="fas fa-check-circle"></i>
                             <span>Approved Providers</span>
                         </button>
+                    </div>
+                    
+                    <!-- Approved Providers Filters -->
+                    <div id="approvedFilters" class="approved-filters" style="display: none;">
+                        <div class="filters-container">
+                            <div class="filter-group">
+                                <label for="approvedProviderTypeFilter">Provider Type:</label>
+                                <select id="approvedProviderTypeFilter" class="filter-select">
+                                    <option value="">All Types</option>
+                                    <option value="hospital">Hospitals</option>
+                                    <option value="doctor">Doctors</option>
+                                    <option value="nurse">Nurses</option>
+                                    <option value="lab">Labs</option>
+                                    <option value="pharmacy">Pharmacies</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="approvedSearchInput">Search by Name:</label>
+                                <input type="text" id="approvedSearchInput" class="search-input" placeholder="Search approved providers...">
+                            </div>
+                            <div class="filter-group">
+                                <button id="searchApprovedBtn" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Search
+                                </button>
+                                <button id="clearApprovedFiltersBtn" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

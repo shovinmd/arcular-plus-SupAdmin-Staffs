@@ -75,10 +75,256 @@
             font-size: 2rem;
         }
         
+        .provider-name-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        
         .provider-basic-info h2 {
-            margin: 0 0 10px 0;
+            margin: 0;
             color: #1e293b;
             font-size: 1.8rem;
+        }
+        
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: #5a67d8;
+            transform: scale(1.05);
+        }
+        
+        .refresh-btn i {
+            font-size: 12px;
+        }
+        
+        /* Tabs Styling */
+        .tabs-container {
+            margin-bottom: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e1e5e9;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #64748b;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tab-btn:hover {
+            color: #667eea;
+            background: #f8fafc;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: #f8fafc;
+        }
+        
+        .tab-btn i {
+            font-size: 14px;
+        }
+        
+        .tab-panel {
+            display: none;
+        }
+        
+        .tab-panel.active {
+            display: block;
+        }
+        
+        /* Approved Providers Styling */
+        .approved-providers-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .provider-type-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .provider-type-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 20px 0;
+            color: #1e293b;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #e1e5e9;
+            padding-bottom: 10px;
+        }
+        
+        .provider-type-title i {
+            color: #667eea;
+        }
+        
+        .providers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .provider-card {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+            border: 2px solid #e1e5e9;
+            transition: all 0.3s ease;
+        }
+        
+        .provider-card.approved {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .provider-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .provider-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .provider-card .provider-avatar {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .provider-card .provider-info h4 {
+            margin: 0 0 4px 0;
+            color: #1e293b;
+            font-size: 1rem;
+        }
+        
+        .provider-card .provider-email {
+            margin: 0 0 8px 0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .provider-card-body {
+            margin-top: 12px;
+        }
+        
+        .provider-details {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .detail-label {
+            font-weight: 500;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .detail-value {
+            color: #1e293b;
+            font-size: 0.9rem;
+        }
+        
+        /* Document Cards Styling */
+        .document-info {
+            flex: 1;
+        }
+        
+        .document-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        
+        .document-status {
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        
+        .document-status.uploaded {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .document-status.missing {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .document-url {
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 0.75rem;
+            word-break: break-all;
+        }
+        
+        .no-documents {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+        
+        .no-documents-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            color: #cbd5e1;
+        }
+        
+        .no-documents h4 {
+            margin: 0 0 8px 0;
+            color: #475569;
+        }
+        
+        .no-documents p {
+            margin: 0;
+            font-size: 0.9rem;
         }
         
         .provider-email {
@@ -311,6 +557,7 @@
             </button>
         </div>
         
+        <!-- Provider Details Content -->
         <div id="providerDetailsContent">
             <div class="loading-state">
                 <div class="loading-spinner">
@@ -321,60 +568,54 @@
         </div>
     </div>
 
-    <!-- Approval Modal -->
-    <div id="approvalModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="approvalModalTitle">Approve Service Provider</h3>
-                <span class="close" onclick="closeApprovalModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div id="approvalContent">
-                    <!-- Approval content will be populated here -->
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="confirmApprovalBtn" class="btn btn-success">
-                    <i class="fas fa-check"></i> Confirm Approval
-                </button>
-                <button class="btn btn-secondary" onclick="closeApprovalModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Rejection Modal -->
-    <div id="rejectionModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="rejectionModalTitle">Reject Service Provider</h3>
-                <span class="close" onclick="closeRejectionModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="rejectionReason">Rejection Reason *</label>
-                    <textarea id="rejectionReason" rows="4" placeholder="Please provide a detailed reason for rejection..." required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="rejectionComments">Additional Comments</label>
-                    <textarea id="rejectionComments" rows="3" placeholder="Any additional comments or suggestions for the applicant..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="confirmRejectionBtn" class="btn btn-danger">
-                    <i class="fas fa-times"></i> Confirm Rejection
-                </button>
-                <button class="btn btn-secondary" onclick="closeRejectionModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="script.js"></script>
     <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvQZQZQZQZQZQZQZQZQZQZQZQZQZQZQ",
+            authDomain: "arcular-plus.firebaseapp.com",
+            projectId: "arcular-plus",
+            storageBucket: "arcular-plus.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdefghijklmnop"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        console.log('✅ Firebase initialized successfully');
+
         // Service Provider Details Page Script
+        const API_BASE_URL = 'https://arcular-plus-backend.onrender.com/api';
         let currentProvider = null;
         let currentProviderType = null;
+
+        // Get authentication token
+        async function getAuthToken() {
+            try {
+                // Try localStorage first
+                const storedToken = localStorage.getItem('staff_idToken');
+                if (storedToken) {
+                    return storedToken;
+                }
+
+                // Try Firebase current user
+                const user = firebase.auth().currentUser;
+                if (user) {
+                    const idToken = await user.getIdToken();
+                    localStorage.setItem('staff_idToken', idToken);
+                    return idToken;
+                }
+
+                // No authentication found
+                console.log('❌ No authentication token found');
+                return null;
+            } catch (error) {
+                console.error('❌ Error getting auth token:', error);
+                return null;
+            }
+        }
         
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
@@ -390,8 +631,6 @@
                 showError('Invalid provider parameters');
             }
             
-            // Setup modal event listeners
-            setupModalEventListeners();
         });
         
         // Load provider details
@@ -435,97 +674,28 @@
                             <i class="${typeIcon}"></i>
                         </div>
                         <div class="provider-basic-info">
-                            <h2>${provider.name || provider.fullName || provider.hospitalName || provider.labName || provider.pharmacyName || 'Unknown'}</h2>
+                            <div class="provider-name-row">
+                                <h2>${provider.name || provider.fullName || provider.hospitalName || provider.labName || provider.pharmacyName || 'Unknown'}</h2>
+                                <button class="refresh-btn" onclick="refreshProviderDetails()" title="Refresh Details">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
                             <div class="provider-email">${provider.email}</div>
                             <span class="status-badge ${statusClass}">${statusText}</span>
                         </div>
                     </div>
                     
                     <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Registration Number</span>
-                            <span class="info-value">${provider.registrationNumber || provider.licenseNumber || 'N/A'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Contact Number</span>
-                            <span class="info-value">${provider.mobileNumber || provider.contact || 'N/A'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Address</span>
-                            <span class="info-value">${provider.address || 'N/A'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Registration Date</span>
-                            <span class="info-value">${new Date(provider.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        ${type === 'doctor' ? `
-                        <div class="info-item">
-                            <span class="info-label">Specialization</span>
-                            <span class="info-value">${provider.specialization || 'N/A'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Experience</span>
-                            <span class="info-value">${provider.experienceYears || 'N/A'} years</span>
-                        </div>
-                        ` : ''}
-                        ${type === 'nurse' ? `
-                        <div class="info-item">
-                            <span class="info-label">Department</span>
-                            <span class="info-value">${provider.department || 'N/A'}</span>
-                        </div>
-                        ` : ''}
+                        ${generateAllProviderFields(provider, type)}
                     </div>
                     
                     <div class="documents-section">
-                        <h3>Documents</h3>
+                        <h3>Documents & Files</h3>
                         <div class="documents-grid">
-                            <div class="document-card">
-                                <div class="document-icon">
-                                    <i class="fas fa-id-card"></i>
-                                </div>
-                                <div class="document-name">License Document</div>
-                                <div class="document-status ${provider.licenseDocumentUrl ? 'uploaded' : 'missing'}">
-                                    ${provider.licenseDocumentUrl ? 'Uploaded' : 'Missing'}
-                                </div>
-                                ${provider.licenseDocumentUrl ? `
-                                    <button class="btn btn-primary" onclick="viewDocument('${provider.licenseDocumentUrl}')" style="margin-top: 10px;">
-                                        <i class="fas fa-eye"></i> View Document
-                                    </button>
-                                ` : ''}
-                            </div>
-                            
-                            ${type === 'hospital' ? `
-                            <div class="document-card">
-                                <div class="document-icon">
-                                    <i class="fas fa-building"></i>
-                                </div>
-                                <div class="document-name">Registration Certificate</div>
-                                <div class="document-status ${provider.registrationCertificateUrl ? 'uploaded' : 'missing'}">
-                                    ${provider.registrationCertificateUrl ? 'Uploaded' : 'Missing'}
-                                </div>
-                                ${provider.registrationCertificateUrl ? `
-                                    <button class="btn btn-primary" onclick="viewDocument('${provider.registrationCertificateUrl}')" style="margin-top: 10px;">
-                                        <i class="fas fa-eye"></i> View Document
-                                    </button>
-                                ` : ''}
-                            </div>
-                            ` : ''}
+                            ${generateDocumentCards(provider, type)}
                         </div>
                     </div>
                     
-                    ${!(provider.isApproved && provider.approvalStatus === 'approved') ? `
-                    <div class="action-buttons">
-                        <button class="btn btn-success" onclick="openApprovalModal()">
-                            <i class="fas fa-check"></i> Approve Application
-                        </button>
-                        <button class="btn btn-danger" onclick="openRejectionModal()">
-                            <i class="fas fa-times"></i> Reject Application
-                        </button>
-                        <button class="btn btn-secondary" onclick="requestAdditionalDocuments()">
-                            <i class="fas fa-file-plus"></i> Request Additional Documents
-                        </button>
-                    </div>
-                    ` : ''}
                     
                     ${provider.comments && provider.comments.length > 0 ? `
                     <div class="comments-section">
@@ -534,7 +704,7 @@
                             <div class="comment-item">
                                 <div class="comment-author">
                                     ${comment.author || 'Staff'}
-                                    <span class="comment-date">${new Date(comment.date).toLocaleDateString()}</span>
+                                    <span class="comment-date">${comment.date ? new Date(comment.date).toLocaleDateString() : 'N/A'}</span>
                                 </div>
                                 <div class="comment-text">${comment.text}</div>
                             </div>
@@ -572,130 +742,273 @@
                 </div>
             `;
         }
+
+        function showErrorMessage(message) {
+            // Create a temporary error message element
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #ef4444;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(errorDiv);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            }, 5000);
+        }
+        
+        
+        // Refresh provider details
+        function refreshProviderDetails() {
+            if (currentProvider && currentProviderType) {
+                loadProviderDetails(currentProvider.uid || currentProvider._id, currentProviderType);
+            }
+        }
         
         // Go back to dashboard
         function goBack() {
             window.location.href = 'arcstaff-dashboard.html';
         }
         
-        // View document
+        // Generate all provider fields based on type
+        function generateAllProviderFields(provider, type) {
+            let fields = '';
+            
+            // Common fields for all providers
+            const commonFields = [
+                { key: 'uid', label: 'UID' },
+                { key: 'email', label: 'Email' },
+                { key: 'mobileNumber', label: 'Mobile Number' },
+                { key: 'altPhoneNumber', label: 'Alternative Phone' },
+                { key: 'address', label: 'Address' },
+                { key: 'city', label: 'City' },
+                { key: 'state', label: 'State' },
+                { key: 'pincode', label: 'Pincode' },
+                { key: 'longitude', label: 'Longitude' },
+                { key: 'latitude', label: 'Latitude' },
+                { key: 'createdAt', label: 'Registration Date', format: 'date' },
+                { key: 'updatedAt', label: 'Last Updated', format: 'date' },
+                { key: 'isApproved', label: 'Is Approved', format: 'boolean' },
+                { key: 'approvalStatus', label: 'Approval Status' },
+                { key: 'approvedBy', label: 'Approved By' },
+                { key: 'approvedAt', label: 'Approved At', format: 'date' },
+                { key: 'approvalNotes', label: 'Approval Notes' },
+                { key: 'rejectedBy', label: 'Rejected By' },
+                { key: 'rejectedAt', label: 'Rejected At', format: 'date' },
+                { key: 'rejectionReason', label: 'Rejection Reason' },
+                { key: 'arcId', label: 'ARC ID' },
+                { key: 'qrCode', label: 'QR Code' },
+                { key: 'profileImageUrl', label: 'Profile Image URL' }
+            ];
+            
+            // Type-specific fields
+            const typeSpecificFields = {
+                hospital: [
+                    { key: 'hospitalName', label: 'Hospital Name' },
+                    { key: 'fullName', label: 'Full Name' },
+                    { key: 'registrationNumber', label: 'Registration Number' },
+                    { key: 'hospitalType', label: 'Hospital Type' },
+                    { key: 'numberOfBeds', label: 'Number of Beds' },
+                    { key: 'departments', label: 'Departments', format: 'array' },
+                    { key: 'specialFacilities', label: 'Special Facilities', format: 'array' },
+                    { key: 'hasPharmacy', label: 'Has Pharmacy', format: 'boolean' },
+                    { key: 'hasLab', label: 'Has Lab', format: 'boolean' },
+                    { key: 'licenseDocumentUrl', label: 'License Document URL' }
+                ],
+                doctor: [
+                    { key: 'fullName', label: 'Full Name' },
+                    { key: 'gender', label: 'Gender' },
+                    { key: 'dateOfBirth', label: 'Date of Birth', format: 'date' },
+                    { key: 'medicalRegistrationNumber', label: 'Medical Registration Number' },
+                    { key: 'licenseNumber', label: 'License Number' },
+                    { key: 'specialization', label: 'Specialization' },
+                    { key: 'experienceYears', label: 'Experience Years' },
+                    { key: 'consultationFee', label: 'Consultation Fee' },
+                    { key: 'education', label: 'Education' },
+                    { key: 'qualification', label: 'Qualification' },
+                    { key: 'qualifications', label: 'Qualifications', format: 'array' },
+                    { key: 'bio', label: 'Bio' },
+                    { key: 'affiliatedHospitals', label: 'Affiliated Hospitals', format: 'object' },
+                    { key: 'currentHospital', label: 'Current Hospital' },
+                    { key: 'workingHours', label: 'Working Hours', format: 'object' },
+                    { key: 'licenseDocumentUrl', label: 'License Document URL' }
+                ],
+                nurse: [
+                    { key: 'fullName', label: 'Full Name' },
+                    { key: 'gender', label: 'Gender' },
+                    { key: 'dateOfBirth', label: 'Date of Birth', format: 'date' },
+                    { key: 'licenseNumber', label: 'License Number' },
+                    { key: 'department', label: 'Department' },
+                    { key: 'experienceYears', label: 'Experience Years' },
+                    { key: 'qualification', label: 'Qualification' },
+                    { key: 'qualifications', label: 'Qualifications', format: 'array' },
+                    { key: 'bio', label: 'Bio' },
+                    { key: 'licenseDocumentUrl', label: 'License Document URL' }
+                ],
+                lab: [
+                    { key: 'labName', label: 'Lab Name' },
+                    { key: 'fullName', label: 'Full Name' },
+                    { key: 'licenseNumber', label: 'License Number' },
+                    { key: 'services', label: 'Services', format: 'array' },
+                    { key: 'licenseDocumentUrl', label: 'License Document URL' }
+                ],
+                pharmacy: [
+                    { key: 'pharmacyName', label: 'Pharmacy Name' },
+                    { key: 'fullName', label: 'Full Name' },
+                    { key: 'licenseNumber', label: 'License Number' },
+                    { key: 'services', label: 'Services', format: 'array' },
+                    { key: 'licenseDocumentUrl', label: 'License Document URL' }
+                ]
+            };
+            
+            // Combine common and type-specific fields
+            const allFields = [...commonFields, ...(typeSpecificFields[type] || [])];
+            
+            // Generate HTML for each field
+            allFields.forEach(field => {
+                const value = provider[field.key];
+                if (value !== undefined && value !== null && value !== '') {
+                    let displayValue = value;
+                    
+                    // Format values based on type
+                    if (field.format === 'date' && value) {
+                        displayValue = new Date(value).toLocaleDateString();
+                    } else if (field.format === 'boolean') {
+                        displayValue = value ? 'Yes' : 'No';
+                    } else if (field.format === 'array' && Array.isArray(value)) {
+                        displayValue = value.join(', ');
+                    } else if (field.format === 'object' && typeof value === 'object') {
+                        displayValue = JSON.stringify(value, null, 2);
+                    }
+                    
+                    fields += `
+                        <div class="info-item">
+                            <span class="info-label">${field.label}</span>
+                            <span class="info-value">${displayValue}</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            return fields;
+        }
+        
+        // Generate document cards for all available documents
+        function generateDocumentCards(provider, type) {
+            let cards = '';
+            
+            // Common document fields
+            const documentFields = [
+                { key: 'licenseDocumentUrl', label: 'License Document', icon: 'fas fa-id-card' },
+                { key: 'profileImageUrl', label: 'Profile Image', icon: 'fas fa-user-circle' },
+                { key: 'registrationCertificateUrl', label: 'Registration Certificate', icon: 'fas fa-certificate' },
+                { key: 'medicalRegistrationUrl', label: 'Medical Registration', icon: 'fas fa-user-md' },
+                { key: 'qualificationCertificateUrl', label: 'Qualification Certificate', icon: 'fas fa-graduation-cap' },
+                { key: 'experienceCertificateUrl', label: 'Experience Certificate', icon: 'fas fa-briefcase' },
+                { key: 'identityProofUrl', label: 'Identity Proof', icon: 'fas fa-id-badge' },
+                { key: 'addressProofUrl', label: 'Address Proof', icon: 'fas fa-map-marker-alt' },
+                { key: 'bankDetailsUrl', label: 'Bank Details', icon: 'fas fa-university' },
+                { key: 'taxCertificateUrl', label: 'Tax Certificate', icon: 'fas fa-receipt' },
+                { key: 'insuranceDocumentUrl', label: 'Insurance Document', icon: 'fas fa-shield-alt' },
+                { key: 'facilityPhotosUrl', label: 'Facility Photos', icon: 'fas fa-camera' },
+                { key: 'equipmentListUrl', label: 'Equipment List', icon: 'fas fa-tools' },
+                { key: 'staffListUrl', label: 'Staff List', icon: 'fas fa-users' },
+                { key: 'otherDocumentsUrl', label: 'Other Documents', icon: 'fas fa-file-alt' }
+            ];
+            
+            // Generate cards for each document field
+            documentFields.forEach(doc => {
+                const url = provider[doc.key];
+                if (url && url.trim() !== '') {
+                    cards += `
+                        <div class="document-card">
+                            <div class="document-icon">
+                                <i class="${doc.icon}"></i>
+                            </div>
+                            <div class="document-info">
+                                <div class="document-name">${doc.label}</div>
+                                <div class="document-status uploaded">Available</div>
+                                <div class="document-url">
+                                    <small>${url.length > 50 ? url.substring(0, 50) + '...' : url}</small>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="downloadDocument('${url}', '${doc.label}')" title="Download ${doc.label}">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+            
+            // If no documents found, show message
+            if (cards === '') {
+                cards = `
+                    <div class="no-documents">
+                        <div class="no-documents-icon">
+                            <i class="fas fa-file-slash"></i>
+                        </div>
+                        <h4>No Documents Available</h4>
+                        <p>No documents have been uploaded for this provider.</p>
+                    </div>
+                `;
+            }
+            
+            return cards;
+        }
+        
+        // Download document
+        function downloadDocument(url, filename) {
+            if (url && url.trim() !== '') {
+                try {
+                    console.log('📥 Downloading document:', url);
+                    
+                    // Create a temporary anchor element to trigger download
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename || 'document';
+                    link.target = '_blank';
+                    
+                    // Add to DOM, click, and remove
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    showSuccessMessage(`Downloading ${filename || 'document'}...`);
+                } catch (error) {
+                    console.error('❌ Error downloading document:', error);
+                    showErrorMessage('Failed to download document. Please try again.');
+                }
+            } else {
+                showErrorMessage('Document URL is not available');
+            }
+        }
+        
+        // View document (fallback)
         function viewDocument(url) {
-            window.open(url, '_blank');
-        }
-        
-        // Open approval modal
-        function openApprovalModal() {
-            document.getElementById('approvalModalTitle').textContent = `Approve ${currentProviderType.charAt(0).toUpperCase() + currentProviderType.slice(1)}`;
-            document.getElementById('approvalContent').innerHTML = `
-                <p>Are you sure you want to approve this ${currentProviderType} application?</p>
-                <p><strong>Applicant:</strong> ${currentProvider.name || currentProvider.fullName}</p>
-                <p><strong>Email:</strong> ${currentProvider.email}</p>
-            `;
-            document.getElementById('approvalModal').style.display = 'block';
-        }
-        
-        // Close approval modal
-        function closeApprovalModal() {
-            document.getElementById('approvalModal').style.display = 'none';
-        }
-        
-        // Open rejection modal
-        function openRejectionModal() {
-            document.getElementById('rejectionModalTitle').textContent = `Reject ${currentProviderType.charAt(0).toUpperCase() + currentProviderType.slice(1)}`;
-            document.getElementById('rejectionReason').value = '';
-            document.getElementById('rejectionComments').value = '';
-            document.getElementById('rejectionModal').style.display = 'block';
-        }
-        
-        // Close rejection modal
-        function closeRejectionModal() {
-            document.getElementById('rejectionModal').style.display = 'none';
-        }
-        
-        // Setup modal event listeners
-        function setupModalEventListeners() {
-            // Approval confirmation
-            document.getElementById('confirmApprovalBtn').addEventListener('click', async () => {
-                try {
-                    await approveProvider();
-                    closeApprovalModal();
-                } catch (error) {
-                    console.error('Error approving provider:', error);
-                    showErrorMessage('Failed to approve provider');
-                }
-            });
-            
-            // Rejection confirmation
-            document.getElementById('confirmRejectionBtn').addEventListener('click', async () => {
-                const reason = document.getElementById('rejectionReason').value.trim();
-                const comments = document.getElementById('rejectionComments').value.trim();
-                
-                if (!reason) {
-                    showErrorMessage('Please provide a rejection reason');
-                    return;
-                }
-                
-                try {
-                    await rejectProvider(reason, comments);
-                    closeRejectionModal();
-                } catch (error) {
-                    console.error('Error rejecting provider:', error);
-                    showErrorMessage('Failed to reject provider');
-                }
-            });
-        }
-        
-        // Approve provider
-        async function approveProvider() {
-            const token = await getAuthToken();
-            const response = await fetch(`${API_BASE_URL}/arc-staff/approve/${currentProvider.uid}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    userType: currentProviderType,
-                    notes: 'Approved by ARC Staff'
-                })
-            });
-            
-            if (response.ok) {
-                showSuccessMessage('✅ Provider approved successfully! Email notification sent. You can now login to the platform.');
-                // Refresh the page to show updated status
-                setTimeout(() => {
-                    loadProviderDetails(currentProvider.uid, currentProviderType);
-                }, 1000);
+            if (url && url.trim() !== '') {
+                window.open(url, '_blank');
             } else {
-                throw new Error('Failed to approve provider');
+                showErrorMessage('Document URL is not available');
             }
         }
         
-        // Reject provider
-        async function rejectProvider(reason, comments) {
-            const token = await getAuthToken();
-            const response = await fetch(`${API_BASE_URL}/arc-staff/reject/${currentProvider.uid}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    userType: currentProviderType,
-                    reason: reason
-                })
-            });
-            
-            if (response.ok) {
-                showSuccessMessage('❌ Provider rejected successfully! Email notification sent with feedback. Please register again after 24-48 hours with the requested changes.');
-                // Redirect back to dashboard since the provider data is deleted
-                setTimeout(() => {
-                    window.location.href = 'arcstaff-dashboard.html';
-                }, 2000);
-            } else {
-                throw new Error('Failed to reject provider');
-            }
-        }
+        
         
         // Request additional documents
         async function requestAdditionalDocuments() {

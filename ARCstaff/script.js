@@ -62,10 +62,42 @@ function updateDashboardStats() {
     document.getElementById('pending-approvals-count').textContent = dashboardStats.pendingApprovals;
     document.getElementById('total-departments').textContent = dashboardStats.totalDepartments;
     
+    // Calculate and update percentages
+    const totalProviders = dashboardStats.totalProviders || 0;
+    const approvedProviders = dashboardStats.approvedProviders || 0;
+    const pendingApprovals = dashboardStats.pendingApprovals || 0;
+    
+    // Calculate approval rate percentage
+    const approvalRate = totalProviders > 0 ? Math.round((approvedProviders / totalProviders) * 100) : 0;
+    
+    // Calculate pending rate percentage
+    const pendingRate = totalProviders > 0 ? Math.round((pendingApprovals / totalProviders) * 100) : 0;
+    
+    // Calculate growth rate (simplified - you can make this more sophisticated)
+    const growthRate = totalProviders > 0 ? Math.round((totalProviders / 10) * 100) / 100 : 0;
+    
+    // Update percentage displays
+    const totalProvidersTrend = document.querySelector('#total-providers-count').parentElement.querySelector('.stat-trend span');
+    const approvedProvidersTrend = document.querySelector('#approved-providers-count').parentElement.querySelector('.stat-trend span');
+    const pendingApprovalsTrend = document.querySelector('#pending-approvals-count').parentElement.querySelector('.stat-trend span');
+    
+    if (totalProvidersTrend) {
+        totalProvidersTrend.textContent = `${growthRate}%`;
+    }
+    
+    if (approvedProvidersTrend) {
+        approvedProvidersTrend.textContent = `${approvalRate}%`;
+    }
+    
+    if (pendingApprovalsTrend) {
+        pendingApprovalsTrend.textContent = `${pendingRate}%`;
+    }
+    
     // Update sidebar counts
     updateSidebarCounts();
     
     console.log('✅ Dashboard stats updated:', dashboardStats);
+    console.log('📊 Percentages - Approval:', approvalRate, 'Pending:', pendingRate, 'Growth:', growthRate);
 }
 
 // Setup stats filtering
@@ -1690,7 +1722,10 @@ function loadHospitals() {
                     </div>
                 ` : `
                     <div class="provider-grid-screen">
-                        ${hospitals.map(hospital => `
+                        ${hospitals.map(hospital => {
+                            console.log('🏥 Hospital data:', hospital);
+                            console.log('📅 Hospital createdAt:', hospital.createdAt);
+                            return `
                             <div class="provider-card-screen" data-status="${hospital.isApproved ? 'approved' : 'pending'}">
                                 <div class="card-header">
                                     <div class="provider-avatar-large">
@@ -1720,19 +1755,19 @@ function loadHospitals() {
                                         </div>
                                         <div class="info-item">
                                             <label>Registered:</label>
-                                            <span>${new Date(hospital.createdAt).toLocaleDateString()}</span>
+                                            <span>${hospital.createdAt ? new Date(hospital.createdAt).toLocaleDateString() : 'N/A'}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="card-actions">
-                                                <button class="btn btn-primary" onclick="viewProviderDetails('${hospital.uid || hospital._id}', 'hospital')">
+                                                <button class="btn btn-primary" onclick="viewProviderDetails('${hospital.uid || hospital._id || hospital.id}', 'hospital')">
                                                     <i class="fas fa-eye"></i> View Details
                                                 </button>
                                     ${!(hospital.isApproved && hospital.approvalStatus === 'approved') ? `
-                                        <button class="btn btn-success" onclick="approveServiceProvider('${hospital.uid || hospital._id}', 'hospital')">
+                                        <button class="btn btn-success" onclick="approveServiceProvider('${hospital.uid || hospital._id || hospital.id}', 'hospital')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
-                                        <button class="btn btn-danger" onclick="rejectServiceProvider('${hospital.uid || hospital._id}', 'hospital')">
+                                        <button class="btn btn-danger" onclick="rejectServiceProvider('${hospital.uid || hospital._id || hospital.id}', 'hospital')">
                                             <i class="fas fa-times"></i> Reject
                                         </button>
                                     ` : ''}
@@ -1839,19 +1874,19 @@ function loadDoctors() {
                                         </div>
                                         <div class="info-item">
                                             <label>Registered:</label>
-                                            <span>${new Date(doctor.createdAt).toLocaleDateString()}</span>
+                                            <span>${doctor.createdAt ? new Date(doctor.createdAt).toLocaleDateString() : 'N/A'}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="card-actions">
-                                                <button class="btn btn-primary" onclick="viewProviderDetails('${doctor.uid || doctor._id}', 'doctor')">
+                                                <button class="btn btn-primary" onclick="viewProviderDetails('${doctor.uid || doctor._id || doctor.id}', 'doctor')">
                                                     <i class="fas fa-eye"></i> View Details
                                                 </button>
-                                    ${!doctor.isApproved ? `
-                                        <button class="btn btn-success" onclick="approveServiceProvider('${doctor.uid || doctor._id}', 'doctor')">
+                                    ${!(doctor.isApproved && doctor.approvalStatus === 'approved') ? `
+                                        <button class="btn btn-success" onclick="approveServiceProvider('${doctor.uid || doctor._id || doctor.id}', 'doctor')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
-                                        <button class="btn btn-danger" onclick="rejectServiceProvider('${doctor.uid || doctor._id}', 'doctor')">
+                                        <button class="btn btn-danger" onclick="rejectServiceProvider('${doctor.uid || doctor._id || doctor.id}', 'doctor')">
                                             <i class="fas fa-times"></i> Reject
                                         </button>
                                     ` : ''}
@@ -1958,19 +1993,19 @@ function loadNurses() {
                                         </div>
                                         <div class="info-item">
                                             <label>Registered:</label>
-                                            <span>${new Date(nurse.createdAt).toLocaleDateString()}</span>
+                                            <span>${nurse.createdAt ? new Date(nurse.createdAt).toLocaleDateString() : 'N/A'}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="card-actions">
-                                    <button class="btn btn-primary" onclick="viewProviderDetails('${nurse.uid || nurse._id}', 'nurse')">
+                                    <button class="btn btn-primary" onclick="viewProviderDetails('${nurse.uid || nurse._id || nurse.id}', 'nurse')">
                                         <i class="fas fa-eye"></i> View Details
                                     </button>
-                                    ${!nurse.isApproved ? `
-                                        <button class="btn btn-success" onclick="approveServiceProvider('${nurse.uid || nurse._id}', 'nurse')">
+                                    ${!(nurse.isApproved && nurse.approvalStatus === 'approved') ? `
+                                        <button class="btn btn-success" onclick="approveServiceProvider('${nurse.uid || nurse._id || nurse.id}', 'nurse')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
-                                        <button class="btn btn-danger" onclick="rejectServiceProvider('${nurse.uid || nurse._id}', 'nurse')">
+                                        <button class="btn btn-danger" onclick="rejectServiceProvider('${nurse.uid || nurse._id || nurse.id}', 'nurse')">
                                             <i class="fas fa-times"></i> Reject
                                         </button>
                                     ` : ''}
@@ -2077,19 +2112,19 @@ function loadLabs() {
                                         </div>
                                         <div class="info-item">
                                             <label>Registered:</label>
-                                            <span>${new Date(lab.createdAt).toLocaleDateString()}</span>
+                                            <span>${lab.createdAt ? new Date(lab.createdAt).toLocaleDateString() : 'N/A'}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="card-actions">
-                                    <button class="btn btn-primary" onclick="viewProviderDetails('${lab.uid || lab._id}', 'lab')">
+                                    <button class="btn btn-primary" onclick="viewProviderDetails('${lab.uid || lab._id || lab.id}', 'lab')">
                                         <i class="fas fa-eye"></i> View Details
                                     </button>
-                                    ${!lab.isApproved ? `
-                                        <button class="btn btn-success" onclick="approveServiceProvider('${lab._id}', 'lab')">
+                                    ${!(lab.isApproved && lab.approvalStatus === 'approved') ? `
+                                        <button class="btn btn-success" onclick="approveServiceProvider('${lab.uid || lab._id || lab.id}', 'lab')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
-                                        <button class="btn btn-danger" onclick="rejectServiceProvider('${lab._id}', 'lab')">
+                                        <button class="btn btn-danger" onclick="rejectServiceProvider('${lab.uid || lab._id || lab.id}', 'lab')">
                                             <i class="fas fa-times"></i> Reject
                                         </button>
                                     ` : ''}
@@ -2196,19 +2231,19 @@ function loadPharmacies() {
                                         </div>
                                         <div class="info-item">
                                             <label>Registered:</label>
-                                            <span>${new Date(pharmacy.createdAt).toLocaleDateString()}</span>
+                                            <span>${pharmacy.createdAt ? new Date(pharmacy.createdAt).toLocaleDateString() : 'N/A'}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="card-actions">
-                                    <button class="btn btn-primary" onclick="viewProviderDetails('${pharmacy.uid || pharmacy._id}', 'pharmacy')">
+                                    <button class="btn btn-primary" onclick="viewProviderDetails('${pharmacy.uid || pharmacy._id || pharmacy.id}', 'pharmacy')">
                                         <i class="fas fa-eye"></i> View Details
                                     </button>
                                     ${!(pharmacy.isApproved && pharmacy.approvalStatus === 'approved') ? `
-                                        <button class="btn btn-success" onclick="approveServiceProvider('${pharmacy.uid || pharmacy._id}', 'pharmacy')">
+                                        <button class="btn btn-success" onclick="approveServiceProvider('${pharmacy.uid || pharmacy._id || pharmacy.id}', 'pharmacy')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
-                                        <button class="btn btn-danger" onclick="rejectServiceProvider('${pharmacy.uid || pharmacy._id}', 'pharmacy')">
+                                        <button class="btn btn-danger" onclick="rejectServiceProvider('${pharmacy.uid || pharmacy._id || pharmacy.id}', 'pharmacy')">
                                             <i class="fas fa-times"></i> Reject
                                         </button>
                                     ` : ''}
@@ -5933,8 +5968,8 @@ function renderDocumentSection(provider, providerType) {
                 <i class="fas fa-${doc.type === 'image' ? 'image' : 'file-alt'}"></i>
                 <span>${doc.name}</span>
             </div>
-            <button class="btn btn-sm btn-secondary" onclick="viewDocument('${doc.url}', '${doc.name}')">
-                <i class="fas fa-eye"></i> View
+            <button class="btn btn-sm btn-secondary" onclick="downloadDocument('${doc.url}', '${doc.name}')">
+                <i class="fas fa-download"></i> Download
             </button>
         </div>
     `).join('');
@@ -5981,12 +6016,58 @@ function renderAdditionalInfo(provider, providerType) {
     `).join('');
 }
 
-// View document
-function viewDocument(url, name) {
-    if (url) {
-        window.open(url, '_blank');
+// Download document
+function downloadDocument(url, filename) {
+    if (url && url.trim() !== '') {
+        try {
+            console.log('📥 Downloading document:', url);
+            
+            // Create a temporary anchor element to trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename || 'document';
+            link.target = '_blank';
+            
+            // Add to DOM, click, and remove
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showSuccessMessage(`Downloading ${filename || 'document'}...`);
+        } catch (error) {
+            console.error('❌ Error downloading document:', error);
+            showErrorMessage('Failed to download document. Please try again.');
+        }
     } else {
-        showErrorMessage('Document not available');
+        showErrorMessage('Document URL is not available');
+    }
+}
+
+// View document (fallback)
+function viewDocument(url, name) {
+    if (url && url.trim() !== '') {
+        try {
+            // Check if URL is valid
+            const urlObj = new URL(url);
+            console.log('📄 Opening document:', url);
+            
+            // Open in new tab
+            const newWindow = window.open(url, '_blank');
+            
+            // Check if popup was blocked
+            if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+                showErrorMessage('Popup blocked. Please allow popups for this site and try again.');
+                // Fallback: try to redirect current window
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 1000);
+            }
+        } catch (error) {
+            console.error('❌ Error opening document:', error);
+            showErrorMessage('Invalid document URL. Please check the file link.');
+        }
+    } else {
+        showErrorMessage('Document URL is not available');
     }
 }
 
@@ -6401,7 +6482,7 @@ async function viewProviderDetailsImproved(uid, type, status) {
     console.log(`👁️ Viewing ${type} details for UID: ${uid}`);
     
     const idToken = localStorage.getItem('staff_idToken');
-    const response = await fetch(`https://arcular-plus-backend.onrender.com/api/${type}s/uid/${uid}`, {
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/api/arc-staff/service-provider/${type}/${uid}`, {
       headers: {
         'Authorization': `Bearer ${idToken}`,
         'Content-Type': 'application/json'
@@ -6441,7 +6522,7 @@ function showProviderDetailsModalImproved(provider, status) {
   if (!modal || !title || !content) return;
   
   // Update modal title
-  const typeName = provider.type?.charAt(0).toUpperCase() + provider.type?.slice(1) || 'Service Provider';
+  const typeName = provider?.type?.charAt(0).toUpperCase() + provider?.type?.slice(1) || 'Service Provider';
   title.textContent = `${typeName} Details`;
   
   // Generate content with improved UI
@@ -6472,6 +6553,10 @@ function showProviderDetailsModalImproved(provider, status) {
 
 // Generate Provider Details HTML with improved UI
 function generateProviderDetailsHTMLImproved(provider, status) {
+  if (!provider) {
+    return '<div class="error-message">Provider data not available</div>';
+  }
+  
   const typeIcon = getTypeIcon(provider.type);
   const typeColor = getTypeColor(provider.type);
   
@@ -6835,12 +6920,34 @@ function generateDocumentsSectionImproved(provider) {
 
 // View Document with improved functionality
 function viewDocumentImproved(url, name) {
-  // Open document in new tab
-  window.open(url, '_blank');
+    if (url && url.trim() !== '') {
+        try {
+            // Check if URL is valid
+            const urlObj = new URL(url);
+            console.log('📄 Opening document (improved):', url);
+            
+            // Open in new tab
+            const newWindow = window.open(url, '_blank');
+            
+            // Check if popup was blocked
+            if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+                showErrorMessage('Popup blocked. Please allow popups for this site and try again.');
+                // Fallback: try to redirect current window
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 1000);
+            }
+        } catch (error) {
+            console.error('❌ Error opening document:', error);
+            showErrorMessage('Invalid document URL. Please check the file link.');
+        }
+    } else {
+        showErrorMessage('Document URL is not available');
+    }
 }
 
 // Approve Service Provider with improved functionality
-async function approveServiceProviderImproved(type, id, notes = '') {
+async function approveServiceProviderImproved(id, type, notes = '') {
   try {
     console.log(`✅ Approving ${type} with ID: ${id}`);
     
@@ -6879,7 +6986,7 @@ async function approveServiceProviderImproved(type, id, notes = '') {
 }
 
 // Reject Service Provider with improved functionality
-async function rejectServiceProviderImproved(type, id, reason, category, nextSteps) {
+async function rejectServiceProviderImproved(id, type, reason, category, nextSteps) {
   try {
     console.log(`❌ Rejecting ${type} with ID: ${id}`);
     
@@ -7149,7 +7256,8 @@ function showMessage(message, type) {
 
 // Override existing functions to use improved functionality
 window.loadServiceProviderData = loadServiceProviderDataImproved;
-window.viewProviderDetails = viewProviderDetailsImproved;
+// Keep the original viewProviderDetails function for redirecting to details page
+// window.viewProviderDetails = viewProviderDetailsImproved;
 window.approveServiceProvider = approveServiceProviderImproved;
 window.rejectServiceProvider = rejectServiceProviderImproved;
 window.loadDashboardData = loadDashboardDataImproved;
@@ -7483,6 +7591,138 @@ function getTypeIcon(type) {
         'pharmacy': 'fas fa-pills'
     };
     return icons[type] || 'fas fa-user';
+}
+
+// Provider Management Tab Switching
+function switchProviderTab(tabName) {
+    console.log('🔄 Switching provider tab:', tabName);
+    
+    // Remove active class from all provider tabs
+    document.querySelectorAll('.provider-management-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // Add active class to selected tab
+    document.querySelector(`[onclick="switchProviderTab('${tabName}')"]`).classList.add('active');
+    
+    // Load content based on tab
+    if (tabName === 'pending') {
+        showDashboardOverview();
+    } else if (tabName === 'approved') {
+        loadApprovedProviders();
+    }
+}
+
+// Load approved providers for the main dashboard
+async function loadApprovedProviders() {
+    try {
+        const content = document.getElementById('serviceProviderContent');
+        content.innerHTML = `
+            <div class="loading-state">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <p>Loading approved providers...</p>
+            </div>
+        `;
+        
+        const token = await getAuthToken();
+        const response = await fetch(`${API_BASE_URL}/arc-staff/approved-service-providers`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            renderApprovedProviders(result.data);
+        } else {
+            throw new Error('Failed to load approved providers');
+        }
+    } catch (error) {
+        console.error('Error loading approved providers:', error);
+        const content = document.getElementById('serviceProviderContent');
+        content.innerHTML = `
+            <div class="error-state">
+                <div class="error-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <p>Failed to load approved providers</p>
+                <button class="btn btn-primary" onclick="loadApprovedProviders()">
+                    <i class="fas fa-refresh"></i> Try Again
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Render approved providers in main dashboard
+function renderApprovedProviders(data) {
+    const content = document.getElementById('serviceProviderContent');
+    
+    if (!data || Object.keys(data).length === 0) {
+        content.innerHTML = `
+            <div class="empty-state-screen">
+                <div class="empty-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>No Approved Providers</h3>
+                <p>There are no approved service providers yet.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="approved-providers-overview">';
+    
+    // Render each provider type
+    Object.keys(data).forEach(type => {
+        const providers = data[type];
+        if (providers && providers.length > 0) {
+            html += `
+                <div class="provider-type-section">
+                    <h3 class="provider-type-title">
+                        <i class="${getTypeIcon(type)}"></i>
+                        ${type.charAt(0).toUpperCase() + type.slice(1)}s (${providers.length})
+                    </h3>
+                    <div class="providers-grid">
+                        ${providers.map(provider => `
+                            <div class="provider-card approved">
+                                <div class="provider-card-header">
+                                    <div class="provider-avatar">
+                                        <i class="${getTypeIcon(type)}"></i>
+                                    </div>
+                                    <div class="provider-info">
+                                        <h4>${provider.name || provider.fullName || provider.hospitalName || provider.labName || provider.pharmacyName || 'Unknown'}</h4>
+                                        <p class="provider-email">${provider.email}</p>
+                                        <span class="status-badge approved">Approved</span>
+                                    </div>
+                                </div>
+                                <div class="provider-card-body">
+                                    <div class="provider-details">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Registration:</span>
+                                            <span class="detail-value">${provider.registrationNumber || provider.licenseNumber || 'N/A'}</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Contact:</span>
+                                            <span class="detail-value">${provider.mobileNumber || 'N/A'}</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Registered:</span>
+                                            <span class="detail-value">${provider.createdAt ? new Date(provider.createdAt).toLocaleDateString() : 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    html += '</div>';
+    content.innerHTML = html;
 }
 
 // Quick Actions Tab Switching

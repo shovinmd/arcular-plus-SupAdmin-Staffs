@@ -158,6 +158,20 @@
                     </div>
                 </div>
 
+                <!-- Service Provider Management Tabs -->
+                <div class="provider-management-tabs">
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="switchProviderTab('pending')">
+                            <i class="fas fa-clock"></i>
+                            <span>Pending Providers</span>
+                        </button>
+                        <button class="tab-btn" onclick="switchProviderTab('approved')">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Approved Providers</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Service Provider Lists -->
                 <div id="serviceProviderContent" class="service-provider-content">
                     <!-- Content will be dynamically loaded here -->

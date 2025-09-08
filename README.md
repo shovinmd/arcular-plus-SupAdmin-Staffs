@@ -1,6 +1,7 @@
 ## Arcular+ Web Apps – Overview and Backend Flow
 
 This document explains how the Arcular+ web apps (Arc Staff UI and Admin UI) work end‑to‑end with the Node.js backend, plus how to run, configure, and extend them. Image placeholders are included so you can add screenshots later.
+<img width="1900" height="993" alt="image" src="https://github.com/user-attachments/assets/4c3c2840-20f5-4e20-b310-f298393fde72" />
 
 ---
 

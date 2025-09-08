@@ -6450,9 +6450,7 @@ function initializeSettings() {
     // Ensure the modal X button closes the modal reliably
     const xBtn = document.querySelector('#settingsModal .close');
     if (xBtn) {
-        xBtn.addEventListener('click', () => {
-            settingsModal.style.display = 'none';
-        });
+        xBtn.onclick = () => { settingsModal.style.display = 'none'; };
     }
 
     // Also close on Escape key
@@ -6463,11 +6461,9 @@ function initializeSettings() {
     });
 
     // Wire up an explicit Submit-for-Admin-Review button if present
-    const submitForAdminBtn = document.getElementById('submitForAdminReviewBtn');
+    const submitForAdminBtn = document.getElementById('saveSettingsBtn');
     if (submitForAdminBtn) {
-        submitForAdminBtn.addEventListener('click', async () => {
-            await saveStaffSettings();
-        });
+        submitForAdminBtn.onclick = async () => { await saveStaffSettings(); };
     }
     
     // Close modal when clicking outside
@@ -6643,26 +6639,51 @@ function initializeNewDashboard() {
 // Load initial counts for sidebar
 async function loadInitialCounts() {
     try {
+        // Prefer up-to-date values from backend, with reliable fallback to allUsers snapshot
         const token = await getAuthToken();
-        const response = await fetch(`${API_BASE_URL}/arc-staff/dashboard-counts`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-                const counts = result.data;
-                
-                // Update all sidebar counts
-                Object.keys(counts).forEach(providerType => {
-                    const approvedCount = document.getElementById(`${providerType}ApprovedCount`);
-                    const pendingCount = document.getElementById(`${providerType}PendingCount`);
-                    
-                    if (approvedCount) approvedCount.textContent = counts[providerType].approved || 0;
-                    if (pendingCount) pendingCount.textContent = counts[providerType].pending || 0;
-                });
+        let counts;
+        try {
+            const response = await fetch(`${API_BASE_URL}/arc-staff/dashboard-counts`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) counts = result.data;
             }
+        } catch (_) {}
+
+        if (!counts) {
+            // Fallback build from allUsers
+            counts = {
+                hospitals: {
+                    approved: (allUsers.hospitals||[]).filter(h=>isApprovedTrue(h.isApproved)).length,
+                    pending: (allUsers.hospitals||[]).filter(h=>!isApprovedTrue(h.isApproved)).length,
+                },
+                doctors: {
+                    approved: (allUsers.doctors||[]).filter(d=>isApprovedTrue(d.isApproved)).length,
+                    pending: (allUsers.doctors||[]).filter(d=>!isApprovedTrue(d.isApproved)).length,
+                },
+                nurses: {
+                    approved: (allUsers.nurses||[]).filter(n=>isApprovedTrue(n.isApproved)).length,
+                    pending: (allUsers.nurses||[]).filter(n=>!isApprovedTrue(n.isApproved)).length,
+                },
+                labs: {
+                    approved: (allUsers.labs||[]).filter(l=>isApprovedTrue(l.isApproved)).length,
+                    pending: (allUsers.labs||[]).filter(l=>!isApprovedTrue(l.isApproved)).length,
+                },
+                pharmacies: {
+                    approved: (allUsers.pharmacies||[]).filter(p=>isApprovedTrue(p.isApproved)).length,
+                    pending: (allUsers.pharmacies||[]).filter(p=>!isApprovedTrue(p.isApproved)).length,
+                },
+            };
         }
+
+        Object.keys(counts).forEach(providerType => {
+            const approvedCount = document.getElementById(`${providerType}ApprovedCount`);
+            const pendingCount = document.getElementById(`${providerType}PendingCount`);
+            if (approvedCount) approvedCount.textContent = counts[providerType].approved || 0;
+            if (pendingCount) pendingCount.textContent = counts[providerType].pending || 0;
+        });
     } catch (error) {
         console.error('❌ Error loading initial counts:', error);
     }

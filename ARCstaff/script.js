@@ -53,8 +53,8 @@ if (typeof firebase !== 'undefined') {
 }
 
 // Stats Functions
-function updateDashboardStats() {
-    console.log('📊 Updating dashboard stats...');
+function updatePlatformStats() {
+    console.log('📊 Updating platform stats...');
     
     // Update stats display
     document.getElementById('total-providers-count').textContent = dashboardStats.totalProviders;
@@ -153,7 +153,7 @@ async function loadFilteredStats(period) {
                 dashboardStats.totalDepartments = stats.totalDepartments || 5;
                 
                 // Update display
-                updateDashboardStats();
+                updatePlatformStats();
                 
                 // Update trend indicators
                 updateTrendIndicators(stats.trends || {});
@@ -164,7 +164,7 @@ async function loadFilteredStats(period) {
     } catch (error) {
         console.error('❌ Error loading filtered stats:', error);
         // Fallback to current stats if API fails
-        updateDashboardStats();
+        updatePlatformStats();
     }
 }
 
@@ -524,6 +524,38 @@ async function approveServiceProvider(id, type, notes = '') {
         const data = await response.json();
         if (data.success) {
             showSuccessMessage(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} approved successfully! Email notification sent. You can now login to the platform.`);
+
+            // Update local cache so UI moves item from pending -> approved immediately
+            const listKeyMap = { hospital: 'hospitals', doctor: 'doctors', nurse: 'nurses', lab: 'labs', pharmacy: 'pharmacies' };
+            const listKey = listKeyMap[type];
+            if (listKey && allUsers && Array.isArray(allUsers[listKey])) {
+                const arr = allUsers[listKey];
+                const idx = arr.findIndex(x => (x.uid || x._id || x.id) === id);
+                if (idx !== -1) {
+                    arr[idx].isApproved = true;
+                }
+            }
+
+            // Recompute dashboard stats and refresh current view
+            if (typeof updateDashboardStatsFromData === 'function') {
+                updateDashboardStatsFromData();
+            } else if (typeof updatePlatformStats === 'function') {
+                updatePlatformStats();
+            }
+
+            // Try to re-render the active provider view
+            if (type === 'hospital' && typeof loadHospitals === 'function') loadHospitals();
+            else if (type === 'doctor' && typeof loadDoctors === 'function') loadDoctors();
+            else if (type === 'nurse' && typeof loadNurses === 'function') loadNurses();
+            else if (type === 'lab' && typeof loadLabs === 'function') loadLabs();
+            else if (type === 'pharmacy' && typeof loadPharmacies === 'function') loadPharmacies();
+            else if (typeof showDashboardOverview === 'function') showDashboardOverview();
+
+            // Close details modal if open
+            const modal = document.getElementById('providerDetailsModal');
+            if (modal && modal.style.display === 'block') {
+                modal.style.display = 'none';
+            }
         }
         return data.success;
     } catch (error) {
@@ -558,6 +590,35 @@ async function rejectServiceProvider(id, type, reason, category, nextSteps) {
         const data = await response.json();
         if (data.success) {
             showSuccessMessage(`❌ ${type.charAt(0).toUpperCase() + type.slice(1)} rejected successfully! Email notification sent with feedback. Please register again after 24-48 hours with the requested changes.`);
+
+            // Remove from local cache so UI updates immediately
+            const listKeyMap = { hospital: 'hospitals', doctor: 'doctors', nurse: 'nurses', lab: 'labs', pharmacy: 'pharmacies' };
+            const listKey = listKeyMap[type];
+            if (listKey && allUsers && Array.isArray(allUsers[listKey])) {
+                const arr = allUsers[listKey];
+                const idx = arr.findIndex(x => (x.uid || x._id || x.id) === id);
+                if (idx !== -1) arr.splice(idx, 1);
+            }
+
+            // Recompute dashboard stats and refresh current view
+            if (typeof updateDashboardStatsFromData === 'function') {
+                updateDashboardStatsFromData();
+            } else if (typeof updatePlatformStats === 'function') {
+                updatePlatformStats();
+            }
+
+            if (type === 'hospital' && typeof loadHospitals === 'function') loadHospitals();
+            else if (type === 'doctor' && typeof loadDoctors === 'function') loadDoctors();
+            else if (type === 'nurse' && typeof loadNurses === 'function') loadNurses();
+            else if (type === 'lab' && typeof loadLabs === 'function') loadLabs();
+            else if (type === 'pharmacy' && typeof loadPharmacies === 'function') loadPharmacies();
+            else if (typeof showDashboardOverview === 'function') showDashboardOverview();
+
+            // Close details modal if open
+            const modal = document.getElementById('providerDetailsModal');
+            if (modal && modal.style.display === 'block') {
+                modal.style.display = 'none';
+            }
         }
         return data.success;
     } catch (error) {
@@ -691,6 +752,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const userNameElement = document.getElementById('userName');
                     if (userNameElement) {
                         userNameElement.textContent = staffProfile.data.fullName || user.email;
+                    }
+                    
+                    // Update welcome bar with staff name
+                    const staffNameDisplay = document.getElementById('staffNameDisplay');
+                    if (staffNameDisplay) {
+                        staffNameDisplay.textContent = staffProfile.data.fullName || user.email;
                     }
                     
                     // Update staff status in settings
@@ -1720,7 +1787,7 @@ function loadHospitals() {
     
     const allHospitals = allUsers.hospitals || [];
     // Filter to show only pending hospitals (not approved)
-    const hospitals = allHospitals.filter(h => !h.isApproved || h.approvalStatus !== 'approved');
+    const hospitals = allHospitals.filter(h => h.isApproved !== true);
     console.log('🏥 All hospitals:', allHospitals.length, 'Pending hospitals:', hospitals.length);
     
     // Create a full-screen hospital management view
@@ -1780,8 +1847,8 @@ function loadHospitals() {
                                     <div class="provider-info-main">
                                         <h3>${hospital.name || hospital.hospitalName || 'Unknown Hospital'}</h3>
                                         <p class="provider-email">${hospital.email}</p>
-                                        <span class="status-badge-large ${hospital.isApproved && hospital.approvalStatus === 'approved' ? 'approved' : 'pending'}">
-                                            ${hospital.isApproved && hospital.approvalStatus === 'approved' ? 'Approved' : 'Pending Approval'}
+                                        <span class="status-badge-large ${hospital.isApproved === true ? 'approved' : 'pending'}">
+                                            ${hospital.isApproved === true ? 'Approved' : 'Pending Approval'}
                                         </span>
                                     </div>
                                 </div>
@@ -1809,7 +1876,7 @@ function loadHospitals() {
                                                 <button class="btn btn-primary" onclick="viewProviderDetails('${hospital.uid || hospital._id || hospital.id}', 'hospital')">
                                                     <i class="fas fa-eye"></i> View Details
                                                 </button>
-                                    ${!(hospital.isApproved && hospital.approvalStatus === 'approved') ? `
+                                    ${hospital.isApproved !== true ? `
                                         <button class="btn btn-success" onclick="approveServiceProvider('${hospital.uid || hospital._id || hospital.id}', 'hospital')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
@@ -1841,7 +1908,7 @@ function loadDoctors() {
     
     const allDoctors = allUsers.doctors || [];
     // Filter to show only pending doctors (not approved)
-    const doctors = allDoctors.filter(d => !d.isApproved || d.approvalStatus !== 'approved');
+    const doctors = allDoctors.filter(d => d.isApproved !== true);
     console.log('👨‍⚕️ All doctors:', allDoctors.length, 'Pending doctors:', doctors.length);
     
     // Create a full-screen doctor management view
@@ -1930,7 +1997,7 @@ function loadDoctors() {
                                                 <button class="btn btn-primary" onclick="viewProviderDetails('${doctor.uid || doctor._id || doctor.id}', 'doctor')">
                                                     <i class="fas fa-eye"></i> View Details
                                                 </button>
-                                    ${!(doctor.isApproved && doctor.approvalStatus === 'approved') ? `
+                                    ${doctor.isApproved !== true ? `
                                         <button class="btn btn-success" onclick="approveServiceProvider('${doctor.uid || doctor._id || doctor.id}', 'doctor')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
@@ -1962,7 +2029,7 @@ function loadNurses() {
 
     const allNurses = allUsers.nurses || [];
     // Filter to show only pending nurses (not approved)
-    const nurses = allNurses.filter(n => !n.isApproved || n.approvalStatus !== 'approved');
+    const nurses = allNurses.filter(n => n.isApproved !== true);
     console.log('👩‍⚕️ All nurses:', allNurses.length, 'Pending nurses:', nurses.length);
 
     // Create a full-screen nurse management view
@@ -2051,7 +2118,7 @@ function loadNurses() {
                                     <button class="btn btn-primary" onclick="viewProviderDetails('${nurse.uid || nurse._id || nurse.id}', 'nurse')">
                                         <i class="fas fa-eye"></i> View Details
                                     </button>
-                                    ${!(nurse.isApproved && nurse.approvalStatus === 'approved') ? `
+                                    ${nurse.isApproved !== true ? `
                                         <button class="btn btn-success" onclick="approveServiceProvider('${nurse.uid || nurse._id || nurse.id}', 'nurse')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
@@ -2083,7 +2150,7 @@ function loadLabs() {
 
     const allLabs = allUsers.labs || [];
     // Filter to show only pending labs (not approved)
-    const labs = allLabs.filter(l => !l.isApproved || l.approvalStatus !== 'approved');
+    const labs = allLabs.filter(l => l.isApproved !== true);
     console.log('🧪 All labs:', allLabs.length, 'Pending labs:', labs.length);
 
     // Create a full-screen lab management view
@@ -2172,7 +2239,7 @@ function loadLabs() {
                                     <button class="btn btn-primary" onclick="viewProviderDetails('${lab.uid || lab._id || lab.id}', 'lab')">
                                         <i class="fas fa-eye"></i> View Details
                                     </button>
-                                    ${!(lab.isApproved && lab.approvalStatus === 'approved') ? `
+                                    ${lab.isApproved !== true ? `
                                         <button class="btn btn-success" onclick="approveServiceProvider('${lab.uid || lab._id || lab.id}', 'lab')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
@@ -2204,7 +2271,7 @@ function loadPharmacies() {
 
     const allPharmacies = allUsers.pharmacies || [];
     // Filter to show only pending pharmacies (not approved)
-    const pharmacies = allPharmacies.filter(p => !p.isApproved || p.approvalStatus !== 'approved');
+    const pharmacies = allPharmacies.filter(p => p.isApproved !== true);
     console.log('💊 All pharmacies:', allPharmacies.length, 'Pending pharmacies:', pharmacies.length);
 
     // Create a full-screen pharmacy management view
@@ -2227,7 +2294,7 @@ function loadPharmacies() {
                             <span class="stat-label">Total</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${pharmacies.filter(p => !p.isApproved || p.approvalStatus === 'pending').length}</span>
+                            <span class="stat-number">${pharmacies.filter(p => p.isApproved === false || p.approvalStatus === 'pending').length}</span>
                             <span class="stat-label">Pending</span>
                         </div>
                         <div class="stat-item">
@@ -2256,7 +2323,7 @@ function loadPharmacies() {
                 ` : `
                     <div class="provider-grid-screen">
                         ${pharmacies.map(pharmacy => `
-                            <div class="provider-card-screen" data-status="${pharmacy.isApproved && pharmacy.approvalStatus === 'approved' ? 'approved' : 'pending'}">
+                            <div class="provider-card-screen" data-status="${pharmacy.isApproved === true ? 'approved' : 'pending'}">
                                 <div class="card-header">
                                     <div class="provider-avatar-large">
                                         <i class="fas fa-pills"></i>
@@ -2264,8 +2331,8 @@ function loadPharmacies() {
                                     <div class="provider-info-main">
                                         <h3>${pharmacy.name || pharmacy.pharmacyName || 'Unknown Pharmacy'}</h3>
                                         <p class="provider-email">${pharmacy.email}</p>
-                                        <span class="status-badge-large ${pharmacy.isApproved && pharmacy.approvalStatus === 'approved' ? 'approved' : 'pending'}">
-                                            ${pharmacy.isApproved && pharmacy.approvalStatus === 'approved' ? 'Approved' : 'Pending Approval'}
+                                        <span class="status-badge-large ${pharmacy.isApproved === true ? 'approved' : 'pending'}">
+                                            ${pharmacy.isApproved === true ? 'Approved' : 'Pending Approval'}
                                         </span>
                                     </div>
                                 </div>
@@ -2293,7 +2360,7 @@ function loadPharmacies() {
                                     <button class="btn btn-primary" onclick="viewProviderDetails('${pharmacy.uid || pharmacy._id || pharmacy.id}', 'pharmacy')">
                                         <i class="fas fa-eye"></i> View Details
                                     </button>
-                                    ${!(pharmacy.isApproved && pharmacy.approvalStatus === 'approved') ? `
+                                    ${pharmacy.isApproved !== true ? `
                                         <button class="btn btn-success" onclick="approveServiceProvider('${pharmacy.uid || pharmacy._id || pharmacy.id}', 'pharmacy')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
@@ -2332,6 +2399,9 @@ async function loadAllUsers() {
         allUsers.pharmacies = allUsersData.pharmacies || [];
         
         console.log('✅ Global allUsers object updated:', allUsers);
+        
+        // Calculate and update dashboard stats
+        updateDashboardStatsFromData();
         
         // Don't automatically load individual provider screens
         // Only show dashboard overview by default
@@ -3128,7 +3198,7 @@ async function fetchPendingStakeholders() {
       showErrorMessage('Failed to load pending approvals. Please try again.');
       
       // Show empty state
-      updateDashboardStats([]);
+      updatePlatformStats();
       renderPendingApprovals([]);
     }
   } catch (error) {
@@ -3136,13 +3206,56 @@ async function fetchPendingStakeholders() {
     showErrorMessage('Network error loading dashboard data. Please check your connection.');
     
     // Show empty state
-    updateDashboardStats([]);
+    updatePlatformStats();
     renderPendingApprovals([]);
   }
 }
 
+// Update dashboard stats from loaded data
+function updateDashboardStatsFromData() {
+    console.log('📊 Updating dashboard stats from loaded data...');
+    
+    // Calculate totals from allUsers data
+    const totalHospitals = allUsers.hospitals?.length || 0;
+    const totalDoctors = allUsers.doctors?.length || 0;
+    const totalNurses = allUsers.nurses?.length || 0;
+    const totalLabs = allUsers.labs?.length || 0;
+    const totalPharmacies = allUsers.pharmacies?.length || 0;
+    
+    const totalProviders = totalHospitals + totalDoctors + totalNurses + totalLabs + totalPharmacies;
+    
+    // Calculate approved providers (isApproved: true)
+    const approvedHospitals = allUsers.hospitals?.filter(h => h.isApproved === true).length || 0;
+    const approvedDoctors = allUsers.doctors?.filter(d => d.isApproved === true).length || 0;
+    const approvedNurses = allUsers.nurses?.filter(n => n.isApproved === true).length || 0;
+    const approvedLabs = allUsers.labs?.filter(l => l.isApproved === true).length || 0;
+    const approvedPharmacies = allUsers.pharmacies?.filter(p => p.isApproved === true).length || 0;
+    
+    const approvedProviders = approvedHospitals + approvedDoctors + approvedNurses + approvedLabs + approvedPharmacies;
+    
+    // Calculate pending providers (isApproved !== true)
+    const pendingHospitals = allUsers.hospitals?.filter(h => h.isApproved !== true).length || 0;
+    const pendingDoctors = allUsers.doctors?.filter(d => d.isApproved !== true).length || 0;
+    const pendingNurses = allUsers.nurses?.filter(n => n.isApproved !== true).length || 0;
+    const pendingLabs = allUsers.labs?.filter(l => l.isApproved !== true).length || 0;
+    const pendingPharmacies = allUsers.pharmacies?.filter(p => p.isApproved !== true).length || 0;
+    
+    const pendingApprovals = pendingHospitals + pendingDoctors + pendingNurses + pendingLabs + pendingPharmacies;
+    
+    // Update global stats
+    dashboardStats.totalProviders = totalProviders;
+    dashboardStats.approvedProviders = approvedProviders;
+    dashboardStats.pendingApprovals = pendingApprovals;
+    dashboardStats.totalDepartments = 5; // Fixed number of departments
+    
+    console.log('📊 Updated dashboard stats:', dashboardStats);
+    
+    // Update the display
+    updatePlatformStats();
+}
+
 // Update dashboard statistics
-function updateDashboardStats(stakeholders) {
+function updateDashboardStats(stakeholders = []) {
   const stats = {
     hospital: 0,
     doctor: 0,
@@ -3151,13 +3264,15 @@ function updateDashboardStats(stakeholders) {
     pharmacy: 0
   };
   
-  stakeholders.forEach(stakeholder => {
-    // Handle both 'type' and 'userType' fields from backend
-    const userType = stakeholder.userType || stakeholder.type;
-    if (userType && stats.hasOwnProperty(userType)) {
-      stats[userType]++;
-    }
-  });
+  if (stakeholders && Array.isArray(stakeholders)) {
+    stakeholders.forEach(stakeholder => {
+      // Handle both 'type' and 'userType' fields from backend
+      const userType = stakeholder.userType || stakeholder.type;
+      if (userType && stats.hasOwnProperty(userType)) {
+        stats[userType]++;
+      }
+    });
+  }
   
   // Update individual counts
   document.getElementById('hospitalCount').textContent = stats.hospital;
@@ -3884,7 +3999,7 @@ function updateCurrentDateTime() {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
-  }) + ' ' + now.toLocaleTimeString('en-US', {
+  }) + ' at ' + now.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit'
   });
@@ -3892,6 +4007,12 @@ function updateCurrentDateTime() {
   const dateTimeElement = document.getElementById('currentDateTime');
   if (dateTimeElement) {
     dateTimeElement.textContent = dateTimeString;
+  }
+  
+  // Update welcome bar date/time
+  const welcomeDateTime = document.getElementById('welcomeDateTime');
+  if (welcomeDateTime) {
+    welcomeDateTime.textContent = dateTimeString;
   }
   
   // Update every minute
@@ -6131,6 +6252,13 @@ function initializeSettings() {
     const saveBtn = document.getElementById('saveSettingsBtn');
     const cancelBtn = document.getElementById('cancelSettingsBtn');
     
+    console.log('🔧 Modal elements found:', {
+        settingsModal: !!settingsModal,
+        closeBtn: !!closeBtn,
+        saveBtn: !!saveBtn,
+        cancelBtn: !!cancelBtn
+    });
+    
     // Open settings modal
     settingsBtn.addEventListener('click', () => {
         loadStaffProfile();
@@ -6142,8 +6270,23 @@ function initializeSettings() {
         settingsModal.style.display = 'none';
     });
     
+    // Also add event listener for the close button in the modal header
+    const settingsCloseBtn = settingsModal.querySelector('.close');
+    if (settingsCloseBtn) {
+        settingsCloseBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+        });
+    }
+    
     // Save settings
-    saveBtn.addEventListener('click', saveStaffSettings);
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            console.log('🔘 Save button clicked');
+            saveStaffSettings();
+        });
+    } else {
+        console.error('❌ Save button not found!');
+    }
     
     // Cancel settings
     cancelBtn.addEventListener('click', () => {
@@ -6156,6 +6299,15 @@ function initializeSettings() {
             settingsModal.style.display = 'none';
         }
     });
+}
+
+// Open settings modal
+function openSettingsModal() {
+    loadStaffProfile();
+    const settingsModal = document.getElementById('settingsModal');
+    if (settingsModal) {
+        settingsModal.style.display = 'block';
+    }
 }
 
 // Load staff profile
@@ -6218,10 +6370,14 @@ function loadStaffDataIntoForm() {
 // Save staff settings
 async function saveStaffSettings() {
     try {
+        console.log('💾 Save staff settings called');
+        
         // Validate required fields
         const fullName = document.getElementById('staffName').value.trim();
         const mobileNumber = document.getElementById('staffPhone').value.trim();
         const department = document.getElementById('staffDepartment').value.trim();
+        
+        console.log('📝 Form data:', { fullName, mobileNumber, department });
         
         if (!fullName || !mobileNumber || !department) {
             showErrorMessage('Please fill in all required fields (Full Name, Phone Number, Department)');
@@ -6237,8 +6393,10 @@ async function saveStaffSettings() {
         };
         
         console.log('📝 Submitting profile changes:', formData);
+        console.log('🌐 API URL:', `${API_BASE_URL}/arc-staff/profile-changes`);
         
         const token = await getAuthToken();
+        console.log('🔑 Token obtained:', token ? 'Yes' : 'No');
         
         // Submit profile changes for admin approval instead of direct update
         const response = await fetch(`${API_BASE_URL}/arc-staff/profile-changes`, {
@@ -6387,6 +6545,17 @@ function renderServiceProviderListImproved(providerType, approvedProviders, pend
   const typeIcon = getTypeIcon(providerType);
   const typeColor = getTypeColor(providerType);
   const typeName = providerType.charAt(0).toUpperCase() + providerType.slice(1);
+  
+  // Enforce status using local allUsers data when available
+  const listKeyMap = { hospital: 'hospitals', doctor: 'doctors', nurse: 'nurses', lab: 'labs', pharmacy: 'pharmacies' };
+  const listKey = listKeyMap[providerType];
+  if (allUsers && listKey && Array.isArray(allUsers[listKey])) {
+    const list = allUsers[listKey];
+    const strictApproved = list.filter(item => item.isApproved === true).map(item => ({ ...item, type: providerType }));
+    const strictPending = list.filter(item => item.isApproved !== true).map(item => ({ ...item, type: providerType }));
+    approvedProviders = strictApproved;
+    pendingProviders = strictPending;
+  }
   
   let html = `
     <div class="provider-section">
@@ -7318,8 +7487,8 @@ function showDashboardOverview() {
                         <h3>Hospitals</h3>
                         <p>Manage hospital registrations</p>
                         <div class="card-stats">
-                            <span class="stat">Total: ${allUsers.hospitals?.length || 0}</span>
-                            <span class="stat">Pending: ${allUsers.hospitals?.filter(h => !h.isApproved || h.approvalStatus === 'pending').length || 0}</span>
+                            <span class="stat">Pending: ${allUsers.hospitals?.filter(h => h.isApproved !== true).length || 0}</span>
+                            <span class="stat">Approved: ${allUsers.hospitals?.filter(h => h.isApproved === true).length || 0}</span>
                         </div>
                     </div>
                     <div class="overview-card" onclick="loadDoctors()">
@@ -7329,8 +7498,8 @@ function showDashboardOverview() {
                         <h3>Doctors</h3>
                         <p>Manage doctor registrations</p>
                         <div class="card-stats">
-                            <span class="stat">Total: ${allUsers.doctors?.length || 0}</span>
-                            <span class="stat">Pending: ${allUsers.doctors?.filter(d => !d.isApproved || d.approvalStatus === 'pending').length || 0}</span>
+                            <span class="stat">Pending: ${allUsers.doctors?.filter(d => d.isApproved !== true).length || 0}</span>
+                            <span class="stat">Approved: ${allUsers.doctors?.filter(d => d.isApproved === true).length || 0}</span>
                         </div>
                     </div>
                     <div class="overview-card" onclick="loadNurses()">
@@ -7340,8 +7509,8 @@ function showDashboardOverview() {
                         <h3>Nurses</h3>
                         <p>Manage nurse registrations</p>
                         <div class="card-stats">
-                            <span class="stat">Total: ${allUsers.nurses?.length || 0}</span>
-                            <span class="stat">Pending: ${allUsers.nurses?.filter(n => !n.isApproved || n.approvalStatus === 'pending').length || 0}</span>
+                            <span class="stat">Pending: ${allUsers.nurses?.filter(n => n.isApproved !== true).length || 0}</span>
+                            <span class="stat">Approved: ${allUsers.nurses?.filter(n => n.isApproved === true).length || 0}</span>
                         </div>
                     </div>
                     <div class="overview-card" onclick="loadLabs()">
@@ -7351,8 +7520,8 @@ function showDashboardOverview() {
                         <h3>Labs</h3>
                         <p>Manage lab registrations</p>
                         <div class="card-stats">
-                            <span class="stat">Total: ${allUsers.labs?.length || 0}</span>
-                            <span class="stat">Pending: ${allUsers.labs?.filter(l => !l.isApproved || l.approvalStatus === 'pending').length || 0}</span>
+                            <span class="stat">Pending: ${allUsers.labs?.filter(l => l.isApproved !== true).length || 0}</span>
+                            <span class="stat">Approved: ${allUsers.labs?.filter(l => l.isApproved === true).length || 0}</span>
                         </div>
                     </div>
                     <div class="overview-card" onclick="loadPharmacies()">
@@ -7362,8 +7531,8 @@ function showDashboardOverview() {
                         <h3>Pharmacies</h3>
                         <p>Manage pharmacy registrations</p>
                         <div class="card-stats">
-                            <span class="stat">Total: ${allUsers.pharmacies?.length || 0}</span>
-                            <span class="stat">Pending: ${allUsers.pharmacies?.filter(p => !p.isApproved || p.approvalStatus === 'pending').length || 0}</span>
+                            <span class="stat">Pending: ${allUsers.pharmacies?.filter(p => p.isApproved !== true).length || 0}</span>
+                            <span class="stat">Approved: ${allUsers.pharmacies?.filter(p => p.isApproved === true).length || 0}</span>
                         </div>
                     </div>
                 </div>
@@ -7624,138 +7793,29 @@ function getTypeIcon(type) {
 }
 
 // Provider Management Tab Switching
-function switchProviderTab(tabName) {
-    console.log('🔄 Switching provider tab:', tabName);
-    
-    // Remove active class from all provider tabs
-    document.querySelectorAll('.provider-management-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
-    
-    // Add active class to selected tab
-    document.querySelector(`[onclick="switchProviderTab('${tabName}')"]`).classList.add('active');
-    
-    // Show/hide filters
-    const approvedFilters = document.getElementById('approvedFilters');
-    if (tabName === 'approved') {
-        approvedFilters.style.display = 'block';
-        loadApprovedProviders();
-    } else {
-        approvedFilters.style.display = 'none';
-        showDashboardOverview();
-    }
+// Show dashboard overview (pending providers)
+function showPendingProviders() {
+    console.log('🔄 Showing pending providers overview');
+    showDashboardOverview();
 }
 
 // Load approved providers for the main dashboard
-async function loadApprovedProviders() {
+// Load pending providers data
+async function loadPendingProvidersData() {
     try {
-        const content = document.getElementById('serviceProviderContent');
-        content.innerHTML = `
-            <div class="loading-state">
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </div>
-                <p>Loading approved providers...</p>
-            </div>
-        `;
-        
-        const token = await getAuthToken();
-        const response = await fetch(`${API_BASE_URL}/arc-staff/approved-providers-only`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            renderApprovedProviders(result.data);
-        } else {
-            throw new Error('Failed to load approved providers');
-        }
+        console.log('📋 Loading pending providers data...');
+        await loadAllUsers();
+        showDashboardOverview();
     } catch (error) {
-        console.error('Error loading approved providers:', error);
-        const content = document.getElementById('serviceProviderContent');
-        content.innerHTML = `
-            <div class="error-state">
-                <div class="error-icon">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <p>Failed to load approved providers</p>
-                <button class="btn btn-primary" onclick="loadApprovedProviders()">
-                    <i class="fas fa-refresh"></i> Try Again
-                </button>
-            </div>
-        `;
+        console.error('❌ Error loading pending providers:', error);
+        showErrorMessage('Failed to load pending providers data');
     }
 }
 
-// Render approved providers in main dashboard
-function renderApprovedProviders(data) {
-    const content = document.getElementById('serviceProviderContent');
-    
-    if (!data || Object.keys(data).length === 0) {
-        content.innerHTML = `
-            <div class="empty-state-screen">
-                <div class="empty-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <h3>No Approved Providers</h3>
-                <p>There are no approved service providers yet.</p>
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '<div class="approved-providers-overview">';
-    
-    // Render each provider type
-    Object.keys(data).forEach(type => {
-        const providers = data[type];
-        if (providers && providers.length > 0) {
-            html += `
-                <div class="provider-type-section">
-                    <h3 class="provider-type-title">
-                        <i class="${getTypeIcon(type)}"></i>
-                        ${type.charAt(0).toUpperCase() + type.slice(1)}s (${providers.length})
-                    </h3>
-                    <div class="providers-grid">
-                        ${providers.map(provider => `
-                            <div class="provider-card approved">
-                                <div class="provider-card-header">
-                                    <div class="provider-avatar">
-                                        <i class="${getTypeIcon(type)}"></i>
-                                    </div>
-                                    <div class="provider-info">
-                                        <h4>${provider.name || provider.fullName || provider.hospitalName || provider.labName || provider.pharmacyName || 'Unknown'}</h4>
-                                        <p class="provider-email">${provider.email}</p>
-                                        <span class="status-badge approved">Approved</span>
-                                    </div>
-                                </div>
-                                <div class="provider-card-body">
-                                    <div class="provider-details">
-                                        <div class="detail-item">
-                                            <span class="detail-label">Registration:</span>
-                                            <span class="detail-value">${provider.registrationNumber || provider.licenseNumber || 'N/A'}</span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <span class="detail-label">Contact:</span>
-                                            <span class="detail-value">${provider.mobileNumber || 'N/A'}</span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <span class="detail-label">Registered:</span>
-                                            <span class="detail-value">${provider.createdAt ? new Date(provider.createdAt).toLocaleDateString() : 'N/A'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
-    });
-    
-    html += '</div>';
-    content.innerHTML = html;
+// Load and display pending providers overview
+function loadPendingProvidersOverview() {
+    console.log('📋 Loading pending providers overview...');
+    showDashboardOverview();
 }
 
 // Quick Actions Tab Switching
@@ -8301,6 +8361,7 @@ async function refreshDashboard() {
         
         // Refresh all data
         await loadAllUsers();
+        showDashboardOverview();
         
         // Reset button state
         if (refreshBtn) {
@@ -8364,13 +8425,16 @@ async function logout() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM loaded, initializing improved dashboard...');
 
+    // Initialize date/time immediately
+    updateCurrentDateTime();
+
     // Initialize the improved dashboard functionality
     initializeNewDashboard();
 
     // Also initialize improved functionality
     setTimeout(() => {
       loadDashboardDataImproved();
-      // Show dashboard overview by default
-      showDashboardOverview();
+      // Load pending providers data and show dashboard overview
+      loadPendingProvidersData();
     }, 1000);
 });

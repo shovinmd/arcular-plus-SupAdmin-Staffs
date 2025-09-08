@@ -51,15 +51,27 @@
                     </button>
                 </div>
                 <div class="header-actions">
-                    <button id="settingsBtn" class="settings-btn" title="Staff Settings">
-                        <i class="fas fa-cog"></i>
-                    </button>
                     <button id="logoutBtn" class="logout-btn" onclick="logout()">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
                 </div>
             </div>
         </header>
+
+        <!-- Welcome Bar -->
+        <div class="welcome-bar">
+            <div class="welcome-content">
+                <div class="welcome-text">
+                    <h2 id="welcomeMessage">Welcome back, <span id="staffNameDisplay">Staff Member</span>! 👋</h2>
+                    <p id="welcomeDateTime" class="welcome-datetime">Loading...</p>
+                </div>
+                <div class="welcome-actions">
+                    <button id="platformSettingsBtn" class="platform-settings-btn" onclick="openSettingsModal()">
+                        <i class="fas fa-cog"></i> Platform Settings
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- Stats Overview Section -->
         <section class="stats-section">
@@ -161,46 +173,11 @@
                     </div>
                 </div>
 
-                <!-- Service Provider Management Tabs -->
-                <div class="provider-management-tabs">
-                    <div class="tabs">
-                        <button class="tab-btn active" onclick="switchProviderTab('pending')">
-                            <i class="fas fa-clock"></i>
-                            <span>Pending Providers</span>
-                        </button>
-                        <button class="tab-btn" onclick="switchProviderTab('approved')">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Approved Providers</span>
-                        </button>
-                    </div>
-                    
-                    <!-- Approved Providers Filters -->
-                    <div id="approvedFilters" class="approved-filters" style="display: none;">
-                        <div class="filters-container">
-                            <div class="filter-group">
-                                <label for="approvedProviderTypeFilter">Provider Type:</label>
-                                <select id="approvedProviderTypeFilter" class="filter-select">
-                                    <option value="">All Types</option>
-                                    <option value="hospital">Hospitals</option>
-                                    <option value="doctor">Doctors</option>
-                                    <option value="nurse">Nurses</option>
-                                    <option value="lab">Labs</option>
-                                    <option value="pharmacy">Pharmacies</option>
-                                </select>
-                            </div>
-                            <div class="filter-group">
-                                <label for="approvedSearchInput">Search by Name:</label>
-                                <input type="text" id="approvedSearchInput" class="search-input" placeholder="Search approved providers...">
-                            </div>
-                            <div class="filter-group">
-                                <button id="searchApprovedBtn" class="btn btn-primary">
-                                    <i class="fas fa-search"></i> Search
-                                </button>
-                                <button id="clearApprovedFiltersBtn" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Clear
-                                </button>
-                            </div>
-                        </div>
+                <!-- Service Provider Management Section -->
+                <div class="provider-management-section">
+                    <div class="section-header">
+                        <h3>Pending Service Providers</h3>
+                        <p>Manage and approve service provider registrations</p>
                     </div>
                 </div>
 

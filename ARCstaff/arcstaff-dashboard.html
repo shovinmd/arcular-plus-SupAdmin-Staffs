@@ -188,107 +188,27 @@
             </main>
         </div>
 
-        <!-- Quick Actions Section -->
+        <!-- Quick Actions Section (Three Cards) -->
         <section class="quick-actions-section">
             <div class="section-header">
                 <h3>Quick Actions</h3>
             </div>
-            
-            <!-- Quick Actions Tabs -->
-            <div class="quick-actions-tabs">
-                <button class="tab-btn active" data-tab="reports">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Reports</span>
+            <div class="quick-actions-grid simple">
+                <button class="quick-action-btn" onclick="qaExportProvidersXlsx()">
+                    <i class="fas fa-file-excel"></i>
+                    <span>Generate Reports (XLS)</span>
+                    <small>Export all service providers to XLSX</small>
                 </button>
-                <button class="tab-btn" data-tab="exports">
+                <button class="quick-action-btn" onclick="qaGenerateSummaryReport()">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Generate Report</span>
+                    <small>Platform summary (counts and trends)</small>
+                </button>
+                <button class="quick-action-btn" onclick="qaExportCsvXls()">
                     <i class="fas fa-download"></i>
-                    <span>Exports</span>
+                    <span>Export Staff Data</span>
+                    <small>Export CSV/XLS snapshots</small>
                 </button>
-                <button class="tab-btn" data-tab="tools">
-                    <i class="fas fa-tools"></i>
-                    <span>Tools</span>
-                </button>
-            </div>
-            
-            <!-- Tab Content -->
-            <div class="tab-content">
-                <!-- Reports Tab -->
-                <div id="reports-tab" class="tab-panel active">
-                    <div class="quick-actions-grid">
-                        <button class="quick-action-btn" onclick="generateStaffReport()">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Staff Performance Report</span>
-                            <small>Generate staff performance analytics</small>
-                        </button>
-                        <button class="quick-action-btn" onclick="generateProviderReport()">
-                            <i class="fas fa-users"></i>
-                            <span>Provider Statistics</span>
-                            <small>View provider registration trends</small>
-                        </button>
-                        <button class="quick-action-btn" onclick="generateApprovalReport()">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Approval Summary</span>
-                            <small>Track approval rates and timelines</small>
-                        </button>
-                        <button class="quick-action-btn" onclick="generateMonthlyReport()">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>Monthly Summary</span>
-                            <small>Monthly platform activity report</small>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Exports Tab -->
-                <div id="exports-tab" class="tab-panel">
-                    <div class="quick-actions-grid">
-                        <button class="quick-action-btn" onclick="exportStaffData()">
-                            <i class="fas fa-download"></i>
-                            <span>Export Staff Data</span>
-                            <small>Download staff information (CSV)</small>
-                        </button>
-                        <button class="quick-action-btn" onclick="exportProviderData()">
-                            <i class="fas fa-file-excel"></i>
-                            <span>Export Provider Data</span>
-                            <small>Download all provider data (XLS)</small>
-                        </button>
-                        <button class="quick-action-btn" onclick="exportApprovalData()">
-                            <i class="fas fa-clipboard-list"></i>
-                            <span>Export Approval Data</span>
-                            <small>Download approval history (CSV)</small>
-                        </button>
-                        <button class="quick-action-btn" onclick="exportAuditLog()">
-                            <i class="fas fa-history"></i>
-                            <span>Export Audit Log</span>
-                            <small>Download system activity log</small>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Tools Tab -->
-                <div id="tools-tab" class="tab-panel">
-                    <div class="quick-actions-grid">
-                        <button class="quick-action-btn" onclick="bulkApproveProviders()">
-                            <i class="fas fa-check-double"></i>
-                            <span>Bulk Approve</span>
-                            <small>Approve multiple providers at once</small>
-                        </button>
-                        <button class="quick-action-btn" onclick="sendBulkNotifications()">
-                            <i class="fas fa-bell"></i>
-                            <span>Send Notifications</span>
-                            <small>Send notifications to providers</small>
-                        </button>
-                        <button class="quick-action-btn" onclick="systemMaintenance()">
-                            <i class="fas fa-cog"></i>
-                            <span>System Maintenance</span>
-                            <small>Run system maintenance tasks</small>
-                        </button>
-                        <button class="quick-action-btn" onclick="backupData()">
-                            <i class="fas fa-database"></i>
-                            <span>Backup Data</span>
-                            <small>Create system backup</small>
-                        </button>
-                    </div>
-                </div>
             </div>
         </section>
     </div>

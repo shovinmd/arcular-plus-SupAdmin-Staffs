@@ -30,6 +30,29 @@ let currentProviderData = {
 // Backend API configuration
 const API_BASE_URL = 'https://arcular-plus-backend.onrender.com/api';
 
+// Normalize booleans coming from backend ('true', 1, etc.)
+function isApprovedTrue(value) {
+    return value === true || value === 'true' || value === 1 || value === '1';
+}
+
+function normalizeProviderRecord(record) {
+    if (!record || typeof record !== 'object') return record;
+    const approved = isApprovedTrue(record.isApproved) || (record.approvalStatus === 'approved');
+    record.isApproved = approved;
+    record.approvalStatus = approved ? 'approved' : 'pending';
+    return record;
+}
+
+function normalizeAllUsersData(data) {
+    return {
+        hospitals: (data.hospitals || []).map(normalizeProviderRecord),
+        doctors: (data.doctors || []).map(normalizeProviderRecord),
+        nurses: (data.nurses || []).map(normalizeProviderRecord),
+        labs: (data.labs || []).map(normalizeProviderRecord),
+        pharmacies: (data.pharmacies || []).map(normalizeProviderRecord)
+    };
+}
+
 // Firebase configuration for Arcular+ project
 const firebaseConfig = {
     apiKey: "AIzaSyBzK4SQ44cv6k8EiNF9B2agNASArWQrstk",
@@ -321,53 +344,73 @@ async function fetchAllServiceProviders() {
         
         // Transform data to match expected format
         const transformedData = {
-            hospitals: (allUsersData.hospitals || []).map(h => ({
-                id: h.uid || h._id,
-                name: h.hospitalName || h.fullName || 'Unknown',
-                registrationNumber: h.registrationNumber || h.licenseNumber || 'N/A',
-                contact: h.mobileNumber || h.phoneNumber || 'N/A',
-                email: h.email || 'N/A',
-                address: h.address || 'N/A',
-                status: h.approvalStatus || 'approved'
-            })),
-            doctors: (allUsersData.doctors || []).map(d => ({
-                id: d.uid || d._id,
-                name: d.fullName || 'Unknown',
-                licenseNumber: d.licenseNumber || d.medicalRegistrationNumber || 'N/A',
-                specialization: d.specialization || 'N/A',
-                contact: d.mobileNumber || d.phoneNumber || 'N/A',
-                email: d.email || 'N/A',
-                experience: d.experienceYears || 'N/A',
-                status: d.approvalStatus || 'approved'
-            })),
-            nurses: (allUsersData.nurses || []).map(n => ({
-                id: n.uid || n._id,
-                name: n.fullName || 'Unknown',
-                licenseNumber: n.licenseNumber || n.registrationNumber || 'N/A',
-                department: n.department || n.specialization || 'N/A',
-                contact: n.mobileNumber || n.phoneNumber || 'N/A',
-                email: n.email || 'N/A',
-                experience: n.experienceYears || 'N/A',
-                status: n.approvalStatus || 'approved'
-            })),
-            labs: (allUsersData.labs || []).map(l => ({
-                id: l.uid || l._id,
-                name: l.labName || l.fullName || 'Unknown',
-                licenseNumber: l.licenseNumber || l.registrationNumber || 'N/A',
-                contact: l.mobileNumber || l.phoneNumber || 'N/A',
-                email: l.email || 'N/A',
-                services: l.services || 'N/A',
-                status: l.approvalStatus || 'approved'
-            })),
-            pharmacies: (allUsersData.pharmacies || []).map(p => ({
-                id: p.uid || p._id,
-                name: p.pharmacyName || p.fullName || 'Unknown',
-                licenseNumber: p.licenseNumber || p.registrationNumber || 'N/A',
-                contact: p.mobileNumber || p.phoneNumber || 'N/A',
-                email: p.email || 'N/A',
-                services: p.services || 'N/A',
-                status: p.approvalStatus || 'approved'
-            }))
+            hospitals: (allUsersData.hospitals || []).map(h => {
+                const approved = isApprovedTrue(h.isApproved) || h.approvalStatus === 'approved';
+                return {
+                    id: h.uid || h._id,
+                    name: h.hospitalName || h.fullName || 'Unknown',
+                    registrationNumber: h.registrationNumber || h.licenseNumber || 'N/A',
+                    contact: h.mobileNumber || h.phoneNumber || 'N/A',
+                    email: h.email || 'N/A',
+                    address: h.address || 'N/A',
+                    isApproved: approved,
+                    approvalStatus: approved ? 'approved' : 'pending'
+                };
+            }),
+            doctors: (allUsersData.doctors || []).map(d => {
+                const approved = isApprovedTrue(d.isApproved) || d.approvalStatus === 'approved';
+                return {
+                    id: d.uid || d._id,
+                    name: d.fullName || 'Unknown',
+                    licenseNumber: d.licenseNumber || d.medicalRegistrationNumber || 'N/A',
+                    specialization: d.specialization || 'N/A',
+                    contact: d.mobileNumber || d.phoneNumber || 'N/A',
+                    email: d.email || 'N/A',
+                    experience: d.experienceYears || 'N/A',
+                    isApproved: approved,
+                    approvalStatus: approved ? 'approved' : 'pending'
+                };
+            }),
+            nurses: (allUsersData.nurses || []).map(n => {
+                const approved = isApprovedTrue(n.isApproved) || n.approvalStatus === 'approved';
+                return {
+                    id: n.uid || n._id,
+                    name: n.fullName || 'Unknown',
+                    licenseNumber: n.licenseNumber || n.registrationNumber || 'N/A',
+                    department: n.department || n.specialization || 'N/A',
+                    contact: n.mobileNumber || n.phoneNumber || 'N/A',
+                    email: n.email || 'N/A',
+                    experience: n.experienceYears || 'N/A',
+                    isApproved: approved,
+                    approvalStatus: approved ? 'approved' : 'pending'
+                };
+            }),
+            labs: (allUsersData.labs || []).map(l => {
+                const approved = isApprovedTrue(l.isApproved) || l.approvalStatus === 'approved';
+                return {
+                    id: l.uid || l._id,
+                    name: l.labName || l.fullName || 'Unknown',
+                    licenseNumber: l.licenseNumber || l.registrationNumber || 'N/A',
+                    contact: l.mobileNumber || l.phoneNumber || 'N/A',
+                    email: l.email || 'N/A',
+                    services: l.services || 'N/A',
+                    isApproved: approved,
+                    approvalStatus: approved ? 'approved' : 'pending'
+                };
+            }),
+            pharmacies: (allUsersData.pharmacies || []).map(p => {
+                const approved = isApprovedTrue(p.isApproved) || p.approvalStatus === 'approved';
+                return {
+                    id: p.uid || p._id,
+                    name: p.pharmacyName || p.fullName || 'Unknown',
+                    licenseNumber: p.licenseNumber || p.registrationNumber || 'N/A',
+                    contact: p.mobileNumber || p.phoneNumber || 'N/A',
+                    email: p.email || 'N/A',
+                    services: p.services || 'N/A',
+                    isApproved: approved,
+                    approvalStatus: approved ? 'approved' : 'pending'
+                };
+            })
         };
         
         console.log('✅ Fetched all service providers:', {
@@ -1786,9 +1829,9 @@ function loadHospitals() {
     }
     
     const allHospitals = allUsers.hospitals || [];
-    // Filter to show only pending hospitals (not approved)
-    const hospitals = allHospitals.filter(h => h.isApproved !== true);
-    console.log('🏥 All hospitals:', allHospitals.length, 'Pending hospitals:', hospitals.length);
+    const pendingHospitals = allHospitals.filter(h => !isApprovedTrue(h.isApproved));
+    const approvedHospitals = allHospitals.filter(h => isApprovedTrue(h.isApproved));
+    console.log('🏥 All hospitals:', allHospitals.length, 'Pending:', pendingHospitals.length, 'Approved:', approvedHospitals.length);
     
     // Create a full-screen hospital management view
     contentArea.innerHTML = `
@@ -1810,11 +1853,11 @@ function loadHospitals() {
                             <span class="stat-label">Total</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${hospitals.length}</span>
+                            <span class="stat-number">${pendingHospitals.length}</span>
                             <span class="stat-label">Pending</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${allHospitals.filter(h => h.isApproved && h.approvalStatus === 'approved').length}</span>
+                            <span class="stat-number">${approvedHospitals.length}</span>
                             <span class="stat-label">Approved</span>
                         </div>
                     </div>
@@ -1825,7 +1868,7 @@ function loadHospitals() {
             </div>
             
             <div class="screen-content">
-                ${hospitals.length === 0 ? `
+                ${allHospitals.length === 0 ? `
                     <div class="empty-state-screen">
                         <div class="empty-icon">
                             <i class="fas fa-hospital fa-4x"></i>
@@ -1837,8 +1880,9 @@ function loadHospitals() {
                         </button>
                     </div>
                 ` : `
+                    <h3>Pending (${pendingHospitals.length})</h3>
                     <div class="provider-grid-screen">
-                        ${hospitals.map(hospital => `
+                        ${pendingHospitals.map(hospital => `
                             <div class="provider-card-screen" data-status="${hospital.isApproved ? 'approved' : 'pending'}">
                                 <div class="card-header">
                                     <div class="provider-avatar-large">
@@ -1876,7 +1920,7 @@ function loadHospitals() {
                                                 <button class="btn btn-primary" onclick="viewProviderDetails('${hospital.uid || hospital._id || hospital.id}', 'hospital')">
                                                     <i class="fas fa-eye"></i> View Details
                                                 </button>
-                                    ${hospital.isApproved !== true ? `
+                                    ${!isApprovedTrue(hospital.isApproved) ? `
                                         <button class="btn btn-success" onclick="approveServiceProvider('${hospital.uid || hospital._id || hospital.id}', 'hospital')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
@@ -1884,6 +1928,28 @@ function loadHospitals() {
                                             <i class="fas fa-times"></i> Reject
                                         </button>
                                     ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <h3 style="margin-top:24px;">Approved (${approvedHospitals.length})</h3>
+                    <div class="provider-grid-screen">
+                        ${approvedHospitals.map(hospital => `
+                            <div class="provider-card-screen" data-status="approved">
+                                <div class="card-header">
+                                    <div class="provider-avatar-large">
+                                        <i class="fas fa-hospital"></i>
+                                    </div>
+                                    <div class="provider-info-main">
+                                        <h3>${hospital.name || hospital.hospitalName || 'Unknown Hospital'}</h3>
+                                        <p class="provider-email">${hospital.email}</p>
+                                        <span class="status-badge-large approved">Approved</span>
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-primary" onclick="viewProviderDetails('${hospital.uid || hospital._id || hospital.id}', 'hospital')">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </button>
                                 </div>
                             </div>
                         `).join('')}
@@ -1907,9 +1973,9 @@ function loadDoctors() {
     }
     
     const allDoctors = allUsers.doctors || [];
-    // Filter to show only pending doctors (not approved)
-    const doctors = allDoctors.filter(d => d.isApproved !== true);
-    console.log('👨‍⚕️ All doctors:', allDoctors.length, 'Pending doctors:', doctors.length);
+    const pendingDoctors = allDoctors.filter(d => !isApprovedTrue(d.isApproved));
+    const approvedDoctors = allDoctors.filter(d => isApprovedTrue(d.isApproved));
+    console.log('👨‍⚕️ All doctors:', allDoctors.length, 'Pending:', pendingDoctors.length, 'Approved:', approvedDoctors.length);
     
     // Create a full-screen doctor management view
     contentArea.innerHTML = `
@@ -1931,11 +1997,11 @@ function loadDoctors() {
                             <span class="stat-label">Total</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${doctors.length}</span>
+                            <span class="stat-number">${pendingDoctors.length}</span>
                             <span class="stat-label">Pending</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${allDoctors.filter(d => d.isApproved && d.approvalStatus === 'approved').length}</span>
+                            <span class="stat-number">${approvedDoctors.length}</span>
                             <span class="stat-label">Approved</span>
                         </div>
                     </div>
@@ -1946,7 +2012,7 @@ function loadDoctors() {
             </div>
             
             <div class="screen-content">
-                ${doctors.length === 0 ? `
+                ${allDoctors.length === 0 ? `
                     <div class="empty-state-screen">
                         <div class="empty-icon">
                             <i class="fas fa-user-md fa-4x"></i>
@@ -1958,8 +2024,9 @@ function loadDoctors() {
                         </button>
                     </div>
                 ` : `
+                    <h3>Pending (${pendingDoctors.length})</h3>
                     <div class="provider-grid-screen">
-                        ${doctors.map(doctor => `
+                        ${pendingDoctors.map(doctor => `
                             <div class="provider-card-screen" data-status="${doctor.isApproved ? 'approved' : 'pending'}">
                                 <div class="card-header">
                                     <div class="provider-avatar-large">
@@ -1997,7 +2064,7 @@ function loadDoctors() {
                                                 <button class="btn btn-primary" onclick="viewProviderDetails('${doctor.uid || doctor._id || doctor.id}', 'doctor')">
                                                     <i class="fas fa-eye"></i> View Details
                                                 </button>
-                                    ${doctor.isApproved !== true ? `
+                                    ${!isApprovedTrue(doctor.isApproved) ? `
                                         <button class="btn btn-success" onclick="approveServiceProvider('${doctor.uid || doctor._id || doctor.id}', 'doctor')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
@@ -2005,6 +2072,26 @@ function loadDoctors() {
                                             <i class="fas fa-times"></i> Reject
                                         </button>
                                     ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <h3 style=\"margin-top:24px;\">Approved (${approvedDoctors.length})</h3>
+                    <div class=\"provider-grid-screen\">
+                        ${approvedDoctors.map(doctor => `
+                            <div class=\"provider-card-screen\" data-status=\"approved\">
+                                <div class=\"card-header\">
+                                    <div class=\"provider-avatar-large\">
+                                        <i class=\"fas fa-user-md\"></i>
+                                    </div>
+                                    <div class=\"provider-info-main\">
+                                        <h3>${doctor.name || doctor.fullName || 'Unknown Doctor'}</h3>
+                                        <p class=\"provider-email\">${doctor.email}</p>
+                                        <span class=\"status-badge-large approved\">Approved</span>
+                                    </div>
+                                </div>
+                                <div class=\"card-actions\">
+                                    <button class=\"btn btn-primary\" onclick=\"viewProviderDetails('${doctor.uid || doctor._id || doctor.id}', 'doctor')\">\n                                        <i class=\"fas fa-eye\"></i> View Details\n                                    </button>
                                 </div>
                             </div>
                         `).join('')}
@@ -2028,9 +2115,10 @@ function loadNurses() {
     }
 
     const allNurses = allUsers.nurses || [];
-    // Filter to show only pending nurses (not approved)
-    const nurses = allNurses.filter(n => n.isApproved !== true);
-    console.log('👩‍⚕️ All nurses:', allNurses.length, 'Pending nurses:', nurses.length);
+    const nurses = allNurses; // use full list
+    const pendingNurses = allNurses.filter(n => !isApprovedTrue(n.isApproved));
+    const approvedNurses = allNurses.filter(n => isApprovedTrue(n.isApproved));
+    console.log('👩‍⚕️ All nurses:', allNurses.length, 'Pending:', pendingNurses.length, 'Approved:', approvedNurses.length);
 
     // Create a full-screen nurse management view
     contentArea.innerHTML = `
@@ -2048,15 +2136,15 @@ function loadNurses() {
                 <div class="header-right">
                     <div class="screen-stats">
                         <div class="stat-item">
-                            <span class="stat-number">${nurses.length}</span>
+                            <span class="stat-number">${allNurses.length}</span>
                             <span class="stat-label">Total</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${nurses.filter(n => n.isApproved).length}</span>
+                            <span class="stat-number">${approvedNurses.length}</span>
                             <span class="stat-label">Approved</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${nurses.filter(n => !n.isApproved).length}</span>
+                            <span class="stat-number">${pendingNurses.length}</span>
                             <span class="stat-label">Pending</span>
                         </div>
                     </div>
@@ -2067,7 +2155,7 @@ function loadNurses() {
             </div>
             
             <div class="screen-content">
-                ${nurses.length === 0 ? `
+                ${allNurses.length === 0 ? `
                     <div class="empty-state-screen">
                         <div class="empty-icon">
                             <i class="fas fa-user-nurse fa-4x"></i>
@@ -2079,8 +2167,9 @@ function loadNurses() {
                         </button>
                     </div>
                 ` : `
+                    <h3>Pending (${pendingNurses.length})</h3>
                     <div class="provider-grid-screen">
-                        ${nurses.map(nurse => `
+                        ${pendingNurses.map(nurse => `
                             <div class="provider-card-screen" data-status="${nurse.isApproved ? 'approved' : 'pending'}">
                                 <div class="card-header">
                                     <div class="provider-avatar-large">
@@ -2118,7 +2207,7 @@ function loadNurses() {
                                     <button class="btn btn-primary" onclick="viewProviderDetails('${nurse.uid || nurse._id || nurse.id}', 'nurse')">
                                         <i class="fas fa-eye"></i> View Details
                                     </button>
-                                    ${nurse.isApproved !== true ? `
+                                    ${!isApprovedTrue(nurse.isApproved) ? `
                                         <button class="btn btn-success" onclick="approveServiceProvider('${nurse.uid || nurse._id || nurse.id}', 'nurse')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
@@ -2126,6 +2215,28 @@ function loadNurses() {
                                             <i class="fas fa-times"></i> Reject
                                         </button>
                                     ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <h3 style="margin-top:24px;">Approved (${approvedNurses.length})</h3>
+                    <div class="provider-grid-screen">
+                        ${approvedNurses.map(nurse => `
+                            <div class="provider-card-screen" data-status="approved">
+                                <div class="card-header">
+                                    <div class="provider-avatar-large">
+                                        <i class="fas fa-user-nurse"></i>
+                                    </div>
+                                    <div class="provider-info-main">
+                                        <h3>${nurse.name || nurse.fullName || 'Unknown Nurse'}</h3>
+                                        <p class="provider-email">${nurse.email}</p>
+                                        <span class="status-badge-large approved">Approved</span>
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-primary" onclick="viewProviderDetails('${nurse.uid || nurse._id || nurse.id}', 'nurse')">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </button>
                                 </div>
                             </div>
                         `).join('')}
@@ -2149,9 +2260,9 @@ function loadLabs() {
     }
 
     const allLabs = allUsers.labs || [];
-    // Filter to show only pending labs (not approved)
-    const labs = allLabs.filter(l => l.isApproved !== true);
-    console.log('🧪 All labs:', allLabs.length, 'Pending labs:', labs.length);
+    const pendingLabs = allLabs.filter(l => !isApprovedTrue(l.isApproved));
+    const approvedLabs = allLabs.filter(l => isApprovedTrue(l.isApproved));
+    console.log('🧪 All labs:', allLabs.length, 'Pending:', pendingLabs.length, 'Approved:', approvedLabs.length);
 
     // Create a full-screen lab management view
     contentArea.innerHTML = `
@@ -2169,15 +2280,15 @@ function loadLabs() {
                 <div class="header-right">
                     <div class="screen-stats">
                         <div class="stat-item">
-                            <span class="stat-number">${labs.length}</span>
+                            <span class="stat-number">${allLabs.length}</span>
                             <span class="stat-label">Total</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${labs.filter(l => l.isApproved).length}</span>
+                            <span class="stat-number">${approvedLabs.length}</span>
                             <span class="stat-label">Approved</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${labs.filter(l => !l.isApproved).length}</span>
+                            <span class="stat-number">${pendingLabs.length}</span>
                             <span class="stat-label">Pending</span>
                         </div>
                     </div>
@@ -2188,7 +2299,7 @@ function loadLabs() {
             </div>
             
             <div class="screen-content">
-                ${labs.length === 0 ? `
+                ${allLabs.length === 0 ? `
                     <div class="empty-state-screen">
                         <div class="empty-icon">
                             <i class="fas fa-flask fa-4x"></i>
@@ -2200,8 +2311,9 @@ function loadLabs() {
                         </button>
                     </div>
                 ` : `
+                    <h3>Pending (${pendingLabs.length})</h3>
                     <div class="provider-grid-screen">
-                        ${labs.map(lab => `
+                        ${pendingLabs.map(lab => `
                             <div class="provider-card-screen" data-status="${lab.isApproved ? 'approved' : 'pending'}">
                                 <div class="card-header">
                                     <div class="provider-avatar-large">
@@ -2239,7 +2351,7 @@ function loadLabs() {
                                     <button class="btn btn-primary" onclick="viewProviderDetails('${lab.uid || lab._id || lab.id}', 'lab')">
                                         <i class="fas fa-eye"></i> View Details
                                     </button>
-                                    ${lab.isApproved !== true ? `
+                                    ${!isApprovedTrue(lab.isApproved) ? `
                                         <button class="btn btn-success" onclick="approveServiceProvider('${lab.uid || lab._id || lab.id}', 'lab')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
@@ -2247,6 +2359,26 @@ function loadLabs() {
                                             <i class="fas fa-times"></i> Reject
                                         </button>
                                     ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <h3 style=\"margin-top:24px;\">Approved (${approvedLabs.length})</h3>
+                    <div class=\"provider-grid-screen\">
+                        ${approvedLabs.map(lab => `
+                            <div class=\"provider-card-screen\" data-status=\"approved\">
+                                <div class=\"card-header\">
+                                    <div class=\"provider-avatar-large\">
+                                        <i class=\"fas fa-flask\"></i>
+                                    </div>
+                                    <div class=\"provider-info-main\">
+                                        <h3>${lab.name || lab.labName || 'Unknown Lab'}</h3>
+                                        <p class=\"provider-email\">${lab.email}</p>
+                                        <span class=\"status-badge-large approved\">Approved</span>
+                                    </div>
+                                </div>
+                                <div class=\"card-actions\">
+                                    <button class=\"btn btn-primary\" onclick=\"viewProviderDetails('${lab.uid || lab._id || lab.id}', 'lab')\">\n                                        <i class=\"fas fa-eye\"></i> View Details\n                                    </button>
                                 </div>
                             </div>
                         `).join('')}
@@ -2270,9 +2402,9 @@ function loadPharmacies() {
     }
 
     const allPharmacies = allUsers.pharmacies || [];
-    // Filter to show only pending pharmacies (not approved)
-    const pharmacies = allPharmacies.filter(p => p.isApproved !== true);
-    console.log('💊 All pharmacies:', allPharmacies.length, 'Pending pharmacies:', pharmacies.length);
+    const pendingPharmacies = allPharmacies.filter(p => !isApprovedTrue(p.isApproved));
+    const approvedPharmacies = allPharmacies.filter(p => isApprovedTrue(p.isApproved));
+    console.log('💊 All pharmacies:', allPharmacies.length, 'Pending:', pendingPharmacies.length, 'Approved:', approvedPharmacies.length);
 
     // Create a full-screen pharmacy management view
     contentArea.innerHTML = `
@@ -2290,15 +2422,15 @@ function loadPharmacies() {
                 <div class="header-right">
                     <div class="screen-stats">
                         <div class="stat-item">
-                            <span class="stat-number">${pharmacies.length}</span>
+                            <span class="stat-number">${allPharmacies.length}</span>
                             <span class="stat-label">Total</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${pharmacies.filter(p => p.isApproved === false || p.approvalStatus === 'pending').length}</span>
+                            <span class="stat-number">${pendingPharmacies.length}</span>
                             <span class="stat-label">Pending</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number">${pharmacies.filter(p => p.isApproved && p.approvalStatus === 'approved').length}</span>
+                            <span class="stat-number">${approvedPharmacies.length}</span>
                             <span class="stat-label">Approved</span>
                         </div>
                     </div>
@@ -2309,7 +2441,7 @@ function loadPharmacies() {
             </div>
             
             <div class="screen-content">
-                ${pharmacies.length === 0 ? `
+                ${allPharmacies.length === 0 ? `
                     <div class="empty-state-screen">
                         <div class="empty-icon">
                             <i class="fas fa-pills fa-4x"></i>
@@ -2321,8 +2453,9 @@ function loadPharmacies() {
                         </button>
                     </div>
                 ` : `
+                    <h3>Pending (${pendingPharmacies.length})</h3>
                     <div class="provider-grid-screen">
-                        ${pharmacies.map(pharmacy => `
+                        ${pendingPharmacies.map(pharmacy => `
                             <div class="provider-card-screen" data-status="${pharmacy.isApproved === true ? 'approved' : 'pending'}">
                                 <div class="card-header">
                                     <div class="provider-avatar-large">
@@ -2360,7 +2493,7 @@ function loadPharmacies() {
                                     <button class="btn btn-primary" onclick="viewProviderDetails('${pharmacy.uid || pharmacy._id || pharmacy.id}', 'pharmacy')">
                                         <i class="fas fa-eye"></i> View Details
                                     </button>
-                                    ${pharmacy.isApproved !== true ? `
+                                    ${!isApprovedTrue(pharmacy.isApproved) ? `
                                         <button class="btn btn-success" onclick="approveServiceProvider('${pharmacy.uid || pharmacy._id || pharmacy.id}', 'pharmacy')">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
@@ -2368,6 +2501,26 @@ function loadPharmacies() {
                                             <i class="fas fa-times"></i> Reject
                                         </button>
                                     ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <h3 style=\"margin-top:24px;\">Approved (${approvedPharmacies.length})</h3>
+                    <div class=\"provider-grid-screen\">
+                        ${approvedPharmacies.map(pharmacy => `
+                            <div class=\"provider-card-screen\" data-status=\"approved\">
+                                <div class=\"card-header\">
+                                    <div class=\"provider-avatar-large\">
+                                        <i class=\"fas fa-pills\"></i>
+                                    </div>
+                                    <div class=\"provider-info-main\">
+                                        <h3>${pharmacy.name || pharmacy.pharmacyName || 'Unknown Pharmacy'}</h3>
+                                        <p class=\"provider-email\">${pharmacy.email}</p>
+                                        <span class=\"status-badge-large approved\">Approved</span>
+                                    </div>
+                                </div>
+                                <div class=\"card-actions\">
+                                    <button class=\"btn btn-primary\" onclick=\"viewProviderDetails('${pharmacy.uid || pharmacy._id || pharmacy.id}', 'pharmacy')\">\n                                        <i class=\"fas fa-eye\"></i> View Details\n                                    </button>
                                 </div>
                             </div>
                         `).join('')}
@@ -2391,12 +2544,13 @@ async function loadAllUsers() {
         const allUsersData = await fetchAllServiceProviders();
         console.log('📊 Received data from backend:', allUsersData);
         
-        // Update the global allUsers object
-        allUsers.hospitals = allUsersData.hospitals || [];
-        allUsers.doctors = allUsersData.doctors || [];
-        allUsers.nurses = allUsersData.nurses || [];
-        allUsers.labs = allUsersData.labs || [];
-        allUsers.pharmacies = allUsersData.pharmacies || [];
+        // Normalize and update the global allUsers object
+        const normalized = normalizeAllUsersData(allUsersData);
+        allUsers.hospitals = normalized.hospitals;
+        allUsers.doctors = normalized.doctors;
+        allUsers.nurses = normalized.nurses;
+        allUsers.labs = normalized.labs;
+        allUsers.pharmacies = normalized.pharmacies;
         
         console.log('✅ Global allUsers object updated:', allUsers);
         
@@ -3225,20 +3379,20 @@ function updateDashboardStatsFromData() {
     const totalProviders = totalHospitals + totalDoctors + totalNurses + totalLabs + totalPharmacies;
     
     // Calculate approved providers (isApproved: true)
-    const approvedHospitals = allUsers.hospitals?.filter(h => h.isApproved === true).length || 0;
-    const approvedDoctors = allUsers.doctors?.filter(d => d.isApproved === true).length || 0;
-    const approvedNurses = allUsers.nurses?.filter(n => n.isApproved === true).length || 0;
-    const approvedLabs = allUsers.labs?.filter(l => l.isApproved === true).length || 0;
-    const approvedPharmacies = allUsers.pharmacies?.filter(p => p.isApproved === true).length || 0;
+    const approvedHospitals = allUsers.hospitals?.filter(h => isApprovedTrue(h.isApproved)).length || 0;
+    const approvedDoctors = allUsers.doctors?.filter(d => isApprovedTrue(d.isApproved)).length || 0;
+    const approvedNurses = allUsers.nurses?.filter(n => isApprovedTrue(n.isApproved)).length || 0;
+    const approvedLabs = allUsers.labs?.filter(l => isApprovedTrue(l.isApproved)).length || 0;
+    const approvedPharmacies = allUsers.pharmacies?.filter(p => isApprovedTrue(p.isApproved)).length || 0;
     
     const approvedProviders = approvedHospitals + approvedDoctors + approvedNurses + approvedLabs + approvedPharmacies;
     
     // Calculate pending providers (isApproved !== true)
-    const pendingHospitals = allUsers.hospitals?.filter(h => h.isApproved !== true).length || 0;
-    const pendingDoctors = allUsers.doctors?.filter(d => d.isApproved !== true).length || 0;
-    const pendingNurses = allUsers.nurses?.filter(n => n.isApproved !== true).length || 0;
-    const pendingLabs = allUsers.labs?.filter(l => l.isApproved !== true).length || 0;
-    const pendingPharmacies = allUsers.pharmacies?.filter(p => p.isApproved !== true).length || 0;
+    const pendingHospitals = allUsers.hospitals?.filter(h => !isApprovedTrue(h.isApproved)).length || 0;
+    const pendingDoctors = allUsers.doctors?.filter(d => !isApprovedTrue(d.isApproved)).length || 0;
+    const pendingNurses = allUsers.nurses?.filter(n => !isApprovedTrue(n.isApproved)).length || 0;
+    const pendingLabs = allUsers.labs?.filter(l => !isApprovedTrue(l.isApproved)).length || 0;
+    const pendingPharmacies = allUsers.pharmacies?.filter(p => !isApprovedTrue(p.isApproved)).length || 0;
     
     const pendingApprovals = pendingHospitals + pendingDoctors + pendingNurses + pendingLabs + pendingPharmacies;
     
@@ -6292,6 +6446,29 @@ function initializeSettings() {
     cancelBtn.addEventListener('click', () => {
         settingsModal.style.display = 'none';
     });
+
+    // Ensure the modal X button closes the modal reliably
+    const xBtn = document.querySelector('#settingsModal .close');
+    if (xBtn) {
+        xBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+        });
+    }
+
+    // Also close on Escape key
+    settingsModal.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape') {
+            settingsModal.style.display = 'none';
+        }
+    });
+
+    // Wire up an explicit Submit-for-Admin-Review button if present
+    const submitForAdminBtn = document.getElementById('submitForAdminReviewBtn');
+    if (submitForAdminBtn) {
+        submitForAdminBtn.addEventListener('click', async () => {
+            await saveStaffSettings();
+        });
+    }
     
     // Close modal when clicking outside
     window.addEventListener('click', (event) => {
@@ -7408,6 +7585,159 @@ function getTypeColor(type) {
   return colors[type] || 'default';
 }
 
+// ===== Quick Actions (Three Cards) =====
+function qaExportProvidersXlsx() {
+    try {
+        const wb = XLSX.utils.book_new();
+        const addSheet = (name, rows) => {
+            const ws = XLSX.utils.json_to_sheet(rows || []);
+            XLSX.utils.book_append_sheet(wb, ws, name);
+        };
+        addSheet('Hospitals', (allUsers.hospitals || []).map(h => ({
+            uid: h.uid || h.id || h._id,
+            name: h.hospitalName || h.name,
+            email: h.email,
+            phone: h.mobileNumber,
+            isApproved: h.isApproved
+        })));
+        addSheet('Doctors', (allUsers.doctors || []).map(d => ({
+            uid: d.uid || d.id || d._id,
+            name: d.fullName || d.name,
+            email: d.email,
+            phone: d.mobileNumber,
+            specialization: d.specialization,
+            isApproved: d.isApproved
+        })));
+        addSheet('Nurses', (allUsers.nurses || []).map(n => ({
+            uid: n.uid || n.id || n._id,
+            name: n.fullName || n.name,
+            email: n.email,
+            phone: n.mobileNumber,
+            department: n.department,
+            isApproved: n.isApproved
+        })));
+        addSheet('Labs', (allUsers.labs || []).map(l => ({
+            uid: l.uid || l.id || l._id,
+            name: l.labName || l.name,
+            email: l.email,
+            phone: l.mobileNumber,
+            isApproved: l.isApproved
+        })));
+        addSheet('Pharmacies', (allUsers.pharmacies || []).map(p => ({
+            uid: p.uid || p.id || p._id,
+            name: p.pharmacyName || p.name,
+            email: p.email,
+            phone: p.mobileNumber,
+            isApproved: p.isApproved
+        })));
+        XLSX.writeFile(wb, 'service_providers.xlsx');
+        showSuccessMessage('Providers exported to XLSX');
+    } catch (e) {
+        console.error('Export XLSX failed', e);
+        showErrorMessage('Failed to export XLSX');
+    }
+}
+
+function qaGenerateSummaryReport() {
+    const counts = {
+        hospitals: {
+            approved: (allUsers.hospitals||[]).filter(h=>isApprovedTrue(h.isApproved)).length,
+            pending: (allUsers.hospitals||[]).filter(h=>!isApprovedTrue(h.isApproved)).length
+        },
+        doctors: {
+            approved: (allUsers.doctors||[]).filter(d=>isApprovedTrue(d.isApproved)).length,
+            pending: (allUsers.doctors||[]).filter(d=>!isApprovedTrue(d.isApproved)).length
+        },
+        nurses: {
+            approved: (allUsers.nurses||[]).filter(n=>isApprovedTrue(n.isApproved)).length,
+            pending: (allUsers.nurses||[]).filter(n=>!isApprovedTrue(n.isApproved)).length
+        },
+        labs: {
+            approved: (allUsers.labs||[]).filter(l=>isApprovedTrue(l.isApproved)).length,
+            pending: (allUsers.labs||[]).filter(l=>!isApprovedTrue(l.isApproved)).length
+        },
+        pharmacies: {
+            approved: (allUsers.pharmacies||[]).filter(p=>isApprovedTrue(p.isApproved)).length,
+            pending: (allUsers.pharmacies||[]).filter(p=>!isApprovedTrue(p.isApproved)).length
+        }
+    };
+    const totalApproved = counts.hospitals.approved + counts.doctors.approved + counts.nurses.approved + counts.labs.approved + counts.pharmacies.approved;
+    const totalPending = counts.hospitals.pending + counts.doctors.pending + counts.nurses.pending + counts.labs.pending + counts.pharmacies.pending;
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([
+        ['Section','Approved','Pending'],
+        ['Hospitals', counts.hospitals.approved, counts.hospitals.pending],
+        ['Doctors', counts.doctors.approved, counts.doctors.pending],
+        ['Nurses', counts.nurses.approved, counts.nurses.pending],
+        ['Labs', counts.labs.approved, counts.labs.pending],
+        ['Pharmacies', counts.pharmacies.approved, counts.pharmacies.pending],
+        ['TOTAL', totalApproved, totalPending]
+    ]);
+    XLSX.utils.book_append_sheet(wb, ws, 'Summary');
+    XLSX.writeFile(wb, 'platform_summary.xlsx');
+    showSuccessMessage('Summary report generated');
+}
+
+function qaExportCsvXls() {
+    const flatten = (rows) => rows.map(r => ({
+        uid: r.uid || r.id || r._id,
+        name: r.fullName || r.hospitalName || r.labName || r.pharmacyName || r.name,
+        email: r.email,
+        phone: r.mobileNumber,
+        type: r.type || r.userType
+    }));
+    const wb = XLSX.utils.book_new();
+    const sheets = [
+        ['Hospitals', flatten(allUsers.hospitals||[])],
+        ['Doctors', flatten(allUsers.doctors||[])],
+        ['Nurses', flatten(allUsers.nurses||[])],
+        ['Labs', flatten(allUsers.labs||[])],
+        ['Pharmacies', flatten(allUsers.pharmacies||[])]
+    ];
+    sheets.forEach(([name, data]) => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), name));
+    XLSX.writeFile(wb, 'export_snapshot.xlsx');
+    showSuccessMessage('Exported snapshot as XLSX');
+}
+
+// After nurse approval, avoid calling failing stats endpoints; use local update
+async function approveServiceProviderImproved(id, type, notes = '') {
+  try {
+    console.log(`✅ Approving ${type} with ID: ${id}`);
+    const idToken = localStorage.getItem('staff_idToken');
+    const response = await fetch(`https://arcular-plus-backend.onrender.com/api/arc-staff/approve/${id}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userType: type, notes })
+    });
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ Approval successful:', result.message);
+      showSuccessMessage(`${type.charAt(0).toUpperCase() + type.slice(1)} approved successfully!`);
+      // Local update only (prevents 500 stats endpoints from blocking UI)
+      const map = { hospital:'hospitals', doctor:'doctors', nurse:'nurses', lab:'labs', pharmacy:'pharmacies' };
+      const key = map[type];
+      if (key && allUsers[key]) {
+        const idx = allUsers[key].findIndex(x => (x.uid||x._id||x.id) === id);
+        if (idx !== -1) allUsers[key][idx].isApproved = true;
+      }
+      if (typeof updateDashboardStatsFromData === 'function') updateDashboardStatsFromData();
+      if (type === 'nurse' && typeof loadNurses === 'function') loadNurses();
+      else if (type === 'hospital' && typeof loadHospitals === 'function') loadHospitals();
+      else if (type === 'doctor' && typeof loadDoctors === 'function') loadDoctors();
+      else if (type === 'lab' && typeof loadLabs === 'function') loadLabs();
+      else if (type === 'pharmacy' && typeof loadPharmacies === 'function') loadPharmacies();
+      return;
+    } else {
+      const error = await response.json();
+      console.error('❌ Approval failed:', error.message);
+      showErrorMessage(`Failed to approve ${type}: ${error.message}`);
+    }
+  } catch (error) {
+    console.error('❌ Approval error:', error);
+    showErrorMessage(`Failed to approve ${type}. Please try again.`);
+  }
+}
+
 function updateActiveNavItem(providerType) {
   // Remove active class from all nav items
   document.querySelectorAll('.nav-item').forEach(item => {
@@ -7594,16 +7924,53 @@ function viewProviderDetails(providerId, providerType) {
 }
 
 // Search functionality
-function performSearch() {
+async function performSearch() {
     const searchTerm = document.getElementById('providerSearchInput').value.toLowerCase().trim();
     const providerType = document.getElementById('providerTypeFilter').value;
-    const status = document.getElementById('statusFilter').value;
-    
-    console.log('🔍 Performing search:', { searchTerm, providerType, status });
-    
-    // Get all providers from allUsers
+    const status = document.getElementById('statusFilter').value; // '', approved, pending
+    console.log('🔍 Performing realtime search:', { searchTerm, providerType, status });
+
+    // Try realtime backend search first
+    try {
+        const token = await getAuthToken();
+        const params = new URLSearchParams();
+        if (searchTerm) params.append('q', searchTerm);
+        if (providerType) params.append('providerType', providerType);
+        if (status) params.append('status', status);
+        // Include arcId/uid search support by passing as q as well
+        params.append('includeUid', 'true');
+        const url = `${API_BASE_URL}/arc-staff/search-approved-providers?${params.toString()}`;
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (res.ok) {
+            const data = await res.json();
+            // Expect result format: { providers: [...] } or grouped per type
+            let providers = [];
+            if (Array.isArray(data.providers)) {
+                providers = data.providers;
+            } else if (data.results) {
+                // flatten grouped results
+                Object.keys(data.results).forEach(t => {
+                    providers = providers.concat((data.results[t] || []).map(p => ({ ...p, type: t })));
+                });
+            }
+            // Fallback: if empty and we searched by UID, also search locally by uid
+            if ((!providers || providers.length === 0) && searchTerm) {
+                providers = localProviderSearch(searchTerm, providerType, status);
+            }
+            return displaySearchResults(providers, searchTerm, providerType, status);
+        }
+        console.warn('Realtime search failed, falling back to local filter');
+    } catch (e) {
+        console.warn('Realtime search error, fallback to local:', e.message);
+    }
+
+    // Local fallback using current allUsers snapshot
+    const local = localProviderSearch(searchTerm, providerType, status);
+    displaySearchResults(local, searchTerm, providerType, status);
+}
+
+function localProviderSearch(searchTerm, providerType, status) {
     let allProviders = [];
-    
     if (allUsers) {
         if (allUsers.hospitals) allProviders = allProviders.concat(allUsers.hospitals.map(h => ({...h, type: 'hospital'})));
         if (allUsers.doctors) allProviders = allProviders.concat(allUsers.doctors.map(d => ({...d, type: 'doctor'})));
@@ -7611,38 +7978,25 @@ function performSearch() {
         if (allUsers.labs) allProviders = allProviders.concat(allUsers.labs.map(l => ({...l, type: 'lab'})));
         if (allUsers.pharmacies) allProviders = allProviders.concat(allUsers.pharmacies.map(p => ({...p, type: 'pharmacy'})));
     }
-    
-    // Filter providers
-    let filteredProviders = allProviders;
-    
-    // Search term filter
+    let filtered = allProviders;
     if (searchTerm) {
-        filteredProviders = filteredProviders.filter(provider => {
-            const name = (provider.name || provider.fullName || provider.hospitalName || provider.labName || provider.pharmacyName || '').toLowerCase();
-            const email = (provider.email || '').toLowerCase();
-            const type = provider.type.toLowerCase();
-            
-            return name.includes(searchTerm) || email.includes(searchTerm) || type.includes(searchTerm);
+        filtered = filtered.filter(p => {
+            const name = (p.name || p.fullName || p.hospitalName || p.labName || p.pharmacyName || '').toLowerCase();
+            const email = (p.email || '').toLowerCase();
+            const type = (p.type || '').toLowerCase();
+            const uid = (p.uid || p.id || p._id || '').toString().toLowerCase();
+            return name.includes(searchTerm) || email.includes(searchTerm) || type.includes(searchTerm) || uid.includes(searchTerm);
         });
     }
-    
-    // Provider type filter
-    if (providerType) {
-        filteredProviders = filteredProviders.filter(provider => provider.type === providerType);
-    }
-    
-    // Status filter
+    if (providerType) filtered = filtered.filter(p => p.type === providerType);
     if (status) {
-        filteredProviders = filteredProviders.filter(provider => {
-            if (status === 'approved') return provider.isApproved === true;
-            if (status === 'pending') return provider.isApproved === false;
-            if (status === 'rejected') return provider.isApproved === false && provider.rejected === true;
+        filtered = filtered.filter(p => {
+            if (status === 'approved') return isApprovedTrue(p.isApproved);
+            if (status === 'pending') return !isApprovedTrue(p.isApproved);
             return true;
         });
     }
-    
-    // Display search results
-    displaySearchResults(filteredProviders, searchTerm, providerType, status);
+    return filtered;
 }
 
 // Display search results
